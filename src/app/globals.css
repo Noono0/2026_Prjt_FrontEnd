@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* Light/Dark tokens */
+:root{
+  --bg: 255 255 255;
+  --fg: 17 24 39;
+  --muted: 107 114 128;
+  --card: 249 250 251;
+  --border: 229 231 235;
+  --primary: 59 130 246;
+}
+.dark{
+  --bg: 17 24 39;
+  --fg: 243 244 246;
+  --muted: 156 163 175;
+  --card: 31 41 55;
+  --border: 55 65 81;
+  --primary: 96 165 250;
+}
+html, body { height: 100%; }
+body{ background: rgb(var(--bg)); color: rgb(var(--fg)); }
+
+/* AG Grid theme tweak */
+.ag-theme-quartz{
+  --ag-background-color: rgb(var(--bg));
+  --ag-foreground-color: rgb(var(--fg));
+  --ag-border-color: rgb(var(--border));
+  --ag-header-background-color: rgb(var(--card));
+  --ag-odd-row-background-color: rgb(var(--card));
+}
