@@ -4,167 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8d72613b-168b-4af7-bb3c-88a91001e931" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/prjt-frontend-operational.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/next-env.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/next.config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/postcss.config.mjs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/api/auth/[...nextauth]/route.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/api/members/route.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/api/roles/route.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/common-codes/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/globals.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/layout.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/login-popup/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/members/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/menus/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/roles/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/auth/LoginButton.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/auth/LoginModal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/members/MemberFormModal.module.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/members/MemberFormModal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/providers/Providers.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/shell/AppShell.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/shell/MenuTree.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/shell/Sidebar.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/shell/TopBar.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/ui/ThemeToggle.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/commonCodes/CommonCodesPage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/dashboard/Dashboard.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/members/MembersPage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/menus/MenusPage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/roles/RolesPage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/agGrid.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/authOptions.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/stores/authStore.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/stores/menuStore.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/stores/uiStore.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tailwind.config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.0.0/checksums/checksums.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.0.0/checksums/sha1-checksums.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.0.0/executionHistory/executionHistory.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.0.0/executionHistory/executionHistory.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.0.0/fileChanges/last-build.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.0.0/fileHashes/fileHashes.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.0.0/fileHashes/fileHashes.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.0.0/fileHashes/resourceHashesCache.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.0.0/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/vcs-1/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.sdkmanrc" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/PrjtBackendOperationalApplication.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/admin/AdminCatalogController$CategoryDto.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/admin/AdminCatalogController$ProductDto.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/admin/AdminCatalogController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/admin/AdminOrderController$OrderDto.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/admin/AdminOrderController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/audit/Audit.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/audit/AuditAspect.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/auth/AuthController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/auth/AuthService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/auth/dto/LoginRequest.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/auth/dto/TokenResponse.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/bootstrap/DataBootstrap.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/common/ApiResponse$ApiError.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/common/ApiResponse.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/common/GlobalExceptionHandler.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/domain/AdminAuditLog.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/domain/AdminMember.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/domain/AdminOrder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/domain/Category.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/domain/Product.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/domain/RefreshToken.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/menu/MenuController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/menu/MenuMapper.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/menu/MenuService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/menu/dto/MenuTreeDto$MenuDetailDto.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/menu/dto/MenuTreeDto.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/paging/PageResponse.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/repo/AdminAuditLogRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/repo/AdminMemberRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/repo/AdminOrderRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/repo/CategoryRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/repo/ProductRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/repo/RefreshTokenRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/security/JwtAuthenticationFilter$AuthPrincipal.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/security/JwtAuthenticationFilter.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/security/JwtProps.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/security/JwtService$TokenPair.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/security/JwtService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/security/SecurityConfig.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/web/RequestLoggingInterceptor.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/web/TraceIdFilter.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/prjt/backend/operational/web/WebConfig.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/resolvedMainClassName" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/resources/main/application.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/resources/main/db/migration/V1__init.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/resources/main/logback-spring.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/resources/main/mybatis/menu/MenuMapper.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/tmp/compileJava/previous-compilation-data.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradlew.bat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.gradle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/PrjtBackendOperationalApplication.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/admin/AdminCatalogController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/admin/AdminOrderController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/audit/Audit.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/audit/AuditAspect.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/auth/AuthController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/auth/AuthService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/auth/dto/LoginRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/auth/dto/TokenResponse.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/bootstrap/DataBootstrap.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/common/ApiResponse.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/common/GlobalExceptionHandler.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/domain/AdminAuditLog.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/domain/AdminMember.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/domain/AdminOrder.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/domain/Category.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/domain/Product.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/domain/RefreshToken.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/menu/MenuController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/menu/MenuMapper.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/menu/MenuService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/menu/dto/MenuTreeDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/paging/PageResponse.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/repo/AdminAuditLogRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/repo/AdminMemberRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/repo/AdminOrderRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/repo/CategoryRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/repo/ProductRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/repo/RefreshTokenRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/security/JwtAuthenticationFilter.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/security/JwtProps.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/security/JwtService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/security/SecurityConfig.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/web/RequestLoggingInterceptor.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/web/TraceIdFilter.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/prjt/backend/operational/web/WebConfig.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V1__init.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/logback-spring.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/mybatis/menu/MenuMapper.xml" beforeDir="false" />
-    </list>
+    <list default="true" id="8d72613b-168b-4af7-bb3c-88a91001e931" name="변경" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -174,7 +14,7 @@
     <option name="cachedIndexableFilesCount" value="45" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
   <component name="McpProjectServerCommands">
     <commands />
@@ -197,7 +37,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "main 리베이스 중",
+    "git-widget-placeholder": "master",
     "js.debugger.nextJs.config.created.client": "true",
     "js.debugger.nextJs.config.created.server": "true",
     "kotlin-language-version-configured": "true",
@@ -240,7 +80,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1772638386776</updated>
-      <workItem from="1772638388760" duration="562000" />
+      <workItem from="1772638388760" duration="865000" />
     </task>
     <servers />
   </component>
