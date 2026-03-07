@@ -27,7 +27,7 @@ pnpm dev
 pnpm i
 pnpm dev
 pnpm add lucide-react
-
+npm install @tanstack/react-query zustand --legacy-peer-deps
 ```
 
 ## 소셜 로그인 (Google/Kakao/Naver)

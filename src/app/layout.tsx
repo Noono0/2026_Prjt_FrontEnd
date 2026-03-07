@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "@/lib/agGrid";
+import "@/lib/ag-grid";
 import Providers from "@/components/providers/Providers";
 import AppShell from "@/components/shell/AppShell";
 

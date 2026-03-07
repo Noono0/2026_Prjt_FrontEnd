@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev --turbo -H localhost -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.21",
     "ag-grid-community": "^33.2.4",
     "ag-grid-react": "^33.2.4",
     "classnames": "^2.5.1",
