@@ -25,9 +25,9 @@ pnpm dev
 ```bash
 # (Windows) node_modules 없으면 먼저 설치!
 pnpm i
-pnpm dev
 pnpm add lucide-react
 npm install @tanstack/react-query zustand --legacy-peer-deps
+pnpm dev
 ```
 
 ## 소셜 로그인 (Google/Kakao/Naver)
