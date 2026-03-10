@@ -27,6 +27,10 @@ pnpm dev
 pnpm i
 pnpm add lucide-react
 npm install @tanstack/react-query zustand --legacy-peer-deps
+pnpm add @tanstack/react-query-devtools
+
+Remove-Item -Recurse -Force .next
+
 pnpm dev
 ```
 

@@ -1,91 +1,87 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { API_BASE_URL } from "@/lib/config";
 
-// Dev-only in-memory store so the 화면이 바로 동작하게.
-// 실제 운영에서는 백엔드(Spring) API로 교체하세요.
+export async function GET(req: NextRequest) {
+  try {
+    const search = req.nextUrl.search;
+    const res = await fetch(`${API_BASE_URL}/api/members${search}`, {
+      cache: "no-store",
+    });
 
-type Member = {
-  id: string;
-  name: string;
-  birthYmd?: string;
-  gender?: "M" | "F";
-  phone?: string;
-  email?: string;
-  region?: string;
-  status?: "ACTIVE" | "SUSPENDED" | "WITHDRAWN";
-  role?: string;
-  lastLoginAt?: string;
-};
-
-declare global {
-  // eslint-disable-next-line no-var
-  var __MEMBERS__: Member[] | undefined;
-}
-
-function store(): Member[] {
-  if (!globalThis.__MEMBERS__) {
-    globalThis.__MEMBERS__ = [
-      {
-        id: "000001",
-        name: "(샘플)홍길동",
-        birthYmd: "1997-02-03",
-        gender: "M",
-        phone: "010-1234-5678",
-        email: "sample@naver.com",
-        region: "서울",
-        status: "ACTIVE",
-        role: "ADMIN",
-        lastLoginAt: "2026-03-01 11:38:58",
-      },
-    ];
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch (error) {
+    return NextResponse.json(
+        { message: "회원 목록 조회 실패" },
+        { status: 500 }
+    );
   }
-  return globalThis.__MEMBERS__;
 }
 
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+export async function POST(req: NextRequest) {
+  try {
+    console.log("=== POST /api/members start ===");
+    const body = await req.json();
+    console.log("body =", JSON.stringify(body, null, 2));
+    const url = `${API_BASE_URL}/api/members/createMember`;
+    console.log("request url =", url);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
-  const data = store();
-  const filtered = !q
-    ? data
-    : data.filter(
-        (m) => m.id.toLowerCase().includes(q) || (m.name ?? "").toLowerCase().includes(q) || (m.email ?? "").toLowerCase().includes(q)
-      );
-
-  return NextResponse.json({ items: filtered, total: filtered.length });
+    console.log("backend status =", res.status);
+    const data = await res.json();
+    console.log("backend response =", JSON.stringify(data, null, 2));
+    return NextResponse.json(data, { status: res.status });
+  } catch (error) {
+    console.error("POST /api/members error =", error);
+    return NextResponse.json(
+        { message: "회원 등록 실패" },
+        { status: 500 }
+    );
+  }
 }
 
-export async function POST(req: Request) {
-  const body = (await req.json()) as Member;
-  const data = store();
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
 
-  if (!body?.id) return NextResponse.json({ message: "id is required" }, { status: 400 });
-  if (data.some((m) => m.id === body.id)) return NextResponse.json({ message: "duplicate id" }, { status: 409 });
+    const res = await fetch(`${API_BASE_URL}/api/members`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
-  data.push({ ...body });
-  return NextResponse.json({ ok: true });
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch (error) {
+    return NextResponse.json(
+        { message: "회원 수정 실패" },
+        { status: 500 }
+    );
+  }
 }
 
-export async function PUT(req: Request) {
-  const body = (await req.json()) as Member;
-  const data = store();
+export async function DELETE(req: NextRequest) {
+  try {
+    const search = req.nextUrl.search;
 
-  const idx = data.findIndex((m) => m.id === body.id);
-  if (idx < 0) return NextResponse.json({ message: "not found" }, { status: 404 });
+    const res = await fetch(`${API_BASE_URL}/api/members${search}`, {
+      method: "DELETE",
+    });
 
-  data[idx] = { ...data[idx], ...body };
-  return NextResponse.json({ ok: true });
-}
-
-export async function DELETE(req: Request) {
-  const url = new URL(req.url);
-  const ids = (url.searchParams.get("ids") ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (ids.length === 0) return NextResponse.json({ message: "ids required" }, { status: 400 });
-
-  const data = store();
-  globalThis.__MEMBERS__ = data.filter((m) => !ids.includes(m.id));
-  return NextResponse.json({ ok: true });
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch (error) {
+    return NextResponse.json(
+        { message: "회원 삭제 실패" },
+        { status: 500 }
+    );
+  }
 }

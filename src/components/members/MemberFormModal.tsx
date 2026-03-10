@@ -265,9 +265,9 @@ export default function MemberFormModal({
                   <option value="">
                     {rolesLoading ? "불러오는 중..." : "선택하세요"}
                   </option>
-                  {roleOptions.map((r) => (
-                      <option key={r.id} value={r.role_name}>
-                        {r.role_name}
+                  {roleOptions.map((r: any) => (
+                      <option key={r.roleId ?? r.id} value={r.roleName ?? r.role_name}>
+                        {r.roleName ?? r.role_name}
                       </option>
                   ))}
                 </select>

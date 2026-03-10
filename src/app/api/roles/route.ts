@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
-
-// role 테이블 예시 데이터. 실제 운영에서는 DB 조회로 교체하세요.
-// 컬럼: id, role_name
-type RoleRow = { id: number; role_name: string };
-
-const ROLES: RoleRow[] = [
-  { id: 1, role_name: "ADMIN" },
-  { id: 2, role_name: "CS" },
-];
+import { API_BASE_URL } from "@/lib/config";
 
 export async function GET() {
-  return NextResponse.json({ items: ROLES });
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/roles`, {
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+
+    return NextResponse.json(data, { status: res.status });
+  } catch (error) {
+    return NextResponse.json(
+        { message: "권한 목록 조회 실패" },
+        { status: 500 }
+    );
+  }
 }
