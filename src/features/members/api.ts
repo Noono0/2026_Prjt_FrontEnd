@@ -5,12 +5,29 @@ export type RoleItem = {
     role_name: string;
 };
 
-type MembersResponse = {
-    items: Member[];
+type ApiResponse<T> = {
+    success: boolean;
+    data: T;
+    message?: string | null;
 };
 
-type RolesResponse = {
-    items: RoleItem[];
+type MemberSearchCondition = {
+    memberId?: string;
+    memberName?: string;
+    roleCode?: string;
+    status?: string;
+};
+
+export type MemberDetailResponse = {
+    memberSeq?: number;
+    memberId?: string;
+    memberName?: string;
+    email?: string;
+    phone?: string;
+    region?: string;
+    roleCode?: string;
+    status?: string;
+    lastLoginAt?: string;
 };
 
 async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
@@ -24,44 +41,62 @@ async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
         try {
             const json = await res.json();
             message = json?.message ?? message;
-        } catch {
-            // ignore
-        }
+        } catch {}
         throw new Error(message);
     }
 
     return res.json() as Promise<T>;
 }
 
-export async function fetchMembers(keyword?: string): Promise<Member[]> {
-    const qs = new URLSearchParams();
-    if (keyword?.trim()) qs.set("q", keyword.trim());
+export async function searchMembers(
+    condition: MemberSearchCondition
+): Promise<MemberDetailResponse[]> {
+    const data = await apiFetch<ApiResponse<MemberDetailResponse[]>>("/api/members/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(condition),
+    });
 
-    const url = qs.toString() ? `/api/members?${qs.toString()}` : "/api/members";
-    const data = await apiFetch<MembersResponse>(url);
-    return data.items ?? [];
+    return data.data ?? [];
+}
+
+export async function fetchMemberDetail(memberSeq: number): Promise<MemberDetailResponse> {
+    const data = await apiFetch<ApiResponse<MemberDetailResponse>>(
+        `/api/members/detail/${memberSeq}`
+    );
+    return data.data;
 }
 
 export async function fetchRoles(): Promise<RoleItem[]> {
-    const data = await apiFetch<RolesResponse>("/api/roles");
-    return data.items ?? [];
+    const data = await apiFetch<ApiResponse<RoleItem[]>>("/api/roles");
+    return data.data ?? [];
 }
 
 export async function saveMember(member: Member, mode: "create" | "edit") {
-    return apiFetch("/api/members", {
-        method: mode === "create" ? "POST" : "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
+    if (mode === "create") {
+        return apiFetch("/api/members/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(member),
+        });
+    }
+
+    return apiFetch("/api/members/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(member),
     });
 }
 
 export async function deleteMembers(ids: string[]) {
-    const qs = new URLSearchParams();
-    qs.set("ids", ids.join(","));
-
-    return apiFetch(`/api/members?${qs.toString()}`, {
+    return apiFetch("/api/members/delete", {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
     });
+}
+
+// queries.ts 호환용
+export async function fetchMembers(condition?: MemberSearchCondition) {
+    return searchMembers(condition ?? {});
 }

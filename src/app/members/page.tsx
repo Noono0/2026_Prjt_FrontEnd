@@ -1,2 +1,5 @@
-import MembersPage from '@/features/members/MembersPage';
-export default function Page(){return <MembersPage/>;}
+import MembersPage from "@/features/members/MembersPage";
+
+export default function Page() {
+    return <MembersPage />;
+}

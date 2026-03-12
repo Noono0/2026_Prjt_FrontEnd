@@ -2,18 +2,25 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Member } from "@/components/members/MemberFormModal";
-import { deleteMembers, fetchMembers, fetchRoles, saveMember } from "./api";
+import { deleteMembers, searchMembers, fetchRoles, saveMember } from "./api";
+
+export type MemberSearchCondition = {
+    memberId?: string;
+    memberName?: string;
+    roleCode?: string;
+    status?: string;
+};
 
 export const memberKeys = {
     all: ["members"] as const,
-    list: (keyword: string) => ["members", "list", keyword] as const,
+    list: (condition: MemberSearchCondition) => ["members", "list", condition] as const,
     roles: ["members", "roles"] as const,
 };
 
-export function useMembersQuery(keyword: string) {
+export function useMembersQuery(condition: MemberSearchCondition) {
     return useQuery({
-        queryKey: memberKeys.list(keyword),
-        queryFn: () => fetchMembers(keyword),
+        queryKey: memberKeys.list(condition),
+        queryFn: () => searchMembers(condition),
     });
 }
 
