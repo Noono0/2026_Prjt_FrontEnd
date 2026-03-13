@@ -30,6 +30,16 @@ export type MemberDetailResponse = {
     lastLoginAt?: string;
 };
 
+type RolesResponse = {
+    total: number;
+    items: {
+        roleId: number;
+        roleName: string;
+        roleCode?: string;
+        useYn?: string;
+    }[];
+};
+
 async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
     const res = await fetch(input, {
         cache: "no-store",
@@ -67,9 +77,14 @@ export async function fetchMemberDetail(memberSeq: number): Promise<MemberDetail
     return data.data;
 }
 
+
 export async function fetchRoles(): Promise<RoleItem[]> {
-    const data = await apiFetch<ApiResponse<RoleItem[]>>("/api/roles");
-    return data.data ?? [];
+    const data = await apiFetch<RolesResponse>("/api/roles");
+
+    return (data.items ?? []).map((item) => ({
+        id: item.roleId,
+        role_name: item.roleName,
+    }));
 }
 
 export async function saveMember(member: Member, mode: "create" | "edit") {
