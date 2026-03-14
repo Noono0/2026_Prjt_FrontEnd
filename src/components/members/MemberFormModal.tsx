@@ -5,15 +5,18 @@ import styles from "./MemberFormModal.module.css";
 import { useRolesQuery } from "@/features/members/queries";
 
 export type Member = {
-  id: string; // 아이디
-  name: string; // 사용자성명
-  birthYmd?: string; // YYYY-MM-DD
+  memberSeq?: number;
+  memberId: string;
+  memberName: string;
+  memberPwd?: string;
+  birthYmd?: string;
   gender?: "M" | "F";
   phone?: string;
   email?: string;
   region?: string;
   status?: "ACTIVE" | "SUSPENDED" | "WITHDRAWN";
-  role?: string; // 회원 권한
+  roleCode?: string;
+  roleName?: string;
   lastLoginAt?: string;
 };
 
@@ -27,8 +30,18 @@ type Props = {
 
 function toDateInputValue(birthYmd?: string) {
   if (!birthYmd) return "";
-  // assume already yyyy-mm-dd
+
+  // YYYYMMDD 로 올 수도 있어서 date input 용으로 변환
+  if (/^\d{8}$/.test(birthYmd)) {
+    return `${birthYmd.slice(0, 4)}-${birthYmd.slice(4, 6)}-${birthYmd.slice(6, 8)}`;
+  }
+
   return birthYmd;
+}
+
+function toApiBirthYmd(birthYmd?: string) {
+  if (!birthYmd) return "";
+  return birthYmd.replaceAll("-", "");
 }
 
 export default function MemberFormModal({
@@ -43,34 +56,64 @@ export default function MemberFormModal({
   const seed = useMemo<Member>(() => {
     return (
         initial ?? {
-          id: "",
-          name: "",
+          memberSeq: undefined,
+          memberId: "",
+          memberName: "",
+          memberPwd: "",
           birthYmd: "",
           gender: "M",
           phone: "",
           email: "",
           status: "ACTIVE",
-          role: "",
+          roleCode: "",
+          roleName: "",
         }
     );
   }, [initial]);
 
-  const [form, setForm] = useState<Member>(seed);
+  const [form, setForm] = useState<Member>({
+    memberSeq: undefined,
+    memberId: "",
+    memberName: "",
+    memberPwd: "",
+    birthYmd: "",
+    gender: "M",
+    phone: "",
+    email: "",
+    status: "ACTIVE",
+    roleCode: "",
+    roleName: "",
+  });
+
   const [saving, setSaving] = useState(false);
-
   const { data: roleOptions = [], isLoading: rolesLoading } = useRolesQuery();
-
-  // 이메일/휴대폰을 UI 용으로 쪼갠 상태
+  console.log("roleOptions >>>", roleOptions);
   const [emailLocal, setEmailLocal] = useState("");
   const [emailDomain, setEmailDomain] = useState("naver.com");
   const [phone1, setPhone1] = useState("010");
   const [phone2, setPhone2] = useState("");
   const [phone3, setPhone3] = useState("");
 
+  // 모달 열릴 때만 초기화
   useEffect(() => {
     if (!open) return;
-    setForm(seed);
-    // 이메일 쪼개기
+
+    setForm({
+      memberSeq: seed.memberSeq,
+      memberId: seed.memberId ?? "",
+      memberName: seed.memberName ?? "",
+      memberPwd: "",
+      birthYmd: toDateInputValue(seed.birthYmd),
+      gender: seed.gender ?? "M",
+      phone: seed.phone ?? "",
+      email: seed.email ?? "",
+      region: seed.region ?? "",
+      status: seed.status ?? "ACTIVE",
+      roleCode: seed.roleCode ?? "",
+      roleName: seed.roleName ?? "",
+      lastLoginAt: seed.lastLoginAt ?? "",
+    });
+
     if (seed.email) {
       const [local, domain] = seed.email.split("@");
       setEmailLocal(local ?? "");
@@ -79,7 +122,7 @@ export default function MemberFormModal({
       setEmailLocal("");
       setEmailDomain("naver.com");
     }
-    // 휴대폰 쪼개기
+
     if (seed.phone) {
       const [p1, p2, p3] = seed.phone.split("-");
       setPhone1(p1 || "010");
@@ -90,38 +133,64 @@ export default function MemberFormModal({
       setPhone2("");
       setPhone3("");
     }
-  }, [open, seed]);
+  }, [open]);
 
   if (!open) return null;
 
   const update = <K extends keyof Member>(key: K, value: Member[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
-  const joinEmail = (local: string, domain: string) =>
-      local.trim() && domain.trim() ? `${local.trim()}@${domain.trim()}` : "";
+  const joinEmail = (local: string, domain: string) => {
+    const l = local.trim();
+    const d = domain.trim();
+    if (!l || !d) return "";
+    return `${l}@${d}`;
+  };
 
-  const joinPhone = (p1: string, p2: string, p3: string) =>
-      p2.trim() || p3.trim() ? `${p1.trim()}-${p2.trim()}-${p3.trim()}` : "";
+  const joinPhone = (p1: string, p2: string, p3: string) => {
+    const a = p1.trim();
+    const b = p2.trim();
+    const c = p3.trim();
+    if (!b && !c) return "";
+    return `${a}-${b}-${c}`;
+  };
 
   const handleSave = async () => {
-    if (!form.id.trim()) {
+    if (!form.memberId.trim()) {
       alert("아이디는 필수입니다.");
       return;
     }
-    if (!form.name.trim()) {
+
+    if (!form.memberName.trim()) {
       alert("성명은 필수입니다.");
+      return;
+    }
+
+    if (mode === "create" && !(form.memberPwd ?? "").trim()) {
+      alert("비밀번호는 필수입니다.");
+      return;
+    }
+
+    if (!(form.roleCode ?? "").trim()) {
+      alert("회원 권한은 필수입니다.");
       return;
     }
 
     try {
       setSaving(true);
+
       await onSave({
         ...form,
         phone: joinPhone(phone1, phone2, phone3),
         email: joinEmail(emailLocal, emailDomain),
-        birthYmd: form.birthYmd ? toDateInputValue(form.birthYmd) : "",
+        birthYmd: toApiBirthYmd(form.birthYmd),
+        memberPwd: mode === "edit" && !(form.memberPwd ?? "").trim() ? undefined : form.memberPwd,
       });
+
       onClose();
     } finally {
       setSaving(false);
@@ -130,7 +199,12 @@ export default function MemberFormModal({
 
   return (
       <div className={styles.backdrop} onMouseDown={onClose}>
-        <div className={styles.modal} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div
+            className={styles.modal}
+            onMouseDown={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+        >
           <div className={styles.header}>
             <div className={styles.title}>{title}</div>
             <button className={styles.closeBtn} onClick={onClose} aria-label="닫기">
@@ -144,8 +218,8 @@ export default function MemberFormModal({
                 <div className={styles.label}>아이디 *</div>
                 <input
                     className={styles.input}
-                    value={form.id}
-                    onChange={(e) => update("id", e.target.value)}
+                    value={form.memberId}
+                    onChange={(e) => update("memberId", e.target.value)}
                     disabled={mode === "edit"}
                     placeholder="예) user0001"
                 />
@@ -155,8 +229,23 @@ export default function MemberFormModal({
                 <div className={styles.label}>성명 *</div>
                 <input
                     className={styles.input}
-                    value={form.name}
-                    onChange={(e) => update("name", e.target.value)}
+                    value={form.memberName}
+                    onChange={(e) => update("memberName", e.target.value)}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <div className={styles.label}>
+                  비밀번호 {mode === "create" ? "*" : ""}
+                </div>
+                <input
+                    className={styles.input}
+                    type="password"
+                    value={form.memberPwd ?? ""}
+                    onChange={(e) => update("memberPwd", e.target.value)}
+                    placeholder={
+                      mode === "create" ? "비밀번호 입력" : "변경할 때만 입력"
+                    }
                 />
               </div>
 
@@ -196,9 +285,14 @@ export default function MemberFormModal({
                   >
                     <option value="010">010</option>
                     <option value="011">011</option>
+                    <option value="016">016</option>
+                    <option value="017">017</option>
                     <option value="018">018</option>
+                    <option value="019">019</option>
                   </select>
+
                   <span className={styles.sep}>-</span>
+
                   <input
                       className={`${styles.input} ${styles.phoneInput}`}
                       value={phone2}
@@ -209,7 +303,9 @@ export default function MemberFormModal({
                         update("phone", joinPhone(phone1, v, phone3));
                       }}
                   />
+
                   <span className={styles.sep}>-</span>
+
                   <input
                       className={`${styles.input} ${styles.phoneInput}`}
                       value={phone3}
@@ -236,7 +332,9 @@ export default function MemberFormModal({
                       }}
                       placeholder="user"
                   />
+
                   <span className={styles.sep}>@</span>
+
                   <select
                       className={`${styles.select} ${styles.smallSelect}`}
                       value={emailDomain}
@@ -246,30 +344,48 @@ export default function MemberFormModal({
                         update("email", joinEmail(emailLocal, v));
                       }}
                   >
-                    <option value="google.com">google.com</option>
                     <option value="naver.com">naver.com</option>
-                    <option value="kakao.com">kakao.com</option>
                     <option value="gmail.com">gmail.com</option>
+                    <option value="kakao.com">kakao.com</option>
+                    <option value="google.com">google.com</option>
                   </select>
                 </div>
               </div>
 
               <div className={styles.field}>
-                <div className={styles.label}>회원 권한</div>
+                <div className={styles.label}>회원 권한 *</div>
                 <select
                     className={styles.select}
-                    value={form.role ?? ""}
-                    onChange={(e) => update("role", e.target.value || undefined)}
+                    value={form.roleCode ?? ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      update("roleCode", value);
+                    }}
                     disabled={rolesLoading}
                 >
                   <option value="">
                     {rolesLoading ? "불러오는 중..." : "선택하세요"}
                   </option>
-                  {roleOptions.map((r: any) => (
-                      <option key={r.roleId ?? r.id} value={r.roleName ?? r.role_name}>
-                        {r.roleName ?? r.role_name}
-                      </option>
-                  ))}
+
+                  {roleOptions.map((r: any) => {
+                    const roleId =
+                      r.roleId ?? r.id ?? r.role_seq ?? r.role_seq_no ?? r.role_no;
+                    const roleCode =
+                      r.roleCode ??
+                      r.role_code ??
+                      r.code ??
+                      r.roleId?.toString() ??
+                      r.id?.toString() ??
+                      "";
+                    const roleName =
+                      r.roleName ?? r.role_name ?? r.name ?? r.roleCode ?? roleCode;
+
+                    return (
+                        <option key={roleId ?? roleCode} value={roleCode}>
+                          {roleName}
+                        </option>
+                    );
+                  })}
                 </select>
               </div>
 
@@ -279,7 +395,10 @@ export default function MemberFormModal({
                     className={styles.select}
                     value={form.status ?? "ACTIVE"}
                     onChange={(e) =>
-                        update("status", e.target.value as "ACTIVE" | "SUSPENDED" | "WITHDRAWN")
+                        update(
+                            "status",
+                            e.target.value as "ACTIVE" | "SUSPENDED" | "WITHDRAWN"
+                        )
                     }
                 >
                   <option value="ACTIVE">정상</option>
@@ -294,7 +413,11 @@ export default function MemberFormModal({
             <button className={styles.btn} onClick={onClose} disabled={saving}>
               취소
             </button>
-            <button className={`${styles.btn} ${styles.primary}`} onClick={handleSave} disabled={saving}>
+            <button
+                className={`${styles.btn} ${styles.primary}`}
+                onClick={handleSave}
+                disabled={saving}
+            >
               {saving ? "저장중..." : "저장"}
             </button>
           </div>
