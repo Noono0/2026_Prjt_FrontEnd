@@ -1,8 +1,15 @@
 import type { Member } from "@/components/members/MemberFormModal";
 
 export type RoleItem = {
-    id: number;
-    role_name: string;
+    roleId: number;
+    roleName: string;
+    roleCode: string;
+    useYn?: string;
+};
+
+type RolesResponse = {
+    items: RoleItem[];
+    total: number;
 };
 
 /**
@@ -140,8 +147,17 @@ export async function fetchMemberDetail(memberSeq: number): Promise<MemberDetail
  * 현재 /api/roles 응답도 공통 포맷이라고 가정
  */
 export async function fetchRoles(): Promise<RoleItem[]> {
-    const result = await apiFetch<RoleItem[]>("/api/roles");
-    return result.data ?? [];
+    const res = await fetch("/api/roles", {
+        method: "GET",
+        cache: "no-store",
+    });
+
+    if (!res.ok) {
+        throw new Error("권한 목록 조회 실패");
+    }
+
+    const data = (await res.json()) as RolesResponse;
+    return data.items ?? [];
 }
 
 /**
