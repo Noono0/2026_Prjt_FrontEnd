@@ -2,14 +2,13 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Member } from "@/components/members/MemberFormModal";
-import { deleteMembers, searchMembers, fetchRoles, saveMember } from "./api";
-
-export type MemberSearchCondition = {
-    memberId?: string;
-    memberName?: string;
-    roleCode?: string;
-    status?: string;
-};
+import {
+    deleteMembers,
+    fetchRoles,
+    saveMember,
+    searchMembers,
+    type MemberSearchCondition,
+} from "./api";
 
 export const memberKeys = {
     all: ["members"] as const,
@@ -47,7 +46,7 @@ export function useDeleteMembersMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (ids: string[]) => deleteMembers(ids),
+        mutationFn: (memberSeqList: number[]) => deleteMembers(memberSeqList),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: memberKeys.all });
         },

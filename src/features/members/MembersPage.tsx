@@ -4,14 +4,12 @@ import "@/lib/ag-grid";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { AgGridReact } from "ag-grid-react";
-import { useRolesQuery } from "@/features/members/queries";
 import styles from "./MembersPage.module.css";
 
 import type {
     ColDef,
     GridApi,
     GridReadyEvent,
-    RowClickedEvent,
     SortChangedEvent,
     ValueGetterParams,
 } from "ag-grid-community";
@@ -25,6 +23,7 @@ import {
     searchMembers,
     type MemberListItemResponse,
 } from "./api";
+import { useRolesQuery } from "@/features/members/queries";
 
 type SearchCondition = {
     memberId: string;
@@ -100,24 +99,7 @@ export default function MembersPage() {
         return map;
     }, [roleOptions]);
 
-    const rows = useMemo<MemberRow[]>(
-        () =>
-            (items ?? []).map((m: MemberListItemResponse) => ({
-                memberSeq: m.memberSeq,
-                memberId: m.memberId ?? "",
-                memberName: m.memberName ?? "",
-                birthYmd: m.birthYmd ?? "",
-                email: m.email ?? "",
-                gender: m.gender ?? "",
-                phone: m.phone ?? "",
-                roleCode: m.roleCode ?? "",
-                roleName: m.roleName ?? "",
-                status: m.status ?? "",
-                createDt: m.createDt ?? "",
-                modifyDt: m.modifyDt ?? "",
-            })),
-        [items]
-    );
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
     const colDefs = useMemo<ColDef<MemberRow>[]>(
         () => [
@@ -132,7 +114,25 @@ export default function MembersPage() {
                 resizable: false,
             },
             { headerName: "회원SEQ", field: "memberSeq", width: 100, sort: "desc" },
-            { headerName: "아이디", field: "memberId", width: 140 },
+            {
+                headerName: "아이디",
+                field: "memberId",
+                width: 140,
+                cellRenderer: (params: any) => {
+                    const memberId = params.value ?? "";
+                    return (
+                        <span
+                            className={styles.linkText}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenDetail(params.data);
+                            }}
+                        >
+              {memberId}
+            </span>
+                    );
+                },
+            },
             { headerName: "회원명", field: "memberName", width: 140 },
             { headerName: "생년월일", field: "birthYmd", width: 120 },
             { headerName: "이메일", field: "email", minWidth: 220, flex: 1 },
@@ -163,8 +163,6 @@ export default function MembersPage() {
         []
     );
 
-    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-
     const handleChangeCondition = (key: keyof SearchCondition, value: string) => {
         setSearchCondition((prev) => ({
             ...prev,
@@ -173,29 +171,47 @@ export default function MembersPage() {
     };
 
     const loadMembers = async (
-        nextPage = page,
-        nextSize = pageSize,
-        nextSortBy = sortBy,
-        nextSortDir = sortDir
+        nextPage: number = page,
+        nextPageSize: number = pageSize,
+        nextSortBy: string = sortBy,
+        nextSortDir: "asc" | "desc" = sortDir,
+        nextSearchCondition: SearchCondition = searchCondition
     ) => {
         try {
             setIsLoading(true);
 
             const result = await searchMembers({
-                memberId: searchCondition.memberId || undefined,
-                memberName: searchCondition.memberName || undefined,
-                roleCode: searchCondition.roleCode || undefined,
-                status: searchCondition.status || undefined,
+                memberId: nextSearchCondition.memberId || undefined,
+                memberName: nextSearchCondition.memberName || undefined,
+                roleCode: nextSearchCondition.roleCode || undefined,
+                status: nextSearchCondition.status || undefined,
                 page: nextPage,
-                size: nextSize,
+                size: nextPageSize,
                 sortBy: nextSortBy,
                 sortDir: nextSortDir,
             });
 
-            setItems((result.items ?? []) as MemberRow[]);
-            setTotalCount(result.totalCount ?? 0);
+            const nextItems: MemberRow[] = (result.items ?? []).map((m: MemberListItemResponse) => ({
+                memberSeq: m.memberSeq,
+                memberId: m.memberId ?? "",
+                memberName: m.memberName ?? "",
+                birthYmd: m.birthYmd ?? "",
+                email: m.email ?? "",
+                gender: m.gender ?? "",
+                phone: m.phone ?? "",
+                roleCode: m.roleCode ?? "",
+                roleName: m.roleName ?? "",
+                status: m.status ?? "",
+                createDt: m.createDt ?? "",
+                modifyDt: m.modifyDt ?? "",
+            }));
+
+            setItems(nextItems);
             setPage(result.page ?? nextPage);
-            setPageSize(result.size ?? nextSize);
+            setPageSize(result.size ?? nextPageSize);
+            setTotalCount(result.totalCount ?? 0);
+            setSortBy(nextSortBy);
+            setSortDir(nextSortDir);
         } catch (error) {
             const message =
                 error instanceof Error ? error.message : "회원 목록 조회 중 오류가 발생했습니다.";
@@ -206,38 +222,19 @@ export default function MembersPage() {
     };
 
     const handleSearch = async () => {
-        await loadMembers(1, pageSize, sortBy, sortDir);
+        await loadMembers(1, pageSize, sortBy, sortDir, searchCondition);
     };
 
     const handleReset = async () => {
-        setSearchCondition({
+        const resetCondition: SearchCondition = {
             memberId: "",
             memberName: "",
             roleCode: "",
             status: "",
-        });
+        };
 
-        try {
-            setIsLoading(true);
-
-            const result = await searchMembers({
-                page: 1,
-                size: pageSize,
-                sortBy,
-                sortDir,
-            });
-
-            setItems((result.items ?? []) as MemberRow[]);
-            setTotalCount(result.totalCount ?? 0);
-            setPage(result.page ?? 1);
-            setPageSize(result.size ?? pageSize);
-        } catch (error) {
-            const message =
-                error instanceof Error ? error.message : "회원 목록 조회 중 오류가 발생했습니다.";
-            alert(message);
-        } finally {
-            setIsLoading(false);
-        }
+        setSearchCondition(resetCondition);
+        await loadMembers(1, pageSize, sortBy, sortDir, resetCondition);
     };
 
     const handleDelete = async () => {
@@ -259,11 +256,8 @@ export default function MembersPage() {
 
             await deleteMembers(memberSeqList);
 
-            const remainCount = Math.max(0, totalCount - memberSeqList.length);
-            const lastPage = Math.max(1, Math.ceil(remainCount / pageSize));
-            const nextPage = Math.min(page, lastPage);
-
-            await loadMembers(nextPage, pageSize, sortBy, sortDir);
+            const reloadPage = page > 1 && items.length === 1 ? page - 1 : page;
+            await loadMembers(reloadPage, pageSize, sortBy, sortDir, searchCondition);
         } catch (error) {
             const message =
                 error instanceof Error ? error.message : "회원 삭제 중 오류가 발생했습니다.";
@@ -271,8 +265,7 @@ export default function MembersPage() {
         }
     };
 
-    const handleRowClicked = async (event: RowClickedEvent<MemberRow>) => {
-        const row = event.data;
+    const handleOpenDetail = async (row: MemberRow) => {
         if (!row?.memberSeq) return;
 
         try {
@@ -291,6 +284,7 @@ export default function MembersPage() {
                 email: detail.email ?? "",
                 region: detail.region ?? "",
                 roleCode: detail.roleCode ?? "",
+                roleName: detail.roleName ?? "",
                 status: (detail.status as Member["status"]) ?? "ACTIVE",
                 lastLoginAt: detail.lastLoginAt ?? "",
             });
@@ -307,7 +301,7 @@ export default function MembersPage() {
         try {
             await saveMember(member, modalMode);
             close();
-            await loadMembers(page, pageSize, sortBy, sortDir);
+            await loadMembers(page, pageSize, sortBy, sortDir, searchCondition);
         } catch (error) {
             const message =
                 error instanceof Error ? error.message : "회원 저장 중 오류가 발생했습니다.";
@@ -317,23 +311,23 @@ export default function MembersPage() {
 
     const handleSortChanged = async (event: SortChangedEvent<MemberRow>) => {
         const sortModel = event.api.getColumnState().find((col) => col.sort);
-
         const nextSortBy = sortModel?.colId ?? "memberSeq";
         const nextSortDir = (sortModel?.sort as "asc" | "desc") ?? "desc";
 
-        setSortBy(nextSortBy);
-        setSortDir(nextSortDir);
-
-        await loadMembers(1, pageSize, nextSortBy, nextSortDir);
+        await loadMembers(1, pageSize, nextSortBy, nextSortDir, searchCondition);
     };
 
     const handlePageSizeChange = async (value: number) => {
-        setPageSize(value);
-        await loadMembers(1, value, sortBy, sortDir);
+        await loadMembers(1, value, sortBy, sortDir, searchCondition);
+    };
+
+    const handleMovePage = async (nextPage: number) => {
+        if (nextPage < 1 || nextPage > totalPages) return;
+        await loadMembers(nextPage, pageSize, sortBy, sortDir, searchCondition);
     };
 
     useEffect(() => {
-        loadMembers(1, pageSize, sortBy, sortDir);
+        loadMembers(1, 20, "memberSeq", "desc", searchCondition);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -341,6 +335,7 @@ export default function MembersPage() {
         <div className={styles.page}>
             <h2 className={styles.title}>회원관리</h2>
 
+            <div className={styles.sectionTitle}>검색 조건</div>
             <div className={styles.searchGrid}>
                 <div>
                     <div className={styles.label}>회원ID</div>
@@ -375,7 +370,7 @@ export default function MembersPage() {
                             const name = r.roleName ?? r.role_name ?? "";
                             return (
                                 <option key={code} value={code}>
-                                    {name}
+                                    {name || code}
                                 </option>
                             );
                         })}
@@ -398,7 +393,7 @@ export default function MembersPage() {
             </div>
 
             <div className={styles.toolbar}>
-                <button type="button" onClick={handleSearch} disabled={isLoading}>
+                <button type="button" className={styles.primaryButton} onClick={handleSearch} disabled={isLoading}>
                     조회
                 </button>
                 <button type="button" onClick={handleReset} disabled={isLoading}>
@@ -407,13 +402,17 @@ export default function MembersPage() {
                 <button type="button" onClick={openCreate} disabled={isLoading}>
                     등록
                 </button>
-                <button type="button" onClick={handleDelete} disabled={isLoading}>
+                <button type="button" className={styles.dangerButton} onClick={handleDelete} disabled={isLoading}>
                     삭제
                 </button>
 
                 <div className={styles.spacer}>
                     <span>페이지 크기</span>
-                    <select value={pageSize} onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
+                    <select
+                        value={pageSize}
+                        onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                        disabled={isLoading}
+                    >
                         <option value={20}>20</option>
                         <option value={50}>50</option>
                         <option value={100}>100</option>
@@ -428,46 +427,41 @@ export default function MembersPage() {
         </span>
             </div>
 
+            <div className={styles.sectionTitle}>회원 목록</div>
             <div className={`${isDark ? "ag-theme-quartz-dark" : "ag-theme-quartz"} ${styles.gridWrap}`}>
                 <AgGridReact<MemberRow>
                     theme="legacy"
-                    rowData={rows}
+                    rowData={items}
                     columnDefs={colDefs}
                     defaultColDef={defaultColDef}
                     animateRows
                     rowSelection="multiple"
-                    suppressRowClickSelection={false}
+                    suppressRowClickSelection={true}
                     suppressPaginationPanel
                     onGridReady={(event: GridReadyEvent<MemberRow>) => {
                         gridApiRef.current = event.api;
                     }}
-                    onRowClicked={handleRowClicked}
                     onSortChanged={handleSortChanged}
                     overlayLoadingTemplate={'<span class="ag-overlay-loading-center">조회중...</span>'}
                     overlayNoRowsTemplate={'<span class="ag-overlay-loading-center">데이터가 없습니다.</span>'}
+                    loading={isLoading}
                 />
             </div>
 
             <div className={styles.paginationBar}>
-                <button onClick={() => loadMembers(1, pageSize, sortBy, sortDir)} disabled={page <= 1 || isLoading}>
+                <button onClick={() => handleMovePage(1)} disabled={page <= 1 || isLoading}>
                     처음
                 </button>
-                <button onClick={() => loadMembers(page - 1, pageSize, sortBy, sortDir)} disabled={page <= 1 || isLoading}>
+                <button onClick={() => handleMovePage(page - 1)} disabled={page <= 1 || isLoading}>
                     이전
                 </button>
                 <span>
           {page} / {totalPages}
         </span>
-                <button
-                    onClick={() => loadMembers(page + 1, pageSize, sortBy, sortDir)}
-                    disabled={page >= totalPages || isLoading}
-                >
+                <button onClick={() => handleMovePage(page + 1)} disabled={page >= totalPages || isLoading}>
                     다음
                 </button>
-                <button
-                    onClick={() => loadMembers(totalPages, pageSize, sortBy, sortDir)}
-                    disabled={page >= totalPages || isLoading}
-                >
+                <button onClick={() => handleMovePage(totalPages)} disabled={page >= totalPages || isLoading}>
                     마지막
                 </button>
             </div>
