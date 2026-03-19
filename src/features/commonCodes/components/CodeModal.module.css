@@ -1,0 +1,163 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal,
+.modalLarge {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    width: 720px;
+    max-width: 92vw;
+    border: 1px solid #d8dee8;
+}
+
+.modalLarge {
+    width: 860px;
+    max-width: 94vw;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modalTitle {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 20px;
+}
+
+.full {
+    grid-column: 1 / -1;
+}
+
+.label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.input,
+.readonly {
+    width: 100%;
+    height: 40px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0 12px;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.readonly {
+    background: #f8fafc;
+}
+
+.textarea {
+    width: 100%;
+    height: 90px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #ffffff;
+    color: #0f172a;
+    resize: vertical;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 0 20px 20px;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.primaryButton {
+    border: none;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.secondaryButton {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.dangerButton {
+    margin-right: auto;
+    border: none;
+    background: #dc2626;
+    color: #ffffff;
+}
+
+.closeButton {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    cursor: pointer;
+    color: #475569;
+}
+
+:global(.dark) .modal,
+:global(.dark) .modalLarge {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+:global(.dark) .header {
+    border-bottom-color: #334155;
+}
+
+:global(.dark) .input,
+:global(.dark) .readonly,
+:global(.dark) .textarea {
+    background: #020617;
+    border-color: #475569;
+    color: #e5e7eb;
+}
+
+:global(.dark) .readonly {
+    background: #1e293b;
+}
+
+:global(.dark) .secondaryButton {
+    background: #0f172a;
+    color: #e5e7eb;
+    border-color: #475569;
+}
+
+:global(.dark) .closeButton {
+    color: #cbd5e1;
+}
+
+@media (max-width: 720px) {
+    .body {
+        grid-template-columns: 1fr;
+    }
+}

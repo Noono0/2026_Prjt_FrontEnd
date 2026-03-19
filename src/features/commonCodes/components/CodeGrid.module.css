@@ -1,0 +1,91 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.headerRight {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.totalText {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.select {
+    height: 36px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0 10px;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.gridWrap {
+    height: 300px;
+    width: 100%;
+}
+
+.primaryButton,
+.secondaryButton,
+.pageButton {
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.primaryButton {
+    height: 36px;
+    padding: 0 14px;
+    border: none;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.secondaryButton {
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.pageButton {
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.pageText {
+    font-size: 14px;
+}
+
+:global(.dark) .totalText {
+    color: #94a3b8;
+}
+
+:global(.dark) .select,
+:global(.dark) .secondaryButton,
+:global(.dark) .pageButton {
+    background: #0f172a;
+    color: #e5e7eb;
+    border-color: #475569;
+}

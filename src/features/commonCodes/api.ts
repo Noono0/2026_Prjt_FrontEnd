@@ -1,12 +1,3 @@
-import type { Member } from "@/components/members/MemberFormModal";
-
-export type RoleItem = {
-    roleId?: number;
-    roleName?: string;
-    roleCode?: string;
-    useYn?: string;
-};
-
 export type FieldErrorResponse = {
     field: string;
     code: string;
@@ -26,53 +17,73 @@ export type PageResponse<T> = {
     page: number;
     size: number;
     totalCount: number;
+    totalPages?: number;
 };
 
-export type MemberSearchCondition = {
-    memberId?: string;
-    memberName?: string;
-    roleCode?: string;
-    status?: string;
+export type CodeGroupSearchCondition = {
+    codeGroupSeq?: number;
+    codeGroupId?: string;
+    codeGroupName?: string;
+    useYn?: string;
+    delYn?: string;
     page?: number;
     size?: number;
     sortBy?: string;
     sortDir?: "asc" | "desc";
 };
 
-export type MemberListItemResponse = {
-    memberSeq?: number;
-    memberId?: string;
-    memberName?: string;
-    memberPwd?: string;
-    birthYmd?: string;
-    email?: string;
-    gender?: string;
-    phone?: string;
-    region?: string;
-    roleCode?: string;
-    roleName?: string;
-    status?: string;
+export type CodeGroupRow = {
+    codeGroupSeq?: number;
+    codeGroupId?: string;
+    codeGroupName?: string;
+    description?: string;
+    sortOrder?: number;
+    useYn?: string;
+    delYn?: string;
+    createId?: string;
+    createIp?: string;
     createDt?: string;
+    modifyId?: string;
+    modifyIp?: string;
     modifyDt?: string;
-    lastLoginAt?: string;
 };
 
-export type MemberDetailResponse = {
-    memberSeq?: number;
-    memberId?: string;
-    memberName?: string;
-    memberPwd?: string;
-    birthYmd?: string;
-    email?: string;
-    gender?: string;
-    phone?: string;
-    region?: string;
-    roleCode?: string;
-    roleName?: string;
-    status?: string;
+export type CodeDetailSearchCondition = {
+    codeDetailSeq?: number;
+    codeGroupSeq?: number;
+    parentDetailSeq?: number;
+    codeId?: string;
+    codeName?: string;
+    codeLevel?: number;
+    useYn?: string;
+    delYn?: string;
+    page?: number;
+    size?: number;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
+};
+
+export type CodeDetailRow = {
+    codeDetailSeq?: number;
+    codeGroupSeq?: number;
+    parentDetailSeq?: number;
+    codeId?: string;
+    codeValue?: string;
+    codeName?: string;
+    codeLevel?: number;
+    description?: string;
+    sortOrder?: number;
+    useYn?: string;
+    delYn?: string;
+    attr1?: string;
+    attr2?: string;
+    attr3?: string;
+    createId?: string;
+    createIp?: string;
     createDt?: string;
+    modifyId?: string;
+    modifyIp?: string;
     modifyDt?: string;
-    lastLoginAt?: string;
 };
 
 export class ApiError extends Error {
@@ -124,79 +135,119 @@ async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiR
     return json;
 }
 
-export async function searchMembers(
-    condition: MemberSearchCondition
-): Promise<PageResponse<MemberListItemResponse>> {
-    const result = await apiFetch<PageResponse<MemberListItemResponse>>("/api/members/search", {
+/** code group */
+export async function searchCodeGroups(
+    condition: CodeGroupSearchCondition
+): Promise<PageResponse<CodeGroupRow>> {
+    const result = await apiFetch<PageResponse<CodeGroupRow>>("/api/code-groups/search", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(condition),
     });
-
     return result.data;
 }
 
-export async function fetchMemberDetail(memberSeq: number): Promise<MemberDetailResponse> {
-    const result = await apiFetch<MemberDetailResponse>(`/api/members/detail/${memberSeq}`);
-    return result.data;
-}
-
-export async function fetchRoles(): Promise<RoleItem[]> {
-    const res = await fetch("/api/roles", {
-        method: "GET",
-        cache: "no-store",
+export async function fetchCodeGroupDetail(codeGroupSeq: number): Promise<CodeGroupRow> {
+    const result = await apiFetch<CodeGroupRow>("/api/code-groups/detail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codeGroupSeq }),
     });
-
-    if (!res.ok) {
-        throw new Error("권한 목록 조회 실패");
-    }
-
-    const data = (await res.json()) as { items?: RoleItem[]; data?: RoleItem[] };
-    return data.items ?? data.data ?? [];
+    return result.data;
 }
 
-export async function saveMember(member: Member, mode: "create" | "edit") {
+export async function saveCodeGroup(row: CodeGroupRow, mode: "create" | "edit") {
     const payload = {
-        memberSeq: member.memberSeq,
-        memberId: member.memberId,
-        memberName: member.memberName,
-        memberPwd:
-            mode === "edit" && !member.memberPwd?.trim() ? undefined : member.memberPwd,
-        birthYmd: member.birthYmd ?? "",
-        gender: member.gender ?? "M",
-        phone: member.phone ?? "",
-        email: member.email ?? "",
-        roleCode: member.roleCode ?? "",
-        status: member.status ?? "ACTIVE",
+        codeGroupSeq: row.codeGroupSeq,
+        codeGroupId: row.codeGroupId ?? "",
+        codeGroupName: row.codeGroupName ?? "",
+        description: row.description ?? "",
+        sortOrder: row.sortOrder ?? 0,
+        useYn: row.useYn ?? "Y",
+        delYn: row.delYn ?? "N",
     };
 
     if (mode === "create") {
-        return apiFetch<void>("/api/members/create", {
+        return apiFetch<number>("/api/code-groups/create", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
     }
 
-    return apiFetch<void>("/api/members/update", {
+    return apiFetch<number>("/api/code-groups/update", {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
     });
 }
 
-export async function deleteMembers(memberSeqList: number[]) {
-    await Promise.all(
-        memberSeqList.map((memberSeq) =>
-            apiFetch<void>(`/api/members/delete/${memberSeq}`, {
-                method: "DELETE",
-            })
-        )
-    );
+export async function deleteCodeGroup(codeGroupSeq: number) {
+    return apiFetch<number>("/api/code-groups/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codeGroupSeq }),
+    });
+}
+
+/** code detail */
+export async function searchCodeDetails(
+    condition: CodeDetailSearchCondition
+): Promise<PageResponse<CodeDetailRow>> {
+    const result = await apiFetch<PageResponse<CodeDetailRow>>("/api/code-details/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(condition),
+    });
+    return result.data;
+}
+
+export async function fetchCodeDetail(codeDetailSeq: number): Promise<CodeDetailRow> {
+    const result = await apiFetch<CodeDetailRow>("/api/code-details/detail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codeDetailSeq }),
+    });
+    return result.data;
+}
+
+export async function saveCodeDetail(row: CodeDetailRow, mode: "create" | "edit") {
+    const payload = {
+        codeDetailSeq: row.codeDetailSeq,
+        codeGroupSeq: row.codeGroupSeq,
+        parentDetailSeq: row.parentDetailSeq,
+        codeId: row.codeId ?? "",
+        codeValue: row.codeValue ?? "",
+        codeName: row.codeName ?? "",
+        codeLevel: row.codeLevel ?? 2,
+        description: row.description ?? "",
+        sortOrder: row.sortOrder ?? 0,
+        useYn: row.useYn ?? "Y",
+        delYn: row.delYn ?? "N",
+        attr1: row.attr1 ?? "",
+        attr2: row.attr2 ?? "",
+        attr3: row.attr3 ?? "",
+    };
+
+    if (mode === "create") {
+        return apiFetch<number>("/api/code-details/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+    }
+
+    return apiFetch<number>("/api/code-details/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+}
+
+export async function deleteCodeDetail(codeDetailSeq: number) {
+    return apiFetch<number>("/api/code-details/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codeDetailSeq }),
+    });
 }

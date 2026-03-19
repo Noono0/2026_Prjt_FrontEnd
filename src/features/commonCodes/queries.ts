@@ -1,54 +1,109 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Member } from "@/components/members/MemberFormModal";
 import {
-    deleteMembers,
-    fetchRoles,
-    saveMember,
-    searchMembers,
-    type MemberSearchCondition,
+    deleteCodeDetail,
+    deleteCodeGroup,
+    fetchCodeDetail,
+    fetchCodeGroupDetail,
+    saveCodeDetail,
+    saveCodeGroup,
+    searchCodeDetails,
+    searchCodeGroups,
+    type CodeDetailRow,
+    type CodeDetailSearchCondition,
+    type CodeGroupRow,
+    type CodeGroupSearchCondition,
 } from "./api";
 
-export const memberKeys = {
-    all: ["members"] as const,
-    list: (condition: MemberSearchCondition) => ["members", "list", condition] as const,
-    roles: ["members", "roles"] as const,
+export const commonCodeKeys = {
+    all: ["commonCodes"] as const,
+
+    groups: ["commonCodes", "groups"] as const,
+    groupList: (condition: CodeGroupSearchCondition) =>
+        ["commonCodes", "groups", "list", condition] as const,
+    groupDetail: (codeGroupSeq?: number) =>
+        ["commonCodes", "groups", "detail", codeGroupSeq] as const,
+
+    details: ["commonCodes", "details"] as const,
+    detailList: (condition: CodeDetailSearchCondition) =>
+        ["commonCodes", "details", "list", condition] as const,
+    detailDetail: (codeDetailSeq?: number) =>
+        ["commonCodes", "details", "detail", codeDetailSeq] as const,
 };
 
-export function useMembersQuery(condition: MemberSearchCondition) {
+export function useCodeGroupsQuery(condition: CodeGroupSearchCondition) {
     return useQuery({
-        queryKey: memberKeys.list(condition),
-        queryFn: () => searchMembers(condition),
+        queryKey: commonCodeKeys.groupList(condition),
+        queryFn: () => searchCodeGroups(condition),
     });
 }
 
-export function useRolesQuery() {
+export function useCodeGroupDetailQuery(codeGroupSeq?: number) {
     return useQuery({
-        queryKey: memberKeys.roles,
-        queryFn: fetchRoles,
-        staleTime: 10 * 60 * 1000,
+        queryKey: commonCodeKeys.groupDetail(codeGroupSeq),
+        queryFn: () => fetchCodeGroupDetail(codeGroupSeq!),
+        enabled: !!codeGroupSeq,
     });
 }
 
-export function useSaveMemberMutation(mode: "create" | "edit") {
+export function useCodeDetailsQuery(condition: CodeDetailSearchCondition) {
+    return useQuery({
+        queryKey: commonCodeKeys.detailList(condition),
+        queryFn: () => searchCodeDetails(condition),
+        enabled: !!condition.codeGroupSeq || !!condition.parentDetailSeq || !!condition.codeDetailSeq,
+    });
+}
+
+export function useCodeDetailQuery(codeDetailSeq?: number) {
+    return useQuery({
+        queryKey: commonCodeKeys.detailDetail(codeDetailSeq),
+        queryFn: () => fetchCodeDetail(codeDetailSeq!),
+        enabled: !!codeDetailSeq,
+    });
+}
+
+export function useSaveCodeGroupMutation(mode: "create" | "edit") {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (member: Member) => saveMember(member, mode),
+        mutationFn: (row: CodeGroupRow) => saveCodeGroup(row, mode),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: memberKeys.all });
+            queryClient.invalidateQueries({ queryKey: commonCodeKeys.groups });
         },
     });
 }
 
-export function useDeleteMembersMutation() {
+export function useDeleteCodeGroupMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (memberSeqList: number[]) => deleteMembers(memberSeqList),
+        mutationFn: (codeGroupSeq: number) => deleteCodeGroup(codeGroupSeq),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: memberKeys.all });
+            queryClient.invalidateQueries({ queryKey: commonCodeKeys.groups });
+            queryClient.invalidateQueries({ queryKey: commonCodeKeys.details });
+        },
+    });
+}
+
+export function useSaveCodeDetailMutation(mode: "create" | "edit") {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (row: CodeDetailRow) => saveCodeDetail(row, mode),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: commonCodeKeys.details });
+        },
+    });
+}
+
+export function useDeleteCodeDetailMutation() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (codeDetailSeq: number) => deleteCodeDetail(codeDetailSeq),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: commonCodeKeys.details });
         },
     });
 }
