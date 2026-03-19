@@ -1,0 +1,35 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.section {
+    border: 1px solid #d8dee8;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 16px;
+}
+
+.gridRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 1100px) {
+    .gridRow {
+        grid-template-columns: 1fr;
+    }
+}
