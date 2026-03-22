@@ -20,6 +20,7 @@ export function useMembersQuery(condition: MemberSearchCondition) {
     return useQuery({
         queryKey: memberKeys.list(condition),
         queryFn: () => searchMembers(condition),
+        staleTime: 0,
     });
 }
 
@@ -31,11 +32,17 @@ export function useRolesQuery() {
     });
 }
 
-export function useSaveMemberMutation(mode: "create" | "edit") {
+export function useSaveMemberMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (member: Member) => saveMember(member, mode),
+        mutationFn: ({
+            member,
+            mode,
+        }: {
+            member: Member;
+            mode: "create" | "edit";
+        }) => saveMember(member, mode),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: memberKeys.all });
         },

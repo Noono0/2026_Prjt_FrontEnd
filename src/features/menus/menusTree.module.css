@@ -1,0 +1,32 @@
+.treeRow {
+  display: flex;
+  align-items: stretch;
+  min-height: 28px;
+}
+
+.treeGuide {
+  width: 18px;
+  flex-shrink: 0;
+  border-left: 1px solid rgba(128, 128, 128, 0.4);
+  box-sizing: border-box;
+}
+
+:global(.ag-theme-quartz-dark) .treeGuide {
+  border-left-color: rgba(200, 200, 200, 0.25);
+}
+
+.treeToggle {
+  width: 26px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--ag-foreground-color, inherit);
+}
+
+.treeTogglePlaceholder {
+  width: 26px;
+  flex-shrink: 0;
+  display: inline-block;
+}

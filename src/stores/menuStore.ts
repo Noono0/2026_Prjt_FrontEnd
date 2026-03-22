@@ -39,7 +39,7 @@ const defaultMenu: MenuNode[] = [
     icon: "🛡️",
     children: [
       { id: "m2-1", name: "권한 목록", path: "/roles" },
-      { id: "m2-2", name: "역할-메뉴 매핑(예시)", path: "/roles" },
+      { id: "m2-2", name: "역할–메뉴 매핑", path: "/role-menu-mappings" },
     ],
   },
   {
@@ -47,6 +47,12 @@ const defaultMenu: MenuNode[] = [
     name: "메뉴관리",
     icon: "🧭",
     children: [{ id: "m3-1", name: "메뉴 목록", path: "/menus" }],
+  },
+  {
+    id: "m4",
+    name: "공통코드관리",
+    icon: "🗂️",
+    children: [{ id: "m4-1", name: "공통코드 목록", path: "/common-codes" }],
   },
 ];
 

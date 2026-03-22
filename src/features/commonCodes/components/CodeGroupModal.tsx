@@ -32,7 +32,7 @@ export default function CodeGroupModal({
                                        }: Props) {
   const [form, setForm] = useState<CodeGroupRow>(emptyForm);
 
-  const saveMutation = useSaveCodeGroupMutation(mode);
+  const saveMutation = useSaveCodeGroupMutation();
   const deleteMutation = useDeleteCodeGroupMutation();
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function CodeGroupModal({
     }
 
     try {
-      await saveMutation.mutateAsync(form);
+      await saveMutation.mutateAsync({ row: form, mode });
       alert(mode === "create" ? "대분류 등록 완료" : "대분류 수정 완료");
       onClose();
     } catch (error) {

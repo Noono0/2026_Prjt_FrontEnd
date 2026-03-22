@@ -1,3 +1,7 @@
+import { defaultApiRequestInit } from "@/lib/http/requestInit";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+
 export type FieldErrorResponse = {
     field: string;
     code: string;
@@ -103,17 +107,21 @@ export class ApiError extends Error {
     }
 }
 
-async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiResponse<T>> {
-    const res = await fetch(input, {
-        cache: "no-store",
+function buildApiUrl(path: string): string {
+    return `${API_BASE_URL}${path}`;
+}
+
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<ApiResponse<T>> {
+    const res = await fetch(buildApiUrl(path), {
+        ...defaultApiRequestInit,
         ...init,
     });
 
-    let json: ApiResponse<T> | null = null;
+    let json: unknown = null;
 
     try {
-        json = (await res.json()) as ApiResponse<T>;
-    } catch {
+        json = await res.json();
+    } catch (e) {
         if (!res.ok) {
             throw new ApiError("요청 처리 중 오류가 발생했습니다.", {
                 status: res.status,
@@ -124,15 +132,34 @@ async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiR
         });
     }
 
-    if (!res.ok || !json.success) {
-        throw new ApiError(json?.message ?? "요청 처리 중 오류가 발생했습니다.", {
-            code: json?.code,
-            errors: json?.errors ?? [],
+    const hasApiEnvelope =
+        json !== null &&
+        typeof json === "object" &&
+        "success" in json &&
+        "data" in json;
+
+    if (!hasApiEnvelope) {
+        // 백엔드/프록시가 ApiResponse 래퍼 없이 raw body를 내려주는 경우 호환 처리
+        return {
+            success: res.ok,
+            code: res.ok ? "SUCCESS" : "HTTP_ERROR",
+            message: res.ok ? "정상 처리되었습니다." : "요청 처리 중 오류가 발생했습니다.",
+            data: (json ?? null) as T,
+            errors: [],
+        };
+    }
+
+    const envelope = json as ApiResponse<T>;
+
+    if (!res.ok || !envelope.success) {
+        throw new ApiError(envelope.message ?? "요청 처리 중 오류가 발생했습니다.", {
+            code: envelope.code,
+            errors: envelope.errors ?? [],
             status: res.status,
         });
     }
 
-    return json;
+    return envelope;
 }
 
 /** code group */
@@ -144,6 +171,7 @@ export async function searchCodeGroups(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(condition),
     });
+
     return result.data;
 }
 
@@ -194,12 +222,41 @@ export async function deleteCodeGroup(codeGroupSeq: number) {
 export async function searchCodeDetails(
     condition: CodeDetailSearchCondition
 ): Promise<PageResponse<CodeDetailRow>> {
-    const result = await apiFetch<PageResponse<CodeDetailRow>>("/api/code-details/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(condition),
-    });
-    return result.data;
+    let result: ApiResponse<PageResponse<CodeDetailRow>> | null = null;
+    try {
+        result = await apiFetch<PageResponse<CodeDetailRow>>("/api/code-details/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(condition),
+        });
+    } catch (e) {
+        // 목록 조회는 폴백(빈 목록)으로 UX를 유지하고, 상세 원인은 콘솔에서 추적
+        console.warn("[api.ts] searchCodeDetails 실패 - 빈 목록으로 폴백", e);
+        return {
+            items: [],
+            page: condition.page ?? 1,
+            size: condition.size ?? 999,
+            totalCount: 0,
+        };
+    }
+
+    const data = result.data as Partial<PageResponse<CodeDetailRow>> | undefined;
+    if (!data || typeof data !== "object" || !Array.isArray(data.items)) {
+        return {
+            items: [],
+            page: condition.page ?? 1,
+            size: condition.size ?? 999,
+            totalCount: 0,
+        };
+    }
+
+    return {
+        items: data.items ?? [],
+        page: data.page ?? condition.page ?? 1,
+        size: data.size ?? condition.size ?? 999,
+        totalCount: data.totalCount ?? 0,
+        totalPages: data.totalPages,
+    };
 }
 
 export async function fetchCodeDetail(codeDetailSeq: number): Promise<CodeDetailRow> {

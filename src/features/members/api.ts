@@ -1,4 +1,5 @@
 import type { Member } from "@/components/members/MemberFormModal";
+import { defaultApiRequestInit } from "@/lib/http/requestInit";
 
 export type RoleItem = {
     roleId?: number;
@@ -94,7 +95,7 @@ export class ApiError extends Error {
 
 async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiResponse<T>> {
     const res = await fetch(input, {
-        cache: "no-store",
+        ...defaultApiRequestInit,
         ...init,
     });
 
@@ -145,8 +146,8 @@ export async function fetchMemberDetail(memberSeq: number): Promise<MemberDetail
 
 export async function fetchRoles(): Promise<RoleItem[]> {
     const res = await fetch("/api/roles", {
+        ...defaultApiRequestInit,
         method: "GET",
-        cache: "no-store",
     });
 
     if (!res.ok) {

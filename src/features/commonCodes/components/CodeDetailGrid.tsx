@@ -1,10 +1,10 @@
 "use client";
 
 import "@/lib/ag-grid";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { useTheme } from "next-themes";
-import type { ColDef, RowClickedEvent, RowDoubleClickedEvent } from "ag-grid-community";
+import type { ColDef, RowClickedEvent } from "ag-grid-community";
 import styles from "./CodeGrid.module.css";
 import type { CodeDetailRow } from "../api";
 
@@ -16,6 +16,8 @@ type Props = {
     onSelectRow: (row: CodeDetailRow) => void;
     onCreate: () => void;
     onEdit: () => void;
+    onOpenRowEdit: (row: CodeDetailRow) => void;
+    gridHeight?: number;
 };
 
 export default function CodeDetailGrid({
@@ -25,20 +27,66 @@ export default function CodeDetailGrid({
                                            onSelectRow,
                                            onCreate,
                                            onEdit,
+                                           onOpenRowEdit,
+                                           gridHeight = 200,
                                        }: Props) {
     const { resolvedTheme } = useTheme();
-    const gridThemeClass = resolvedTheme === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const gridThemeClass = useMemo(() => {
+        if (!mounted) return "ag-theme-quartz";
+        return resolvedTheme === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
+    }, [mounted, resolvedTheme]);
 
     const columnDefs = useMemo<ColDef[]>(
         () => [
             { headerName: "SEQ", field: "codeDetailSeq", width: 100 },
-            { headerName: "코드ID", field: "codeId", width: 140 },
-            { headerName: "코드명", field: "codeName", flex: 1, minWidth: 160 },
+            {
+                headerName: "코드ID",
+                field: "codeId",
+                width: 140,
+                cellRenderer: (params: { data?: CodeDetailRow; value?: string }) => (
+                    <button
+                        type="button"
+                        className={styles.linkButton}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (!params.data) return;
+                            onOpenRowEdit(params.data);
+                        }}
+                    >
+                        {params.value ?? ""}
+                    </button>
+                ),
+            },
+            {
+                headerName: "코드명",
+                field: "codeName",
+                flex: 1,
+                minWidth: 160,
+                cellRenderer: (params: { data?: CodeDetailRow; value?: string }) => (
+                    <button
+                        type="button"
+                        className={styles.linkButton}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (!params.data) return;
+                            onOpenRowEdit(params.data);
+                        }}
+                    >
+                        {params.value ?? ""}
+                    </button>
+                ),
+            },
             { headerName: "코드값", field: "codeValue", flex: 1, minWidth: 140 },
             { headerName: "정렬", field: "sortOrder", width: 90 },
             { headerName: "사용", field: "useYn", width: 90 },
         ],
-        []
+        [onOpenRowEdit]
     );
 
     const defaultColDef = useMemo<ColDef>(
@@ -63,8 +111,9 @@ export default function CodeDetailGrid({
                 </div>
             </div>
 
-            <div className={`${gridThemeClass} ${styles.gridWrap}`}>
+            <div className={`${gridThemeClass} ${styles.gridWrap}`} style={{ height: gridHeight }}>
                 <AgGridReact<CodeDetailRow>
+                    theme="legacy"
                     rowData={rows}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
@@ -72,10 +121,6 @@ export default function CodeDetailGrid({
                     loading={loading}
                     onRowClicked={(e: RowClickedEvent<CodeDetailRow>) => {
                         if (e.data) onSelectRow(e.data);
-                    }}
-                    onRowDoubleClicked={(e: RowDoubleClickedEvent<CodeDetailRow>) => {
-                        if (e.data) onSelectRow(e.data);
-                        onEdit();
                     }}
                 />
             </div>

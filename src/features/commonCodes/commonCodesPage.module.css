@@ -1,6 +1,24 @@
 .page {
     display: flex;
     flex-direction: column;
+    gap: 10px;
+}
+
+.detailRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: start;
+}
+
+@media (max-width: 1200px) {
+    .detailRow {
+        grid-template-columns: 1fr;
+    }
+}
+.page {
+    display: flex;
+    flex-direction: column;
     gap: 16px;
     color: #0f172a;
 }

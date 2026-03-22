@@ -28,6 +28,8 @@ pnpm i
 pnpm add lucide-react
 npm install @tanstack/react-query zustand --legacy-peer-deps
 pnpm add @tanstack/react-query-devtools
+npm install react-arborist  // 메뉴화면 tree 라이브러리
+// 안되면 이걸로 npm install react-arborist --legacy-peer-deps 
 
 Remove-Item -Recurse -Force .next
 

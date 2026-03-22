@@ -47,7 +47,7 @@ export default function CodeDetailModal({
 
     const isEdit = mode === "edit-middle" || mode === "edit-small";
     const saveMode = isEdit ? "edit" : "create";
-    const saveMutation = useSaveCodeDetailMutation(saveMode);
+    const saveMutation = useSaveCodeDetailMutation();
     const deleteMutation = useDeleteCodeDetailMutation();
 
     const currentTarget = useMemo(() => {
@@ -128,7 +128,7 @@ export default function CodeDetailModal({
         }
 
         try {
-            await saveMutation.mutateAsync(form);
+            await saveMutation.mutateAsync({ row: form, mode: saveMode });
             alert(isEdit ? "코드 수정 완료" : "코드 등록 완료");
             onClose();
         } catch (error) {

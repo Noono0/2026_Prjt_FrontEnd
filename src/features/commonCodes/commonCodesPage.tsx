@@ -1,25 +1,31 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import styles from "./commonCodesPage.module.css";
 import CodeSearchForm from "./components/CodeSearchForm";
 import CodeGroupGrid from "./components/CodeGroupGrid";
 import CodeDetailGrid from "./components/CodeDetailGrid";
 import CodeGroupModal from "./components/CodeGroupModal";
 import CodeDetailModal from "./components/CodeDetailModal";
+import SelectedCodeInfoPanel from "./components/SelectedCodeInfoPanel";
+import styles from "./commonCodesPage.module.css";
+import type {
+    CodeGroupRow,
+    CodeDetailRow,
+    CodeGroupSearchCondition,
+    CodeDetailSearchCondition,
+} from "./api";
 import {
+    commonCodeKeys,
     useCodeDetailsQuery,
     useCodeGroupsQuery,
 } from "./queries";
-import type {
-    CodeDetailRow,
-    CodeGroupRow,
-    CodeGroupSearchCondition,
-} from "./api";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+    normalizeCodeGroupSearchCondition,
+    sameCodeGroupSearchCondition,
+} from "@/lib/query/searchConditions";
 
-type DetailModalMode = "create-middle" | "edit-middle" | "create-small" | "edit-small";
-
-const defaultSearchCondition: CodeGroupSearchCondition = {
+const defaultGroupCondition: CodeGroupSearchCondition = {
     codeGroupId: "",
     codeGroupName: "",
     useYn: "",
@@ -31,98 +37,99 @@ const defaultSearchCondition: CodeGroupSearchCondition = {
 };
 
 export default function CommonCodesPage() {
-    const [searchCondition, setSearchCondition] =
-        useState<CodeGroupSearchCondition>(defaultSearchCondition);
+    const queryClient = useQueryClient();
+    const [groupCondition, setGroupCondition] =
+        useState<CodeGroupSearchCondition>(defaultGroupCondition);
 
     const [selectedGroup, setSelectedGroup] = useState<CodeGroupRow | null>(null);
     const [selectedMiddle, setSelectedMiddle] = useState<CodeDetailRow | null>(null);
     const [selectedSmall, setSelectedSmall] = useState<CodeDetailRow | null>(null);
-
     const [groupModalOpen, setGroupModalOpen] = useState(false);
     const [groupModalMode, setGroupModalMode] = useState<"create" | "edit">("create");
-
     const [detailModalOpen, setDetailModalOpen] = useState(false);
-    const [detailModalMode, setDetailModalMode] =
-        useState<DetailModalMode>("create-middle");
+    const [detailModalMode, setDetailModalMode] = useState<
+        "create-middle" | "edit-middle" | "create-small" | "edit-small"
+    >("create-middle");
 
-    const groupQuery = useCodeGroupsQuery(searchCondition);
+    const normalizedGroupCondition = useMemo(
+        () => normalizeCodeGroupSearchCondition(groupCondition),
+        [groupCondition]
+    );
 
-    const middleCondition = useMemo(
+    const groupQuery = useCodeGroupsQuery(normalizedGroupCondition);
+
+    const middleCondition = useMemo<CodeDetailSearchCondition>(
         () => ({
             codeGroupSeq: selectedGroup?.codeGroupSeq,
             codeLevel: 2,
             delYn: "N",
             page: 1,
-            size: 200,
+            size: 999,
             sortBy: "sortOrder",
-            sortDir: "asc" as const,
+            sortDir: "asc",
         }),
         [selectedGroup?.codeGroupSeq]
     );
 
-    const middleQuery = useCodeDetailsQuery(middleCondition);
-
-    const smallCondition = useMemo(
+    const smallCondition = useMemo<CodeDetailSearchCondition>(
         () => ({
             codeGroupSeq: selectedGroup?.codeGroupSeq,
             parentDetailSeq: selectedMiddle?.codeDetailSeq,
             codeLevel: 3,
             delYn: "N",
             page: 1,
-            size: 200,
+            size: 999,
             sortBy: "sortOrder",
-            sortDir: "asc" as const,
+            sortDir: "asc",
         }),
         [selectedGroup?.codeGroupSeq, selectedMiddle?.codeDetailSeq]
     );
 
+    const middleQuery = useCodeDetailsQuery(middleCondition);
     const smallQuery = useCodeDetailsQuery(smallCondition);
 
-    const handleSearch = (nextCondition: Partial<CodeGroupSearchCondition>) => {
+    const groupListBusy = groupQuery.isFetching;
+
+    const handleSearch = async (next: Partial<CodeGroupSearchCondition>) => {
+        console.log("[CommonCodesPage] handleSearch 호출됨");
+        console.log("[CommonCodesPage] 전달받은 검색조건 =", next);
+        console.log("[CommonCodesPage] 변경 전 groupCondition =", groupCondition);
+        debugger;
+
         setSelectedGroup(null);
         setSelectedMiddle(null);
         setSelectedSmall(null);
 
-        setSearchCondition((prev) => ({
-            ...prev,
-            ...nextCondition,
+        const nextRaw: CodeGroupSearchCondition = {
+            ...groupCondition,
+            ...next,
             page: 1,
-        }));
+        };
+
+        if (sameCodeGroupSearchCondition(groupCondition, nextRaw)) {
+            await groupQuery.refetch();
+            return;
+        }
+
+        setGroupCondition(nextRaw);
     };
 
     const handleReset = () => {
+        console.log("[CommonCodesPage] handleReset 호출됨");
+        debugger;
+
         setSelectedGroup(null);
         setSelectedMiddle(null);
         setSelectedSmall(null);
-        setSearchCondition(defaultSearchCondition);
+        setGroupCondition(defaultGroupCondition);
     };
 
-    const handleChangePage = (page: number) => {
-        setSearchCondition((prev) => ({ ...prev, page }));
-    };
-
-    const handleChangePageSize = (size: number) => {
-        setSelectedGroup(null);
-        setSelectedMiddle(null);
-        setSelectedSmall(null);
-        setSearchCondition((prev) => ({ ...prev, page: 1, size }));
-    };
-
-    const handleChangeSort = (sortBy: string, sortDir: "asc" | "desc") => {
-        setSearchCondition((prev) => ({
-            ...prev,
-            page: 1,
-            sortBy,
-            sortDir,
-        }));
-    };
-
-    const openCreateGroupModal = () => {
+    const handleOpenGroupCreate = () => {
         setGroupModalMode("create");
         setGroupModalOpen(true);
     };
 
-    const openEditGroupModal = () => {
+    const handleOpenGroupEdit = () => {
         if (!selectedGroup?.codeGroupSeq) {
             alert("수정할 대분류를 선택하세요.");
             return;
@@ -131,7 +138,7 @@ export default function CommonCodesPage() {
         setGroupModalOpen(true);
     };
 
-    const openCreateMiddleModal = () => {
+    const handleOpenMiddleCreate = () => {
         if (!selectedGroup?.codeGroupSeq) {
             alert("대분류를 먼저 선택하세요.");
             return;
@@ -140,7 +147,7 @@ export default function CommonCodesPage() {
         setDetailModalOpen(true);
     };
 
-    const openEditMiddleModal = () => {
+    const handleOpenMiddleEdit = () => {
         if (!selectedMiddle?.codeDetailSeq) {
             alert("수정할 중분류를 선택하세요.");
             return;
@@ -149,16 +156,41 @@ export default function CommonCodesPage() {
         setDetailModalOpen(true);
     };
 
-    const openCreateSmallModal = () => {
-        if (!selectedGroup?.codeGroupSeq || !selectedMiddle?.codeDetailSeq) {
-            alert("대분류와 중분류를 먼저 선택하세요.");
+    const handleOpenGroupEditByRow = (row: CodeGroupRow) => {
+        setSelectedGroup(row);
+        setSelectedMiddle(null);
+        setSelectedSmall(null);
+        setGroupModalMode("edit");
+        setGroupModalOpen(true);
+    };
+
+    const handleOpenMiddleEditByRow = (row: CodeDetailRow) => {
+        setSelectedMiddle(row);
+        setSelectedSmall(null);
+        setDetailModalMode("edit-middle");
+        setDetailModalOpen(true);
+    };
+
+    const handleOpenSmallEditByRow = (row: CodeDetailRow) => {
+        setSelectedSmall(row);
+        setDetailModalMode("edit-small");
+        setDetailModalOpen(true);
+    };
+
+    const handleOpenSmallCreate = () => {
+        if (!selectedGroup?.codeGroupSeq) {
+            alert("대분류를 먼저 선택하세요.");
+            return;
+        }
+        if (!selectedMiddle?.codeDetailSeq) {
+            alert("상위 중분류를 먼저 선택하세요.");
             return;
         }
         setDetailModalMode("create-small");
         setDetailModalOpen(true);
     };
 
-    const openEditSmallModal = () => {
+    const handleOpenSmallEdit = () => {
         if (!selectedSmall?.codeDetailSeq) {
             alert("수정할 소분류를 선택하세요.");
             return;
@@ -167,76 +199,97 @@ export default function CommonCodesPage() {
         setDetailModalOpen(true);
     };
 
+    const handleCloseGroupModal = async () => {
+        setGroupModalOpen(false);
+        await queryClient.invalidateQueries({ queryKey: commonCodeKeys.groups });
+    };
+
+    const handleCloseDetailModal = async () => {
+        setDetailModalOpen(false);
+        await queryClient.invalidateQueries({ queryKey: commonCodeKeys.details });
+    };
+
     return (
         <div className={styles.page}>
-            <div className={styles.header}>
-                <div>
-                    <h1 className={styles.title}>공통코드 관리</h1>
-                    <p className={styles.subTitle}>대분류 / 중분류 / 소분류를 한 화면에서 관리합니다.</p>
-                </div>
-            </div>
-
             <CodeSearchForm
-                condition={searchCondition}
+                condition={groupCondition}
                 onSearch={handleSearch}
                 onReset={handleReset}
+                isBusy={groupListBusy}
             />
 
-            <section className={styles.section}>
-                <CodeGroupGrid
-                    rows={groupQuery.data?.items ?? []}
-                    loading={groupQuery.isLoading}
-                    totalCount={groupQuery.data?.totalCount ?? 0}
-                    page={searchCondition.page ?? 1}
-                    size={searchCondition.size ?? 20}
-                    selectedRow={selectedGroup}
+            <CodeGroupGrid
+                rows={groupQuery.data?.items ?? []}
+                loading={groupQuery.isLoading || groupQuery.isFetching}
+                totalCount={groupQuery.data?.totalCount ?? 0}
+                page={groupCondition.page ?? 1}
+                size={groupCondition.size ?? 20}
+                selectedRow={selectedGroup}
+                onSelectRow={(row) => {
+                    setSelectedGroup(row);
+                    setSelectedMiddle(null);
+                    setSelectedSmall(null);
+                }}
+                onCreate={handleOpenGroupCreate}
+                onEdit={handleOpenGroupEdit}
+                onChangePage={(page) =>
+                    setGroupCondition((prev) => ({ ...prev, page }))
+                }
+                onChangePageSize={(size) =>
+                    setGroupCondition((prev) => ({ ...prev, page: 1, size }))
+                }
+                onChangeSort={(sortBy, sortDir) =>
+                    setGroupCondition((prev) => ({
+                        ...prev,
+                        page: 1,
+                        sortBy,
+                        sortDir,
+                    }))
+                }
+                onOpenRowEdit={handleOpenGroupEditByRow}
+                gridHeight={230}
+            />
+
+            <div className={styles.detailRow}>
+                <CodeDetailGrid
+                    title="중분류"
+                    rows={middleQuery.data?.items ?? []}
+                    loading={middleQuery.isLoading || middleQuery.isFetching}
+                    selectedRow={selectedMiddle}
                     onSelectRow={(row) => {
-                        setSelectedGroup(row);
-                        setSelectedMiddle(null);
+                        setSelectedMiddle(row);
                         setSelectedSmall(null);
                     }}
-                    onCreate={openCreateGroupModal}
-                    onEdit={openEditGroupModal}
-                    onChangePage={handleChangePage}
-                    onChangePageSize={handleChangePageSize}
-                    onChangeSort={handleChangeSort}
+                    onCreate={handleOpenMiddleCreate}
+                    onEdit={handleOpenMiddleEdit}
+                    onOpenRowEdit={handleOpenMiddleEditByRow}
+                    gridHeight={200}
                 />
-            </section>
 
-            <section className={styles.gridRow}>
-                <div className={styles.section}>
-                    <CodeDetailGrid
-                        title="중분류"
-                        rows={middleQuery.data?.items ?? []}
-                        loading={middleQuery.isLoading}
-                        selectedRow={selectedMiddle}
-                        onSelectRow={(row) => {
-                            setSelectedMiddle(row);
-                            setSelectedSmall(null);
-                        }}
-                        onCreate={openCreateMiddleModal}
-                        onEdit={openEditMiddleModal}
-                    />
-                </div>
+                <CodeDetailGrid
+                    title="소분류"
+                    rows={smallQuery.data?.items ?? []}
+                    loading={smallQuery.isLoading || smallQuery.isFetching}
+                    selectedRow={selectedSmall}
+                    onSelectRow={setSelectedSmall}
+                    onCreate={handleOpenSmallCreate}
+                    onEdit={handleOpenSmallEdit}
+                    onOpenRowEdit={handleOpenSmallEditByRow}
+                    gridHeight={200}
+                />
+            </div>
 
-                <div className={styles.section}>
-                    <CodeDetailGrid
-                        title="소분류"
-                        rows={smallQuery.data?.items ?? []}
-                        loading={smallQuery.isLoading}
-                        selectedRow={selectedSmall}
-                        onSelectRow={setSelectedSmall}
-                        onCreate={openCreateSmallModal}
-                        onEdit={openEditSmallModal}
-                    />
-                </div>
-            </section>
+            <SelectedCodeInfoPanel
+                selectedGroup={selectedGroup}
+                selectedMiddle={selectedMiddle}
+                selectedSmall={selectedSmall}
+            />
 
             <CodeGroupModal
                 open={groupModalOpen}
                 mode={groupModalMode}
                 selectedGroup={selectedGroup}
-                onClose={() => setGroupModalOpen(false)}
+                onClose={handleCloseGroupModal}
             />
 
             <CodeDetailModal
@@ -245,7 +298,7 @@ export default function CommonCodesPage() {
                 selectedGroup={selectedGroup}
                 selectedMiddle={selectedMiddle}
                 selectedSmall={selectedSmall}
-                onClose={() => setDetailModalOpen(false)}
+                onClose={handleCloseDetailModal}
             />
         </div>
     );

@@ -1,7 +1,7 @@
 "use client";
 
 import "@/lib/ag-grid";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { AgGridReact } from "ag-grid-react";
 import styles from "./MembersPage.module.css";
@@ -16,20 +16,31 @@ import type {
 
 import MemberFormModal, { type Member } from "@/components/members/MemberFormModal";
 import { useMemberModalStore } from "@/stores/memberModalStore";
+import { fetchMemberDetail, type MemberListItemResponse } from "./api";
 import {
-    deleteMembers,
-    fetchMemberDetail,
-    saveMember,
-    searchMembers,
-    type MemberListItemResponse,
-} from "./api";
-import { useRolesQuery } from "@/features/members/queries";
+    useDeleteMembersMutation,
+    useMembersQuery,
+    useRolesQuery,
+    useSaveMemberMutation,
+} from "./queries";
+import {
+    normalizeMemberSearchCondition,
+    sameMemberSearchCondition,
+} from "@/lib/query/searchConditions";
 
-type SearchCondition = {
+type MemberFilters = {
     memberId: string;
     memberName: string;
     roleCode: string;
     status: string;
+};
+
+type MemberListParams = {
+    filters: MemberFilters;
+    page: number;
+    size: number;
+    sortBy: string;
+    sortDir: "asc" | "desc";
 };
 
 type MemberRow = {
@@ -47,26 +58,42 @@ type MemberRow = {
     modifyDt?: string;
 };
 
+const defaultFilters: MemberFilters = {
+    memberId: "",
+    memberName: "",
+    roleCode: "",
+    status: "",
+};
+
+const initialListParams: MemberListParams = {
+    filters: defaultFilters,
+    page: 1,
+    size: 20,
+    sortBy: "memberSeq",
+    sortDir: "desc",
+};
+
+function toListRequest(params: MemberListParams) {
+    return normalizeMemberSearchCondition({
+        memberId: params.filters.memberId,
+        memberName: params.filters.memberName,
+        roleCode: params.filters.roleCode,
+        status: params.filters.status,
+        page: params.page,
+        size: params.size,
+        sortBy: params.sortBy,
+        sortDir: params.sortDir,
+    });
+}
+
 export default function MembersPage() {
     const { resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
-    const [searchCondition, setSearchCondition] = useState<SearchCondition>({
-        memberId: "",
-        memberName: "",
-        roleCode: "",
-        status: "",
-    });
+    const [draftFilters, setDraftFilters] = useState<MemberFilters>(defaultFilters);
+    const [listParams, setListParams] = useState<MemberListParams>(initialListParams);
 
-    const [items, setItems] = useState<MemberRow[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(20);
-    const [totalCount, setTotalCount] = useState(0);
-
-    const [sortBy, setSortBy] = useState("memberSeq");
-    const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+    const [detailLoading, setDetailLoading] = useState(false);
 
     const gridApiRef = useRef<GridApi<MemberRow> | null>(null);
 
@@ -77,11 +104,26 @@ export default function MembersPage() {
     const openEdit = useMemberModalStore((s) => s.openEdit);
     const close = useMemberModalStore((s) => s.close);
 
+    const listRequest = useMemo(() => toListRequest(listParams), [listParams]);
+
+    const membersQuery = useMembersQuery(listRequest);
+    const saveMutation = useSaveMemberMutation();
+    const deleteMutation = useDeleteMembersMutation();
+
     const { data: roleOptions = [] } = useRolesQuery();
 
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    useEffect(() => {
+        if (!membersQuery.isError || !membersQuery.error) return;
+        const message =
+            membersQuery.error instanceof Error
+                ? membersQuery.error.message
+                : "회원 목록 조회 중 오류가 발생했습니다.";
+        alert(message);
+    }, [membersQuery.isError, membersQuery.error]);
 
     const isDark = mounted && resolvedTheme === "dark";
 
@@ -99,7 +141,69 @@ export default function MembersPage() {
         return map;
     }, [roleOptions]);
 
+    const page = listParams.page;
+    const pageSize = listParams.size;
+    const totalCount = membersQuery.data?.totalCount ?? 0;
     const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+    const items = useMemo<MemberRow[]>(() => {
+        const raw = membersQuery.data?.items ?? [];
+        return raw.map((m: MemberListItemResponse) => ({
+            memberSeq: m.memberSeq,
+            memberId: m.memberId ?? "",
+            memberName: m.memberName ?? "",
+            birthYmd: m.birthYmd ?? "",
+            email: m.email ?? "",
+            gender: m.gender ?? "",
+            phone: m.phone ?? "",
+            roleCode: m.roleCode ?? "",
+            roleName: m.roleName ?? "",
+            status: m.status ?? "",
+            createDt: m.createDt ?? "",
+            modifyDt: m.modifyDt ?? "",
+        }));
+    }, [membersQuery.data?.items]);
+
+    const busy =
+        membersQuery.isFetching ||
+        deleteMutation.isPending ||
+        saveMutation.isPending ||
+        detailLoading;
+
+    const handleOpenDetail = useCallback(
+        async (row: MemberRow) => {
+            if (!row?.memberSeq) return;
+
+            try {
+                setDetailLoading(true);
+
+                const detail = await fetchMemberDetail(row.memberSeq);
+
+                openEdit({
+                    memberSeq: detail.memberSeq,
+                    memberId: detail.memberId ?? "",
+                    memberName: detail.memberName ?? "",
+                    memberPwd: "",
+                    birthYmd: detail.birthYmd ?? "",
+                    gender: (detail.gender as Member["gender"]) ?? "M",
+                    phone: detail.phone ?? "",
+                    email: detail.email ?? "",
+                    region: detail.region ?? "",
+                    roleCode: detail.roleCode ?? "",
+                    roleName: detail.roleName ?? "",
+                    status: (detail.status as Member["status"]) ?? "ACTIVE",
+                    lastLoginAt: detail.lastLoginAt ?? "",
+                });
+            } catch (error) {
+                const message =
+                    error instanceof Error ? error.message : "회원 상세조회 중 오류가 발생했습니다.";
+                alert(message);
+            } finally {
+                setDetailLoading(false);
+            }
+        },
+        [openEdit]
+    );
 
     const colDefs = useMemo<ColDef<MemberRow>[]>(
         () => [
@@ -128,8 +232,8 @@ export default function MembersPage() {
                                 handleOpenDetail(params.data);
                             }}
                         >
-              {memberId}
-            </span>
+                            {memberId}
+                        </span>
                     );
                 },
             },
@@ -151,7 +255,7 @@ export default function MembersPage() {
             { headerName: "등록일시", field: "createDt", width: 180 },
             { headerName: "수정일시", field: "modifyDt", width: 180 },
         ],
-        [roleNameMap]
+        [roleNameMap, handleOpenDetail]
     );
 
     const defaultColDef = useMemo<ColDef<MemberRow>>(
@@ -163,78 +267,34 @@ export default function MembersPage() {
         []
     );
 
-    const handleChangeCondition = (key: keyof SearchCondition, value: string) => {
-        setSearchCondition((prev) => ({
+    const handleChangeDraft = (key: keyof MemberFilters, value: string) => {
+        setDraftFilters((prev) => ({
             ...prev,
             [key]: value,
         }));
     };
 
-    const loadMembers = async (
-        nextPage: number = page,
-        nextPageSize: number = pageSize,
-        nextSortBy: string = sortBy,
-        nextSortDir: "asc" | "desc" = sortDir,
-        nextSearchCondition: SearchCondition = searchCondition
-    ) => {
-        try {
-            setIsLoading(true);
-
-            const result = await searchMembers({
-                memberId: nextSearchCondition.memberId || undefined,
-                memberName: nextSearchCondition.memberName || undefined,
-                roleCode: nextSearchCondition.roleCode || undefined,
-                status: nextSearchCondition.status || undefined,
-                page: nextPage,
-                size: nextPageSize,
-                sortBy: nextSortBy,
-                sortDir: nextSortDir,
-            });
-
-            const nextItems: MemberRow[] = (result.items ?? []).map((m: MemberListItemResponse) => ({
-                memberSeq: m.memberSeq,
-                memberId: m.memberId ?? "",
-                memberName: m.memberName ?? "",
-                birthYmd: m.birthYmd ?? "",
-                email: m.email ?? "",
-                gender: m.gender ?? "",
-                phone: m.phone ?? "",
-                roleCode: m.roleCode ?? "",
-                roleName: m.roleName ?? "",
-                status: m.status ?? "",
-                createDt: m.createDt ?? "",
-                modifyDt: m.modifyDt ?? "",
-            }));
-
-            setItems(nextItems);
-            setPage(result.page ?? nextPage);
-            setPageSize(result.size ?? nextPageSize);
-            setTotalCount(result.totalCount ?? 0);
-            setSortBy(nextSortBy);
-            setSortDir(nextSortDir);
-        } catch (error) {
-            const message =
-                error instanceof Error ? error.message : "회원 목록 조회 중 오류가 발생했습니다.";
-            alert(message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleSearch = async () => {
-        await loadMembers(1, pageSize, sortBy, sortDir, searchCondition);
-    };
-
-    const handleReset = async () => {
-        const resetCondition: SearchCondition = {
-            memberId: "",
-            memberName: "",
-            roleCode: "",
-            status: "",
+        const nextListParams: MemberListParams = {
+            ...listParams,
+            filters: { ...draftFilters },
+            page: 1,
         };
 
-        setSearchCondition(resetCondition);
-        await loadMembers(1, pageSize, sortBy, sortDir, resetCondition);
+        const nextReq = toListRequest(nextListParams);
+        const curReq = toListRequest(listParams);
+
+        if (sameMemberSearchCondition(nextReq, curReq) && listParams.page === 1) {
+            await membersQuery.refetch();
+            return;
+        }
+
+        setListParams(nextListParams);
+    };
+
+    const handleReset = () => {
+        setDraftFilters(defaultFilters);
+        setListParams(initialListParams);
     };
 
     const handleDelete = async () => {
@@ -249,15 +309,17 @@ export default function MembersPage() {
             return;
         }
 
+        const memberSeqList = selectedRows
+            .map((row) => row.memberSeq)
+            .filter((v): v is number => typeof v === "number");
+
+        const lenBefore = items.length;
+
         try {
-            const memberSeqList = selectedRows
-                .map((row) => row.memberSeq)
-                .filter((v): v is number => typeof v === "number");
-
-            await deleteMembers(memberSeqList);
-
-            const reloadPage = page > 1 && items.length === 1 ? page - 1 : page;
-            await loadMembers(reloadPage, pageSize, sortBy, sortDir, searchCondition);
+            await deleteMutation.mutateAsync(memberSeqList);
+            if (page > 1 && lenBefore === 1) {
+                setListParams((p) => ({ ...p, page: p.page - 1 }));
+            }
         } catch (error) {
             const message =
                 error instanceof Error ? error.message : "회원 삭제 중 오류가 발생했습니다.";
@@ -265,43 +327,10 @@ export default function MembersPage() {
         }
     };
 
-    const handleOpenDetail = async (row: MemberRow) => {
-        if (!row?.memberSeq) return;
-
-        try {
-            setIsLoading(true);
-
-            const detail = await fetchMemberDetail(row.memberSeq);
-
-            openEdit({
-                memberSeq: detail.memberSeq,
-                memberId: detail.memberId ?? "",
-                memberName: detail.memberName ?? "",
-                memberPwd: "",
-                birthYmd: detail.birthYmd ?? "",
-                gender: (detail.gender as Member["gender"]) ?? "M",
-                phone: detail.phone ?? "",
-                email: detail.email ?? "",
-                region: detail.region ?? "",
-                roleCode: detail.roleCode ?? "",
-                roleName: detail.roleName ?? "",
-                status: (detail.status as Member["status"]) ?? "ACTIVE",
-                lastLoginAt: detail.lastLoginAt ?? "",
-            });
-        } catch (error) {
-            const message =
-                error instanceof Error ? error.message : "회원 상세조회 중 오류가 발생했습니다.";
-            alert(message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleSave = async (member: Member) => {
         try {
-            await saveMember(member, modalMode);
+            await saveMutation.mutateAsync({ member, mode: modalMode });
             close();
-            await loadMembers(page, pageSize, sortBy, sortDir, searchCondition);
         } catch (error) {
             const message =
                 error instanceof Error ? error.message : "회원 저장 중 오류가 발생했습니다.";
@@ -314,22 +343,22 @@ export default function MembersPage() {
         const nextSortBy = sortModel?.colId ?? "memberSeq";
         const nextSortDir = (sortModel?.sort as "asc" | "desc") ?? "desc";
 
-        await loadMembers(1, pageSize, nextSortBy, nextSortDir, searchCondition);
+        setListParams((prev) => ({
+            ...prev,
+            sortBy: nextSortBy,
+            sortDir: nextSortDir,
+            page: 1,
+        }));
     };
 
-    const handlePageSizeChange = async (value: number) => {
-        await loadMembers(1, value, sortBy, sortDir, searchCondition);
+    const handlePageSizeChange = (value: number) => {
+        setListParams((prev) => ({ ...prev, size: value, page: 1 }));
     };
 
-    const handleMovePage = async (nextPage: number) => {
+    const handleMovePage = (nextPage: number) => {
         if (nextPage < 1 || nextPage > totalPages) return;
-        await loadMembers(nextPage, pageSize, sortBy, sortDir, searchCondition);
+        setListParams((prev) => ({ ...prev, page: nextPage }));
     };
-
-    useEffect(() => {
-        loadMembers(1, 20, "memberSeq", "desc", searchCondition);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     return (
         <div className={styles.page}>
@@ -341,8 +370,8 @@ export default function MembersPage() {
                     <div className={styles.label}>회원ID</div>
                     <input
                         className={styles.fullInput}
-                        value={searchCondition.memberId}
-                        onChange={(e) => handleChangeCondition("memberId", e.target.value)}
+                        value={draftFilters.memberId}
+                        onChange={(e) => handleChangeDraft("memberId", e.target.value)}
                         placeholder="회원ID"
                     />
                 </div>
@@ -351,8 +380,8 @@ export default function MembersPage() {
                     <div className={styles.label}>회원명</div>
                     <input
                         className={styles.fullInput}
-                        value={searchCondition.memberName}
-                        onChange={(e) => handleChangeCondition("memberName", e.target.value)}
+                        value={draftFilters.memberName}
+                        onChange={(e) => handleChangeDraft("memberName", e.target.value)}
                         placeholder="회원명"
                     />
                 </div>
@@ -361,8 +390,8 @@ export default function MembersPage() {
                     <div className={styles.label}>권한</div>
                     <select
                         className={styles.fullInput}
-                        value={searchCondition.roleCode}
-                        onChange={(e) => handleChangeCondition("roleCode", e.target.value)}
+                        value={draftFilters.roleCode}
+                        onChange={(e) => handleChangeDraft("roleCode", e.target.value)}
                     >
                         <option value="">전체</option>
                         {roleOptions.map((r: any) => {
@@ -381,8 +410,8 @@ export default function MembersPage() {
                     <div className={styles.label}>상태</div>
                     <select
                         className={styles.fullInput}
-                        value={searchCondition.status}
-                        onChange={(e) => handleChangeCondition("status", e.target.value)}
+                        value={draftFilters.status}
+                        onChange={(e) => handleChangeDraft("status", e.target.value)}
                     >
                         <option value="">전체</option>
                         <option value="ACTIVE">정상</option>
@@ -393,16 +422,16 @@ export default function MembersPage() {
             </div>
 
             <div className={styles.toolbar}>
-                <button type="button" className={styles.primaryButton} onClick={handleSearch} disabled={isLoading}>
+                <button type="button" className={styles.primaryButton} onClick={handleSearch} disabled={busy}>
                     조회
                 </button>
-                <button type="button" onClick={handleReset} disabled={isLoading}>
+                <button type="button" onClick={handleReset} disabled={busy}>
                     초기화
                 </button>
-                <button type="button" onClick={openCreate} disabled={isLoading}>
+                <button type="button" onClick={openCreate} disabled={busy}>
                     등록
                 </button>
-                <button type="button" className={styles.dangerButton} onClick={handleDelete} disabled={isLoading}>
+                <button type="button" className={styles.dangerButton} onClick={handleDelete} disabled={busy}>
                     삭제
                 </button>
 
@@ -411,7 +440,7 @@ export default function MembersPage() {
                     <select
                         value={pageSize}
                         onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                        disabled={isLoading}
+                        disabled={busy}
                     >
                         <option value={20}>20</option>
                         <option value={50}>50</option>
@@ -422,9 +451,9 @@ export default function MembersPage() {
             </div>
 
             <div className={styles.pageInfo}>
-        <span>
-          전체 {totalCount}건 / {page} / {totalPages} 페이지
-        </span>
+                <span>
+                    전체 {totalCount}건 / {page} / {totalPages} 페이지
+                </span>
             </div>
 
             <div className={styles.sectionTitle}>회원 목록</div>
@@ -444,24 +473,24 @@ export default function MembersPage() {
                     onSortChanged={handleSortChanged}
                     overlayLoadingTemplate={'<span class="ag-overlay-loading-center">조회중...</span>'}
                     overlayNoRowsTemplate={'<span class="ag-overlay-loading-center">데이터가 없습니다.</span>'}
-                    loading={isLoading}
+                    loading={busy}
                 />
             </div>
 
             <div className={styles.paginationBar}>
-                <button onClick={() => handleMovePage(1)} disabled={page <= 1 || isLoading}>
+                <button onClick={() => handleMovePage(1)} disabled={page <= 1 || busy}>
                     처음
                 </button>
-                <button onClick={() => handleMovePage(page - 1)} disabled={page <= 1 || isLoading}>
+                <button onClick={() => handleMovePage(page - 1)} disabled={page <= 1 || busy}>
                     이전
                 </button>
                 <span>
-          {page} / {totalPages}
-        </span>
-                <button onClick={() => handleMovePage(page + 1)} disabled={page >= totalPages || isLoading}>
+                    {page} / {totalPages}
+                </span>
+                <button onClick={() => handleMovePage(page + 1)} disabled={page >= totalPages || busy}>
                     다음
                 </button>
-                <button onClick={() => handleMovePage(totalPages)} disabled={page >= totalPages || isLoading}>
+                <button onClick={() => handleMovePage(totalPages)} disabled={page >= totalPages || busy}>
                     마지막
                 </button>
             </div>

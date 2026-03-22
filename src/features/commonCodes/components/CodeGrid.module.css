@@ -35,6 +35,21 @@
     width: 100%;
 }
 
+.linkButton {
+    background: transparent;
+    border: none;
+    color: #2563eb;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    padding: 0;
+    font: inherit;
+}
+
+.linkButton:hover {
+    color: #1d4ed8;
+}
+
 .primaryButton,
 .secondaryButton,
 .pageButton {
@@ -88,4 +103,8 @@
     background: #0f172a;
     color: #e5e7eb;
     border-color: #475569;
+}
+
+:global(.dark) .linkButton {
+    color: #60a5fa;
 }

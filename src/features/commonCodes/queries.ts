@@ -47,11 +47,21 @@ export function useCodeGroupDetailQuery(codeGroupSeq?: number) {
     });
 }
 
-export function useCodeDetailsQuery(condition: CodeDetailSearchCondition) {
+function defaultEnabledForCodeDetailSearch(c: CodeDetailSearchCondition): boolean {
+    if (!c.codeGroupSeq) return false;
+    if (c.codeLevel === 3) return !!c.parentDetailSeq;
+    if (c.codeLevel === 2) return true;
+    return !!(c.parentDetailSeq || c.codeDetailSeq);
+}
+
+export function useCodeDetailsQuery(
+    condition: CodeDetailSearchCondition,
+    options?: { enabled?: boolean }
+) {
     return useQuery({
         queryKey: commonCodeKeys.detailList(condition),
         queryFn: () => searchCodeDetails(condition),
-        enabled: !!condition.codeGroupSeq || !!condition.parentDetailSeq || !!condition.codeDetailSeq,
+        enabled: options?.enabled ?? defaultEnabledForCodeDetailSearch(condition),
     });
 }
 
@@ -63,11 +73,17 @@ export function useCodeDetailQuery(codeDetailSeq?: number) {
     });
 }
 
-export function useSaveCodeGroupMutation(mode: "create" | "edit") {
+export function useSaveCodeGroupMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (row: CodeGroupRow) => saveCodeGroup(row, mode),
+        mutationFn: ({
+            row,
+            mode,
+        }: {
+            row: CodeGroupRow;
+            mode: "create" | "edit";
+        }) => saveCodeGroup(row, mode),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: commonCodeKeys.groups });
         },
@@ -86,11 +102,17 @@ export function useDeleteCodeGroupMutation() {
     });
 }
 
-export function useSaveCodeDetailMutation(mode: "create" | "edit") {
+export function useSaveCodeDetailMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (row: CodeDetailRow) => saveCodeDetail(row, mode),
+        mutationFn: ({
+            row,
+            mode,
+        }: {
+            row: CodeDetailRow;
+            mode: "create" | "edit";
+        }) => saveCodeDetail(row, mode),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: commonCodeKeys.details });
         },
