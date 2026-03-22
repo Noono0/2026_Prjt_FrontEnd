@@ -1,32 +1,209 @@
+.treeWrap {
+  width: 100%;
+  height: min(620px, calc(100vh - 280px));
+  min-height: 360px;
+  border: 1px solid var(--tree-border, #d7deea);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--tree-bg, #ffffff);
+  box-shadow: var(--tree-shadow, 0 10px 30px rgba(15, 23, 42, 0.08));
+}
+
+:global(.dark) .treeWrap {
+  --tree-border: #263246;
+  --tree-bg: #111a2b;
+  --tree-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.detailPanel {
+  border: 1px solid var(--tree-border, #d7deea);
+  border-radius: 16px;
+  padding: 18px 20px;
+  background: var(--tree-bg, #ffffff);
+  box-shadow: var(--tree-shadow, 0 10px 30px rgba(15, 23, 42, 0.08));
+  min-height: 200px;
+}
+
+:global(.dark) .detailPanel {
+  --tree-border: #263246;
+  --tree-bg: #111a2b;
+  --tree-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.detailTitle {
+  margin: 0 0 14px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--tree-text, #162033);
+}
+
+:global(.dark) .detailTitle {
+  --tree-text: #ecf2ff;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px 12px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--tree-text, #162033);
+}
+
+:global(.dark) .detailRow {
+  --tree-text: #ecf2ff;
+}
+
+.detailLabel {
+  color: var(--tree-muted, #5f6b7c);
+  font-weight: 700;
+}
+
+:global(.dark) .detailLabel {
+  --tree-muted: #9fb0cc;
+}
+
+.detailEmpty {
+  color: var(--tree-muted, #5f6b7c);
+  font-size: 14px;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+.badgeInactive {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+:global(.dark) .badgeInactive {
+  background: rgba(248, 113, 113, 0.15);
+  color: #fca5a5;
+}
+
 .treeRow {
   display: flex;
-  align-items: stretch;
-  min-height: 28px;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 10px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--tree-text, #222);
 }
 
-.treeGuide {
-  width: 18px;
-  flex-shrink: 0;
-  border-left: 1px solid rgba(128, 128, 128, 0.4);
-  box-sizing: border-box;
+:global(.dark) .treeRow {
+  --tree-text: #ecf2ff;
 }
 
-:global(.ag-theme-quartz-dark) .treeGuide {
-  border-left-color: rgba(200, 200, 200, 0.25);
+.treeRow:hover {
+  background: var(--tree-hover, #f5f7fb);
 }
 
-.treeToggle {
-  width: 26px;
-  flex-shrink: 0;
+:global(.dark) .treeRow:hover {
+  --tree-hover: #162238;
+}
+
+.treeRowSelected {
+  background: var(--tree-selected, #eaf2ff);
+}
+
+:global(.dark) .treeRowSelected {
+  --tree-selected: rgba(96, 165, 250, 0.18);
+}
+
+.treeRowInactive {
+  opacity: 0.72;
+}
+
+.treeRowInactive .label {
+  text-decoration: line-through;
+  text-decoration-color: rgba(100, 116, 139, 0.6);
+}
+
+.arrowButton {
+  width: 20px;
+  height: 20px;
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
-  color: var(--ag-foreground-color, inherit);
+  font-size: 12px;
+  color: inherit;
+  border-radius: 4px;
 }
 
-.treeTogglePlaceholder {
-  width: 26px;
-  flex-shrink: 0;
+.arrowButton:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+:global(.dark) .arrowButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.arrowPlaceholder {
   display: inline-block;
+  width: 20px;
+}
+
+.folderIcon {
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.label {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--tree-muted, #64748b);
+  flex-shrink: 0;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:global(.dark) .meta {
+  --tree-muted: #9fb0cc;
+}
+
+.dragHandle {
+  margin-left: auto;
+  color: var(--tree-muted, #94a3b8);
+  cursor: grab;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 440px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
 }

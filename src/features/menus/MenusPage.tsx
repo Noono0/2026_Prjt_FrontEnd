@@ -1,30 +1,21 @@
 "use client";
 
-import "@/lib/ag-grid";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTheme } from "next-themes";
-import { AgGridReact } from "ag-grid-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Tree, type NodeApi } from "react-arborist";
+import { FileText, Folder, GripVertical } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import styles from "@/features/members/MembersPage.module.css";
-import treeStyles from "./menusTree.module.css";
-import type {
-    ColDef,
-    GridApi,
-    GridReadyEvent,
-    ICellRendererParams,
-    RowClickedEvent,
-    RowDragEndEvent,
-} from "ag-grid-community";
-import type { MenuRow } from "./api";
-import { saveMenu } from "./api";
+
+import pageStyles from "@/features/members/MembersPage.module.css";
+import { type MenuRow, reorderMenus } from "./api";
 import {
-    computeDragMove,
-    defaultExpandedParentIds,
-    diffMenuRows,
-    filterFlatForSearch,
-    flattenMenuTree,
-    type MenuTreeRow,
-} from "./menuTreeUtils";
+    buildMenuTree,
+    cloneMenuTree,
+    diffMenus,
+    flattenTree,
+    mergeStructureIntoOriginal,
+    nextSortOrderForParent,
+    type MenuNode,
+} from "./arboristUtils";
 import {
     menuAdminKeys,
     useDeleteMenuMutation,
@@ -32,55 +23,92 @@ import {
     useSaveMenuMutation,
 } from "./queries";
 import MenuModal from "./components/MenuModal";
+import styles from "./menusTree.module.css";
 
-type MenuFilters = {
-    menuCode: string;
-    menuName: string;
-    useYn: string;
-    parentMenuId: string;
-};
+function ExplorerNode({
+    node,
+    style,
+    dragHandle,
+    selectedId,
+    onSelect,
+    onEdit,
+}: {
+    node: NodeApi<MenuNode>;
+    style: React.CSSProperties;
+    dragHandle?: (el: HTMLDivElement | null) => void;
+    selectedId?: number;
+    onSelect: (row: MenuRow) => void;
+    onEdit: (row: MenuRow) => void;
+}) {
+    const row = node.data.data;
+    const selected = selectedId === row.menuId;
+    const inactive = row.useYn === "N";
 
-const defaultFilters: MenuFilters = {
-    menuCode: "",
-    menuName: "",
-    useYn: "",
-    parentMenuId: "",
-};
+    return (
+        <div
+            style={style}
+            className={`${styles.treeRow} ${selected ? styles.treeRowSelected : ""} ${
+                inactive ? styles.treeRowInactive : ""
+            }`}
+            onClick={() => onSelect(row)}
+            onDoubleClick={() => onEdit(row)}
+        >
+            {node.isInternal ? (
+                <button
+                    type="button"
+                    className={styles.arrowButton}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        node.toggle();
+                    }}
+                >
+                    {node.isOpen ? "▾" : "▸"}
+                </button>
+            ) : (
+                <span className={styles.arrowPlaceholder} />
+            )}
+
+            <span className={styles.folderIcon}>
+                {node.isInternal ? (
+                    <Folder size={16} strokeWidth={2} aria-hidden />
+                ) : (
+                    <FileText size={16} strokeWidth={2} aria-hidden />
+                )}
+            </span>
+
+            <span className={styles.label}>
+                {row.menuName}
+                {inactive && (
+                    <span className={`${styles.badge} ${styles.badgeInactive}`}>미사용</span>
+                )}
+            </span>
+
+            <span className={styles.meta}>{row.menuCode}</span>
+
+            <div ref={dragHandle} className={styles.dragHandle} title="드래그하여 순서·위치 변경">
+                <GripVertical size={16} strokeWidth={2} />
+            </div>
+        </div>
+    );
+}
 
 export default function MenusPage() {
-    const { resolvedTheme } = useTheme();
     const queryClient = useQueryClient();
-    const [mounted, setMounted] = useState(false);
-
-    const [draftFilters, setDraftFilters] = useState<MenuFilters>(defaultFilters);
-    const [appliedFilters, setAppliedFilters] = useState<MenuFilters>(defaultFilters);
-
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-    const [modalInitial, setModalInitial] = useState<MenuRow | null>(null);
-
-    const [expanded, setExpanded] = useState<Set<number>>(new Set());
-    const flatSignatureRef = useRef<string>("");
-
-    const gridApiRef = useRef<GridApi<MenuTreeRow> | null>(null);
+    /** react-arborist onMove 가 연속 호출되며 중복 저장·에러 알림 나는 것 방지 */
+    const dragSaveLockRef = useRef(false);
 
     const menusQuery = useMenuTreeQuery();
     const saveMutation = useSaveMenuMutation();
     const deleteMutation = useDeleteMenuMutation();
 
+    const [selectedRow, setSelectedRow] = useState<MenuRow | null>(null);
+
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+    const [modalInitial, setModalInitial] = useState<MenuRow | null>(null);
+
     const flatMenus = menusQuery.data ?? [];
-
-    const menuNameById = useMemo(() => {
-        const m = new Map<number, string>();
-        for (const row of flatMenus) {
-            if (row.menuId != null) m.set(row.menuId, row.menuName ?? "");
-        }
-        return m;
-    }, [flatMenus]);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+    const treeData = useMemo(() => buildMenuTree(flatMenus), [flatMenus]);
 
     useEffect(() => {
         if (!menusQuery.isError || !menusQuery.error) return;
@@ -91,201 +119,91 @@ export default function MenusPage() {
         alert(message);
     }, [menusQuery.isError, menusQuery.error]);
 
-    const filteredFlat = useMemo(
-        () => filterFlatForSearch(flatMenus, appliedFilters),
-        [flatMenus, appliedFilters]
-    );
-
-    useEffect(() => {
-        const sig = filteredFlat.map((m) => m.menuId).join(",");
-        if (sig === flatSignatureRef.current) return;
-        flatSignatureRef.current = sig;
-        setExpanded(defaultExpandedParentIds(filteredFlat));
-    }, [filteredFlat]);
-
-    const treeRows = useMemo(
-        () => flattenMenuTree(filteredFlat, expanded),
-        [filteredFlat, expanded]
-    );
-
-    const isDark = mounted && resolvedTheme === "dark";
-
     const busy =
         menusQuery.isFetching || deleteMutation.isPending || saveMutation.isPending;
 
-    const toggleExpand = useCallback((menuId: number) => {
-        setExpanded((prev) => {
-            const n = new Set(prev);
-            if (n.has(menuId)) n.delete(menuId);
-            else n.add(menuId);
-            return n;
-        });
-    }, []);
-
-    const openEdit = useCallback((row: MenuRow) => {
-        setModalMode("edit");
-        setModalInitial(row);
-        setModalOpen(true);
-    }, []);
-
-    const handleRowDragEnd = useCallback(
-        async (e: RowDragEndEvent<MenuTreeRow>) => {
-            if (busy) return;
-            const dragged = e.node.data;
-            const over = e.overNode?.data;
-            if (!dragged?.menuId || !over?.menuId) return;
-            if (dragged.menuId === over.menuId) return;
-
-            const overNode = e.overNode;
-            if (!overNode) return;
-            const h = overNode.rowHeight ?? 40;
-            const top = overNode.rowTop ?? 0;
-            const mid = top + h / 2;
-            const place = e.y < mid ? "before" : "after";
-            const mode = e.event.shiftKey ? "child" : place;
-
-            const next = computeDragMove(flatMenus, dragged.menuId, over.menuId, mode);
-            if (!next) {
-                alert(
-                    "이동할 수 없습니다. (최대 4 depth, 자신의 하위 메뉴 안으로는 이동할 수 없습니다.)"
-                );
-                return;
-            }
-            const changed = diffMenuRows(flatMenus, next);
-            if (changed.length === 0) return;
-            try {
-                await Promise.all(changed.map((row) => saveMenu(row, "edit")));
-                await queryClient.invalidateQueries({ queryKey: menuAdminKeys.all });
-            } catch (err) {
-                alert(err instanceof Error ? err.message : "저장 중 오류");
-            }
+    const openCreate = useCallback(
+        (parent: MenuRow | null) => {
+            const pid = parent?.menuId;
+            const sort = nextSortOrderForParent(flatMenus, pid);
+            setModalMode("create");
+            setModalInitial({
+                parentMenuId: pid,
+                sortOrder: sort,
+                useYn: "Y",
+            });
+            setModalOpen(true);
         },
-        [busy, flatMenus, queryClient]
+        [flatMenus]
     );
 
-    const colDefs = useMemo<ColDef<MenuTreeRow>[]>(
-        () => [
-            {
-                colId: "drag",
-                rowDrag: true,
-                width: 44,
-                sortable: false,
-                suppressHeaderMenuButton: true,
-                headerName: "",
-                cellStyle: { cursor: "grab" },
-            },
-            {
-                headerName: "메뉴명",
-                field: "menuName",
-                flex: 1,
-                minWidth: 200,
-                sortable: false,
-                cellRenderer: (p: ICellRendererParams<MenuTreeRow>) => {
-                    const row = p.data;
-                    if (!row) return null;
-                    const depth = row.depth ?? 0;
-                    return (
-                        <div className={treeStyles.treeRow}>
-                            {Array.from({ length: depth }).map((_, i) => (
-                                <span key={i} className={treeStyles.treeGuide} aria-hidden />
-                            ))}
-                            {row.hasChildren ? (
-                                <button
-                                    type="button"
-                                    className={treeStyles.treeToggle}
-                                    aria-label={row.isExpanded ? "접기" : "펼치기"}
-                                    onClick={(ev) => {
-                                        ev.stopPropagation();
-                                        if (row.menuId) toggleExpand(row.menuId);
-                                    }}
-                                >
-                                    {row.isExpanded ? "▼" : "▶"}
-                                </button>
-                            ) : (
-                                <span className={treeStyles.treeTogglePlaceholder} />
-                            )}
-                            <button
-                                type="button"
-                                className={styles.linkText}
-                                onClick={(ev) => {
-                                    ev.stopPropagation();
-                                    openEdit(row);
-                                }}
-                                style={{ alignSelf: "center" }}
-                            >
-                                {row.menuName ?? ""}
-                            </button>
-                        </div>
-                    );
-                },
-            },
-            {
-                headerName: "상위메뉴",
-                width: 140,
-                sortable: false,
-                valueGetter: (p) => {
-                    const pid = p.data?.parentMenuId;
-                    if (pid == null) return "— (루트)";
-                    return menuNameById.get(pid) ?? `#${pid}`;
-                },
-            },
-            { headerName: "메뉴코드", field: "menuCode", width: 130 },
-            { headerName: "경로", field: "menuPath", flex: 1, minWidth: 120 },
-            { headerName: "정렬", field: "sortOrder", width: 72 },
-            { headerName: "사용", field: "useYn", width: 72 },
-        ],
-        [menuNameById, openEdit, styles.linkText, toggleExpand]
-    );
-
-    const defaultColDef = useMemo<ColDef<MenuTreeRow>>(
-        () => ({
-            sortable: false,
-            filter: false,
-            resizable: true,
-        }),
-        []
-    );
-
-    const handleChangeDraft = (key: keyof MenuFilters, value: string) => {
-        setDraftFilters((prev) => ({ ...prev, [key]: value }));
+    const handleCreateRoot = () => {
+        openCreate(null);
     };
 
-    const handleSearch = async () => {
-        setAppliedFilters({ ...draftFilters });
-        await menusQuery.refetch();
+    const handleCreateChild = () => {
+        if (!selectedRow?.menuId) {
+            alert("하위 메뉴를 추가할 상위 메뉴를 왼쪽 트리에서 먼저 선택하세요.");
+            return;
+        }
+        openCreate(selectedRow);
     };
 
-    const handleReset = () => {
-        setDraftFilters(defaultFilters);
-        setAppliedFilters(defaultFilters);
-    };
-
-    const handleOpenCreate = () => {
-        setModalMode("create");
-        setModalInitial(null);
-        setModalOpen(true);
-    };
-
-    const handleOpenEdit = () => {
-        const selected = gridApiRef.current?.getSelectedRows()?.[0];
-        if (!selected?.menuId) {
+    const handleEdit = () => {
+        if (!selectedRow?.menuId) {
             alert("수정할 메뉴를 선택하세요.");
             return;
         }
-        openEdit(selected);
+        setModalMode("edit");
+        setModalInitial(selectedRow);
+        setModalOpen(true);
     };
 
-    const handleDelete = async () => {
-        const selected = gridApiRef.current?.getSelectedRows()?.[0];
-        if (!selected?.menuId) {
-            alert("삭제할 메뉴를 선택하세요.");
+    const openEdit = (row: MenuRow) => {
+        setSelectedRow(row);
+        setModalMode("edit");
+        setModalInitial(row);
+        setModalOpen(true);
+    };
+
+    const handleSoftDelete = async () => {
+        if (!selectedRow?.menuId) {
+            alert("미사용 처리할 메뉴를 선택하세요.");
             return;
         }
-        if (!confirm("선택한 메뉴를 삭제(미사용 처리)할까요?")) return;
+        if (
+            !confirm(
+                `「${selectedRow.menuName ?? selectedRow.menuCode}」을(를) 미사용 처리할까요?\n\nDB에서는 삭제되지 않고 USE_YN = 'N' 으로만 바뀝니다.`
+            )
+        ) {
+            return;
+        }
+
         try {
-            await deleteMutation.mutateAsync(selected.menuId);
-        } catch (err) {
-            alert(err instanceof Error ? err.message : "삭제 중 오류");
+            await deleteMutation.mutateAsync(selectedRow.menuId);
+            setSelectedRow((prev) =>
+                prev?.menuId === selectedRow.menuId ? { ...prev, useYn: "N" } : prev
+            );
+        } catch (e) {
+            alert(e instanceof Error ? e.message : "처리 중 오류");
+        }
+    };
+
+    const handleRestore = async () => {
+        if (!selectedRow?.menuId || selectedRow.useYn !== "N") {
+            alert("복구할 미사용 메뉴를 선택하세요.");
+            return;
+        }
+        try {
+            await saveMutation.mutateAsync({
+                row: { ...selectedRow, useYn: "Y" },
+                mode: "edit",
+            });
+            setSelectedRow((prev) =>
+                prev?.menuId === selectedRow.menuId ? { ...prev, useYn: "Y" } : prev
+            );
+        } catch (e) {
+            alert(e instanceof Error ? e.message : "복구 중 오류");
         }
     };
 
@@ -293,118 +211,210 @@ export default function MenusPage() {
         await saveMutation.mutateAsync({ row, mode: modalMode });
     };
 
+    const handleMove = async ({
+        dragIds,
+        parentId,
+        index,
+    }: {
+        dragIds: string[];
+        parentId: string | null;
+        index: number;
+    }) => {
+        if (busy || dragIds.length !== 1) return;
+        if (dragSaveLockRef.current) return;
+        dragSaveLockRef.current = true;
+
+        try {
+            const movingId = dragIds[0];
+            const cloned = cloneMenuTree(treeData);
+
+            function removeNode(nodes: MenuNode[], id: string): MenuNode | null {
+                for (let i = 0; i < nodes.length; i++) {
+                    if (nodes[i].id === id) {
+                        return nodes.splice(i, 1)[0];
+                    }
+                    const found = removeNode(nodes[i].children ?? [], id);
+                    if (found) return found;
+                }
+                return null;
+            }
+
+            function findChildren(nodes: MenuNode[], id: string | null): MenuNode[] | null {
+                if (id == null) return nodes;
+                for (const node of nodes) {
+                    if (node.id === id) {
+                        node.children ??= [];
+                        return node.children;
+                    }
+                    const found = findChildren(node.children ?? [], id);
+                    if (found) return found;
+                }
+                return null;
+            }
+
+            const movingNode = removeNode(cloned, movingId);
+            if (!movingNode) return;
+
+            const targetChildren = findChildren(cloned, parentId);
+            if (!targetChildren) return;
+
+            targetChildren.splice(index, 0, movingNode);
+
+            const nextFlat = flattenTree(cloned);
+            const changed = diffMenus(flatMenus, nextFlat);
+
+            if (changed.length === 0) return;
+
+            const toSave = mergeStructureIntoOriginal(flatMenus, changed);
+            if (toSave.length === 0) {
+                await queryClient.refetchQueries({ queryKey: menuAdminKeys.tree });
+                return;
+            }
+
+            await reorderMenus(
+                toSave.map((r) => ({
+                    menuId: r.menuId!,
+                    parentMenuId: r.parentMenuId ?? null,
+                    sortOrder: r.sortOrder ?? 0,
+                }))
+            );
+            await queryClient.refetchQueries({ queryKey: menuAdminKeys.tree });
+        } catch (e) {
+            console.error(e);
+            alert(e instanceof Error ? e.message : "메뉴 순서 저장 중 오류가 발생했습니다.");
+        } finally {
+            dragSaveLockRef.current = false;
+        }
+    };
+
     return (
-        <div className={styles.page}>
-            <h2 className={styles.title}>메뉴관리 (트리)</h2>
+        <div className={pageStyles.page}>
+            <h2 className={pageStyles.title}>메뉴 관리</h2>
             <p
                 style={{
-                    margin: "0 0 16px",
+                    margin: "0 0 18px",
                     color: "var(--text-subtle)",
                     fontSize: 14,
-                    lineHeight: 1.55,
+                    lineHeight: 1.6,
                 }}
             >
-                왼쪽 세로선은 <strong>depth(단계)</strong>, <strong>▶/▼</strong>로 하위를 접고 펼칩니다. DB에
-                하위 메뉴(<code>PARENT_MENU_ID</code>)가 없으면 모두 루트로만 보여 <strong>평면 목록</strong>처럼
-                보일 수 있습니다. <strong>드래그</strong>로 순서·위치 변경, <strong>Shift + 드롭</strong>은 자식으로
-                붙이기(최대 <strong>4 depth</strong>).
+                왼쪽 <strong>트리</strong>에서 메뉴를 선택합니다. <strong>더블클릭</strong>으로 수정,
+                <strong> 드래그</strong>로 같은 레벨 순서 변경 또는 다른 노드 위/아래로 이동해 부모를 바꿀 수
+                있습니다. <strong>미사용 처리</strong>는 DB 행을 지우지 않고{" "}
+                <code>USE_YN = &apos;N&apos;</code> 으로만 바꿉니다. 역할·사용자 메뉴에는 미사용 항목이
+                노출되지 않습니다.
             </p>
 
-            <div className={styles.sectionTitle}>검색 조건</div>
-            <div className={styles.searchGrid}>
-                <div>
-                    <div className={styles.label}>메뉴코드</div>
-                    <input
-                        className={styles.fullInput}
-                        value={draftFilters.menuCode}
-                        onChange={(e) => handleChangeDraft("menuCode", e.target.value)}
-                        placeholder="메뉴코드"
-                    />
-                </div>
-                <div>
-                    <div className={styles.label}>메뉴명</div>
-                    <input
-                        className={styles.fullInput}
-                        value={draftFilters.menuName}
-                        onChange={(e) => handleChangeDraft("menuName", e.target.value)}
-                        placeholder="메뉴명"
-                    />
-                </div>
-                <div>
-                    <div className={styles.label}>상위 메뉴 ID</div>
-                    <input
-                        className={styles.fullInput}
-                        value={draftFilters.parentMenuId}
-                        onChange={(e) => handleChangeDraft("parentMenuId", e.target.value)}
-                        placeholder="숫자"
-                    />
-                </div>
-                <div>
-                    <div className={styles.label}>사용여부</div>
-                    <select
-                        className={styles.fullInput}
-                        value={draftFilters.useYn}
-                        onChange={(e) => handleChangeDraft("useYn", e.target.value)}
-                    >
-                        <option value="">전체</option>
-                        <option value="Y">Y</option>
-                        <option value="N">N</option>
-                    </select>
-                </div>
-            </div>
-
-            <div className={styles.toolbar}>
-                <button type="button" className={styles.primaryButton} onClick={handleSearch} disabled={busy}>
-                    조회
+            <div className={pageStyles.toolbar}>
+                <button
+                    type="button"
+                    onClick={() => menusQuery.refetch()}
+                    disabled={busy}
+                    title="서버에서 최신 트리 다시 불러오기"
+                >
+                    새로고침
                 </button>
-                <button type="button" onClick={handleReset} disabled={busy}>
-                    초기화
+                <button type="button" onClick={handleCreateRoot} disabled={busy}>
+                    루트 메뉴 등록
                 </button>
-                <button type="button" onClick={handleOpenCreate} disabled={busy}>
-                    등록
+                <button type="button" onClick={handleCreateChild} disabled={busy}>
+                    하위 메뉴 등록
                 </button>
-                <button type="button" onClick={handleOpenEdit} disabled={busy}>
+                <button type="button" onClick={handleEdit} disabled={busy}>
                     수정
                 </button>
-                <button type="button" className={styles.dangerButton} onClick={handleDelete} disabled={busy}>
-                    삭제
+                <button
+                    type="button"
+                    className={pageStyles.dangerButton}
+                    onClick={handleSoftDelete}
+                    disabled={busy || !selectedRow?.menuId}
+                >
+                    미사용 처리
+                </button>
+                <button
+                    type="button"
+                    onClick={handleRestore}
+                    disabled={busy || selectedRow?.useYn !== "N"}
+                    title="USE_YN 을 Y 로 복구"
+                >
+                    사용 복구
                 </button>
             </div>
 
-            <div className={styles.pageInfo}>
-                <span>표시 {treeRows.length}건 (전체 {flatMenus.length}건)</span>
+            <div className={pageStyles.pageInfo}>
+                <span>
+                    전체 {flatMenus.length}건 · 미사용{" "}
+                    {flatMenus.filter((m) => m.useYn === "N").length}건
+                </span>
             </div>
 
-            <div className={styles.sectionTitle}>메뉴 트리</div>
-            <div
-                className={`${isDark ? "ag-theme-quartz-dark" : "ag-theme-quartz"} ${styles.gridWrap}`}
-            >
-                <AgGridReact<MenuTreeRow>
-                    theme="legacy"
-                    rowData={treeRows}
-                    columnDefs={colDefs}
-                    defaultColDef={defaultColDef}
-                    animateRows
-                    rowSelection="single"
-                    getRowId={(p) => String(p.data.menuId)}
-                    rowDragManaged={false}
-                    suppressMoveWhenRowDragging={true}
-                    onRowDragEnd={handleRowDragEnd}
-                    onGridReady={(e: GridReadyEvent<MenuTreeRow>) => {
-                        gridApiRef.current = e.api;
-                    }}
-                    onRowClicked={(e: RowClickedEvent<MenuTreeRow>) => {
-                        e.api.deselectAll();
-                        if (e.node) e.node.setSelected(true);
-                    }}
-                    loading={busy}
-                />
+            <div className={pageStyles.sectionTitle}>메뉴 트리</div>
+
+            <div className={styles.layout}>
+                <div className={styles.treeWrap}>
+                    <Tree<MenuNode>
+                        data={treeData}
+                        idAccessor="id"
+                        childrenAccessor="children"
+                        width="100%"
+                        height={560}
+                        indent={24}
+                        rowHeight={36}
+                        openByDefault={true}
+                        onMove={handleMove}
+                    >
+                        {(props) => (
+                            <ExplorerNode
+                                {...props}
+                                selectedId={selectedRow?.menuId}
+                                onSelect={setSelectedRow}
+                                onEdit={openEdit}
+                            />
+                        )}
+                    </Tree>
+                </div>
+
+                <div className={styles.detailPanel}>
+                    <h3 className={styles.detailTitle}>선택한 메뉴</h3>
+                    {selectedRow?.menuId ? (
+                        <div className={styles.detailRow}>
+                            <span className={styles.detailLabel}>메뉴 ID</span>
+                            <span>{selectedRow.menuId}</span>
+                            <span className={styles.detailLabel}>메뉴 코드</span>
+                            <span>{selectedRow.menuCode ?? "—"}</span>
+                            <span className={styles.detailLabel}>메뉴명</span>
+                            <span>{selectedRow.menuName ?? "—"}</span>
+                            <span className={styles.detailLabel}>경로</span>
+                            <span>{selectedRow.menuPath || "—"}</span>
+                            <span className={styles.detailLabel}>상위 메뉴 ID</span>
+                            <span>{selectedRow.parentMenuId ?? "— (루트)"}</span>
+                            <span className={styles.detailLabel}>정렬</span>
+                            <span>{selectedRow.sortOrder ?? 0}</span>
+                            <span className={styles.detailLabel}>사용 여부</span>
+                            <span>
+                                {selectedRow.useYn === "N" ? (
+                                    <>
+                                        <strong style={{ color: "var(--danger, #dc2626)" }}>미사용 (N)</strong>
+                                        <span className={styles.detailEmpty} style={{ marginLeft: 8 }}>
+                                            「사용 복구」로 Y 로 되돌릴 수 있습니다.
+                                        </span>
+                                    </>
+                                ) : (
+                                    "사용 (Y)"
+                                )}
+                            </span>
+                        </div>
+                    ) : (
+                        <div className={styles.detailEmpty}>왼쪽 트리에서 메뉴를 선택하세요.</div>
+                    )}
+                </div>
             </div>
 
             <MenuModal
                 open={modalOpen}
                 mode={modalMode}
                 initial={modalInitial}
+                allMenus={flatMenus}
                 onClose={() => setModalOpen(false)}
                 onSave={handleSave}
             />
