@@ -1,0 +1,70 @@
+.sidebar {
+    border-right: 1px solid rgb(var(--border));
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    background: rgb(var(--card));
+}
+
+.header {
+    height: 56px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgb(var(--border));
+}
+
+.brand {
+    font-weight: 600;
+}
+
+.subTitle {
+    font-size: 12px;
+    color: rgb(var(--muted));
+}
+
+.nav {
+    padding: 8px;
+}
+
+.dashboardWrap {
+    margin-bottom: 8px;
+}
+
+.dashboardLink {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 12px;
+    text-decoration: none;
+}
+
+.dashboardLink:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+:global(.dark) .dashboardLink:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dashboardLinkActive {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+:global(.dark) .dashboardLinkActive {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.extraSection {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgb(var(--border));
+}
+
+.extraTitle {
+    padding: 0 12px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(var(--muted));
+}

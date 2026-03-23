@@ -1,45 +1,179 @@
 "use client";
+
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import cx from "classnames";
 import { MenuNode } from "@/stores/menuStore";
+import styles from "./MenuTree.module.css";
 
-function NodeItem({ node, pathname, level, collapsed }: { node: MenuNode; pathname: string; level: number; collapsed: boolean }) {
-  const [open, setOpen] = useState(level < 1);
-  const hasChildren = (node.children?.length ?? 0) > 0;
-  const active = node.path && pathname === node.path;
-  const pad = collapsed ? 0 : Math.min(30, level * 12);
-
-  return (
-    <div>
-      <div className={cx("flex items-center justify-between rounded-lg", active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10")}>
-        {node.path ? (
-          <Link href={node.path} className="flex-1 px-3 py-2 text-sm truncate" style={{ paddingLeft: collapsed ? 12 : 12 + pad }} title={node.name}>
-            {collapsed ? (node.icon ?? "•") : node.name}
-          </Link>
-        ) : (
-          <button className="flex-1 text-left px-3 py-2 text-sm truncate" style={{ paddingLeft: collapsed ? 12 : 12 + pad }} onClick={() => setOpen((v) => !v)} title={node.name}>
-            {collapsed ? (node.icon ?? "•") : node.name}
-          </button>
-        )}
-        {hasChildren && !collapsed && (
-          <button className="px-2 py-2 text-xs text-[rgb(var(--muted))]" onClick={() => setOpen((v) => !v)} aria-label="Toggle">
-            {open ? "▾" : "▸"}
-          </button>
-        )}
-      </div>
-
-      {hasChildren && open && (
-        <div className="mt-1">
-          {node.children!.map((c) => (
-            <NodeItem key={c.id} node={c} pathname={pathname} level={level + 1} collapsed={collapsed} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+/** 쿼리 제거, 끝 슬래시 정리 */
+function normalizePath(p: string): string {
+    if (!p) return "";
+    const base = p.split("?")[0] ?? "";
+    if (base === "/") return "/";
+    return base.replace(/\/+$/, "") || "/";
 }
 
-export default function MenuTree({ nodes, pathname, collapsed }: { nodes: MenuNode[]; pathname: string; collapsed: boolean }) {
-  return <div className="space-y-1">{nodes.map((n) => <NodeItem key={n.id} node={n} pathname={pathname} level={0} collapsed={collapsed} />)}</div>;
+/**
+ * 현재 URL에 대해 하이라이트할 메뉴 id 하나만 선택.
+ * - 동일 path 를 쓰는 항목이 여러 개면 → 더 깊은 depth 우선, 그다음 id 로 결정
+ * - /members/foo 처럼 하위 경로일 때 → path 길이가 긴(더 구체적인) 메뉴 우선
+ */
+function findActiveMenuId(nodes: MenuNode[], pathname: string): string | null {
+    const cur = normalizePath(pathname);
+    if (!cur) return null;
+
+    let best: { id: string; depth: number; pathLen: number } | null = null;
+
+    const consider = (id: string, depth: number, menuPath: string) => {
+        const p = normalizePath(menuPath);
+        if (!p) return;
+
+        const matches =
+            cur === p ||
+            (p !== "/" && cur.startsWith(p + "/"));
+
+        if (!matches) return;
+
+        const pathLen = p.length;
+        if (!best) {
+            best = { id, depth, pathLen };
+            return;
+        }
+        if (pathLen > best.pathLen) {
+            best = { id, depth, pathLen };
+            return;
+        }
+        if (pathLen === best.pathLen) {
+            if (depth > best.depth) {
+                best = { id, depth, pathLen };
+            } else if (depth === best.depth && id < best.id) {
+                best = { id, depth, pathLen };
+            }
+        }
+    };
+
+    function walk(ns: MenuNode[], depth: number) {
+        for (const n of ns) {
+            if (n.path) consider(n.id, depth, n.path);
+            if (n.children?.length) walk(n.children, depth + 1);
+        }
+    }
+
+    walk(nodes, 0);
+    return best?.id ?? null;
+}
+
+function getLevelClass(level: number) {
+    if (level <= 0) return styles.level0;
+    if (level === 1) return styles.level1;
+    if (level === 2) return styles.level2;
+    return styles.level3;
+}
+
+function NodeItem({
+    node,
+    activeId,
+    level,
+    collapsed,
+}: {
+    node: MenuNode;
+    activeId: string | null;
+    level: number;
+    collapsed: boolean;
+}) {
+    const [open, setOpen] = useState(level < 1);
+    const hasChildren = (node.children?.length ?? 0) > 0;
+    const active = Boolean(node.path) && activeId === node.id;
+    const levelClass = getLevelClass(level);
+
+    return (
+        <div>
+            <div
+                className={cx(
+                    styles.row,
+                    active ? styles.rowActive : styles.rowHover
+                )}
+            >
+                {node.path ? (
+                    <Link
+                        href={node.path}
+                        className={cx(
+                            styles.linkButton,
+                            collapsed ? styles.collapsedLink : levelClass
+                        )}
+                        title={node.name}
+                    >
+                        {collapsed ? node.icon ?? "•" : node.name}
+                    </Link>
+                ) : (
+                    <button
+                        className={cx(
+                            styles.linkButton,
+                            collapsed ? styles.collapsedLink : levelClass
+                        )}
+                        onClick={() => setOpen((v) => !v)}
+                        title={node.name}
+                        type="button"
+                    >
+                        {collapsed ? node.icon ?? "•" : node.name}
+                    </button>
+                )}
+
+                {hasChildren && !collapsed && (
+                    <button
+                        className={styles.toggleButton}
+                        onClick={() => setOpen((v) => !v)}
+                        aria-label="Toggle"
+                        type="button"
+                    >
+                        {open ? "▾" : "▸"}
+                    </button>
+                )}
+            </div>
+
+            {hasChildren && open && (
+                <div className={styles.childrenWrap}>
+                    {node.children!.map((c) => (
+                        <NodeItem
+                            key={c.id}
+                            node={c}
+                            activeId={activeId}
+                            level={level + 1}
+                            collapsed={collapsed}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+export default function MenuTree({
+    nodes,
+    pathname,
+    collapsed,
+}: {
+    nodes: MenuNode[];
+    pathname: string;
+    collapsed: boolean;
+}) {
+    const activeId = useMemo(
+        () => findActiveMenuId(nodes, pathname),
+        [nodes, pathname]
+    );
+
+    return (
+        <div className={styles.tree}>
+            {nodes.map((n) => (
+                <NodeItem
+                    key={n.id}
+                    node={n}
+                    activeId={activeId}
+                    level={0}
+                    collapsed={collapsed}
+                />
+            ))}
+        </div>
+    );
 }
