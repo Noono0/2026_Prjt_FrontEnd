@@ -33,6 +33,7 @@ pnpm add react-arborist
 //npm install react-arborist  // 메뉴화면 tree 라이브러리
 // 안되면 이걸로 npm install react-arborist --legacy-peer-deps 
 
+pnpm add @tiptap/react @tiptap/pm @tiptap/starter-kit @tiptap/extension-image @tiptap/extension-file-handler // Tiptap text Editor
 Remove-Item -Recurse -Force .next
 
 pnpm dev
