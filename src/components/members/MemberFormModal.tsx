@@ -4,20 +4,37 @@ import React, { useEffect, useMemo, useState } from "react";
 import styles from "./MemberFormModal.module.css";
 import { useRolesQuery } from "@/features/members/queries";
 
+/** member_streamer_profile — 회원과 1:1, 선택 입력 */
+export type MemberStreamerProfileFields = {
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  soopChannelUrl?: string;
+  /** 공통코드 code_value (컴퍼니/팀) */
+  companyCategoryCode?: string;
+  bloodType?: string;
+  careerHistory?: string;
+};
+
 export type Member = {
   memberSeq?: number;
   memberId: string;
   memberName: string;
+  /** 게시·댓글 등에 노출되는 닉네임 */
+  nickname?: string;
   memberPwd?: string;
   birthYmd?: string;
   gender?: "M" | "F";
   phone?: string;
   email?: string;
+  profileImageUrl?: string | null;
+  /** attach_file.file_seq */
+  profileImageFileSeq?: number | null;
   region?: string;
   status?: "ACTIVE" | "SUSPENDED" | "WITHDRAWN";
   roleCode?: string;
   roleName?: string;
   lastLoginAt?: string;
+  streamerProfile?: MemberStreamerProfileFields | null;
 };
 
 type Props = {
@@ -44,6 +61,17 @@ function toApiBirthYmd(birthYmd?: string) {
   return birthYmd.replaceAll("-", "");
 }
 
+function emptyStreamerProfile(): MemberStreamerProfileFields {
+  return {
+    instagramUrl: "",
+    youtubeUrl: "",
+    soopChannelUrl: "",
+    companyCategoryCode: "",
+    bloodType: "",
+    careerHistory: "",
+  };
+}
+
 export default function MemberFormModal({
                                           open,
                                           mode,
@@ -59,6 +87,7 @@ export default function MemberFormModal({
           memberSeq: undefined,
           memberId: "",
           memberName: "",
+          nickname: "",
           memberPwd: "",
           birthYmd: "",
           gender: "M",
@@ -67,6 +96,7 @@ export default function MemberFormModal({
           status: "ACTIVE",
           roleCode: "",
           roleName: "",
+          streamerProfile: emptyStreamerProfile(),
         }
     );
   }, [initial]);
@@ -75,6 +105,7 @@ export default function MemberFormModal({
     memberSeq: undefined,
     memberId: "",
     memberName: "",
+    nickname: "",
     memberPwd: "",
     birthYmd: "",
     gender: "M",
@@ -83,6 +114,7 @@ export default function MemberFormModal({
     status: "ACTIVE",
     roleCode: "",
     roleName: "",
+    streamerProfile: emptyStreamerProfile(),
   });
 
   const [saving, setSaving] = useState(false);
@@ -102,16 +134,23 @@ export default function MemberFormModal({
       memberSeq: seed.memberSeq,
       memberId: seed.memberId ?? "",
       memberName: seed.memberName ?? "",
+      nickname: seed.nickname ?? "",
       memberPwd: "",
       birthYmd: toDateInputValue(seed.birthYmd),
       gender: seed.gender ?? "M",
       phone: seed.phone ?? "",
       email: seed.email ?? "",
+      profileImageUrl: seed.profileImageUrl ?? null,
+      profileImageFileSeq: seed.profileImageFileSeq ?? null,
       region: seed.region ?? "",
       status: seed.status ?? "ACTIVE",
       roleCode: seed.roleCode ?? "",
       roleName: seed.roleName ?? "",
       lastLoginAt: seed.lastLoginAt ?? "",
+      streamerProfile: {
+        ...emptyStreamerProfile(),
+        ...seed.streamerProfile,
+      },
     });
 
     if (seed.email) {
@@ -141,6 +180,20 @@ export default function MemberFormModal({
     setForm((prev) => ({
       ...prev,
       [key]: value,
+    }));
+  };
+
+  const updateStreamer = <K extends keyof MemberStreamerProfileFields>(
+    key: K,
+    value: MemberStreamerProfileFields[K]
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      streamerProfile: {
+        ...emptyStreamerProfile(),
+        ...prev.streamerProfile,
+        [key]: value,
+      },
     }));
   };
 
@@ -189,6 +242,10 @@ export default function MemberFormModal({
         email: joinEmail(emailLocal, emailDomain),
         birthYmd: toApiBirthYmd(form.birthYmd),
         memberPwd: mode === "edit" && !(form.memberPwd ?? "").trim() ? undefined : form.memberPwd,
+        streamerProfile: {
+          ...emptyStreamerProfile(),
+          ...form.streamerProfile,
+        },
       });
 
       onClose();
@@ -231,6 +288,16 @@ export default function MemberFormModal({
                     className={styles.input}
                     value={form.memberName}
                     onChange={(e) => update("memberName", e.target.value)}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <div className={styles.label}>닉네임</div>
+                <input
+                    className={styles.input}
+                    value={form.nickname ?? ""}
+                    onChange={(e) => update("nickname", e.target.value)}
+                    placeholder="게시글·댓글에 표시"
                 />
               </div>
 
@@ -405,6 +472,70 @@ export default function MemberFormModal({
                   <option value="SUSPENDED">정지</option>
                   <option value="WITHDRAWN">탈퇴</option>
                 </select>
+              </div>
+
+              <div className={styles.sectionTitle}>스트리머·컴퍼니 정보 (선택)</div>
+
+              <div className={styles.field}>
+                <div className={styles.label}>인스타그램 URL</div>
+                <input
+                    className={styles.input}
+                    value={form.streamerProfile?.instagramUrl ?? ""}
+                    onChange={(e) => updateStreamer("instagramUrl", e.target.value)}
+                    placeholder="https://"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <div className={styles.label}>유튜브 URL</div>
+                <input
+                    className={styles.input}
+                    value={form.streamerProfile?.youtubeUrl ?? ""}
+                    onChange={(e) => updateStreamer("youtubeUrl", e.target.value)}
+                    placeholder="https://"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <div className={styles.label}>SOOP 방송국 URL</div>
+                <input
+                    className={styles.input}
+                    value={form.streamerProfile?.soopChannelUrl ?? ""}
+                    onChange={(e) => updateStreamer("soopChannelUrl", e.target.value)}
+                    placeholder="https://"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <div className={styles.label}>컴퍼니 카테고리 코드</div>
+                <input
+                    className={styles.input}
+                    value={form.streamerProfile?.companyCategoryCode ?? ""}
+                    onChange={(e) => updateStreamer("companyCategoryCode", e.target.value)}
+                    placeholder="공통코드 code_value"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <div className={styles.label}>혈액형</div>
+                <input
+                    className={styles.input}
+                    value={form.streamerProfile?.bloodType ?? ""}
+                    onChange={(e) => updateStreamer("bloodType", e.target.value)}
+                    placeholder="예) A"
+                    maxLength={10}
+                />
+              </div>
+
+              <div className={`${styles.field} ${styles.row}`}>
+                <div className={styles.label}>약력·이력</div>
+                <textarea
+                    className={styles.textarea}
+                    value={form.streamerProfile?.careerHistory ?? ""}
+                    onChange={(e) => updateStreamer("careerHistory", e.target.value)}
+                    placeholder="방송·활동 이력 등"
+                    rows={5}
+                />
               </div>
             </div>
           </div>

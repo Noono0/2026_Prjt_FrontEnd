@@ -1,0 +1,210 @@
+.wrap {
+    --fc-border-color: rgb(51 65 85);
+    --fc-page-bg-color: #0c1017;
+    --fc-neutral-bg-color: rgb(15 23 42);
+    --fc-list-event-hover-bg-color: rgb(30 41 59);
+    /* 오늘: 은은한 스카이 틴트 (과하지 않게) */
+    --fc-today-bg-color: rgba(14 165 233 / 0.16);
+    --fc-button-bg-color: rgb(30 41 59);
+    --fc-button-border-color: rgb(71 85 105);
+    --fc-button-text-color: #e2e8f0;
+    --fc-button-hover-bg-color: rgb(51 65 85);
+    --fc-button-active-bg-color: rgb(71 85 105);
+}
+
+/* 공휴일·일요일: 붉은 배경 */
+.wrap :global(.fc-daygrid-day.cal-cell-holiday),
+.wrap :global(.fc-daygrid-day.cal-cell-sun) {
+    background-color: rgba(239 68 68 / 0.16) !important;
+}
+
+/* 토요일: 푸른 배경 (공휴일이 아닐 때만 클래스 부여) */
+.wrap :global(.fc-daygrid-day.cal-cell-sat) {
+    background-color: rgba(59 130 246 / 0.18) !important;
+}
+
+/* 요일 헤더(일·토): 본문과 동일 톤 */
+.wrap :global(.fc-col-header-cell.fc-day-sun) {
+    background-color: rgba(239 68 68 / 0.16) !important;
+}
+
+.wrap :global(.fc-col-header-cell.fc-day-sat) {
+    background-color: rgba(59 130 246 / 0.18) !important;
+}
+
+/* 주간·일간 뷰 헤더 */
+.wrap :global(.fc-timegrid-axis.fc-day-sun),
+.wrap :global(.fc-timegrid-col.fc-day-sun) {
+    background-color: rgba(239 68 68 / 0.08) !important;
+}
+
+.wrap :global(.fc-timegrid-axis.fc-day-sat),
+.wrap :global(.fc-timegrid-col.fc-day-sat) {
+    background-color: rgba(59 130 246 / 0.1) !important;
+}
+
+/* 툴바: [빈칸] | [◀ 월 ▶ 오늘] | [월주일] — 좌우 flex로 가운데 네비가 화면 중앙에 오도록 */
+.wrap :global(.fc .fc-toolbar) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.wrap :global(.fc .fc-toolbar-chunk:nth-child(1)) {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* 이전·다음이 제목 양옆 — 가운데 청크 */
+.wrap :global(.fc .fc-toolbar-chunk:nth-child(2)) {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+}
+
+/*
+ * FullCalendar: prev,title,next 를 한 그룹으로 쓰면 title 때문에 fc-buttonGroup 이 안 붙고,
+ * 내부 div 가 block 이라 ◀ / 월 / ▶ 가 세로로 쌓임 → 안쪽을 가로 flex 로 고정
+ */
+.wrap :global(.fc .fc-toolbar-chunk:nth-child(2) > div) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+}
+
+.wrap :global(.fc .fc-toolbar-chunk:nth-child(2) .fc-toolbar-title) {
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* 월/주/일 — 오른쪽 청크 */
+.wrap :global(.fc .fc-toolbar-chunk:nth-child(3)) {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.wrap :global(.fc .fc-toolbar-title) {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-inline: 0.25rem;
+}
+
+.wrap :global(.fc .fc-col-header-cell-cushion),
+.wrap :global(.fc .fc-daygrid-day-number) {
+    color: #94a3b8;
+}
+
+/* 커스텀 dayCellContent: 공휴일명 + 일자 */
+.dayCellInner {
+    width: 100%;
+    min-width: 0;
+}
+
+.dayCellTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    padding: 2px 4px 0;
+}
+
+.dayCellHoliday {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+
+.dayCellHolidaySpacer {
+    flex: 1;
+    min-width: 0;
+}
+
+.holidayMark {
+    width: 3px;
+    height: 11px;
+    flex-shrink: 0;
+    border-radius: 1px;
+    background: #0f172a;
+}
+
+.holidayName {
+    font-size: 0.65rem;
+    line-height: 1.2;
+    color: #f87171;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dayNumber {
+    flex-shrink: 0;
+    font-size: 0.875rem;
+    color: #94a3b8;
+}
+
+.dayHeaderInner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    line-height: 1.2;
+}
+
+.dayHeaderText {
+    font-size: inherit;
+}
+
+.dayHeaderHoliday {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #f87171;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wrap :global(.fc-h-event) {
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+/* ─── 오늘 표시: 배경 틴트 + 얇은 링(공휴일/주말과 겹쳐도 구분) ─── */
+.wrap :global(.fc-daygrid-day.fc-day-today .fc-daygrid-day-frame) {
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.45);
+}
+
+.wrap :global(.fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion) {
+    color: #7dd3fc;
+    font-weight: 700;
+}
+
+.wrap :global(.fc-col-header-cell.fc-day-today) {
+    box-shadow: inset 0 -2px 0 0 rgba(56, 189, 248, 0.65);
+}
+
+.wrap :global(.fc-timegrid-col.fc-day-today) {
+    box-shadow: inset 1px 0 0 0 rgba(56, 189, 248, 0.25);
+}
+
+/* 커스텀 일자 숫자: 오늘은 스카이 + 굵게 */
+.wrap :global(.fc-daygrid-day.fc-day-today) .dayNumber {
+    color: #7dd3fc;
+    font-weight: 700;
+}

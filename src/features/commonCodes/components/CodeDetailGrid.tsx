@@ -82,7 +82,7 @@ export default function CodeDetailGrid({
                     </button>
                 ),
             },
-            { headerName: "코드값", field: "codeValue", flex: 1, minWidth: 140 },
+            { headerName: "화면에 보여질 코드값", field: "codeValue", flex: 1, minWidth: 140 },
             { headerName: "정렬", field: "sortOrder", width: 90 },
             { headerName: "사용", field: "useYn", width: 90 },
         ],

@@ -34,8 +34,10 @@ pnpm add react-arborist
 // 안되면 이걸로 npm install react-arborist --legacy-peer-deps 
 
 pnpm add @tiptap/react @tiptap/pm @tiptap/starter-kit @tiptap/extension-image @tiptap/extension-file-handler // Tiptap text Editor
-Remove-Item -Recurse -Force .next
+pnpm add @tiptap/extension-link @tiptap/extension-placeholder @tiptap/extension-text-align @tiptap/extension-underline // Tiptap text Editor
+pnpm add @fullcalendar/react @fullcalendar/core @fullcalendar/daygrid @fullcalendar/timegrid @fullcalendar/interaction  // calendar 라이브러리
 
+Remove-Item -Recurse -Force .next
 pnpm dev
 ```
 

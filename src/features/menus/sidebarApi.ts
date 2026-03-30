@@ -30,6 +30,13 @@ const RESERVED_MENU_CODES = new Set([
     "CODE_DETAIL",
     "PRODUCT",
     "ORDER",
+    "SITE_POPUP",
+    "CONTENT_FILTER",
+    "BOARD",
+    "CALENDAR_SCHEDULE",
+    "POINT_RANKING",
+    "POINT_POLICY",
+    "BLACKLIST_REPORT",
 ]);
 
 function buildApiUrl(path: string) {

@@ -1,0 +1,27 @@
+import { NextRequest, NextResponse } from "next/server";
+import { API_BASE_URL } from "@/lib/config";
+
+type Params = {
+    params: Promise<{
+        boardSeq: string;
+    }>;
+};
+
+export async function POST(_req: NextRequest, { params }: Params) {
+    try {
+        const { boardSeq } = await params;
+        const res = await fetch(`${API_BASE_URL}/api/boards/${boardSeq}/dislike`, {
+            method: "POST",
+            cache: "no-store",
+        });
+
+        const data = await res.json();
+        return NextResponse.json(data, { status: res.status });
+    } catch (error) {
+        console.error("POST /api/boards/[boardSeq]/dislike error =", error);
+        return NextResponse.json(
+            { success: false, message: "싫어요 처리 실패" },
+            { status: 500 }
+        );
+    }
+}

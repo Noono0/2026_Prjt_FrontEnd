@@ -202,7 +202,7 @@ export default function CodeDetailModal({
                     </div>
 
                     <div>
-                        <label className={styles.label}>코드값</label>
+                        <label className={styles.label}>화면에 보여질 코드값</label>
                         <input
                             className={styles.input}
                             value={form.codeValue ?? ""}

@@ -40,7 +40,7 @@ export default function SelectedCodeInfoPanel({
                 <Row label="중분류 코드명" value={selectedMiddle?.codeName} />
                 <Row label="소분류 코드ID" value={selectedSmall?.codeId} />
                 <Row label="소분류 코드명" value={selectedSmall?.codeName} />
-                <Row label="선택 코드값" value={(target as CodeDetailRow | null)?.codeValue} />
+                <Row label="선택 화면에 보여질 코드값" value={(target as CodeDetailRow | null)?.codeValue} />
                 <Row label="설명" value={(target as CodeDetailRow | CodeGroupRow | null)?.description} />
             </div>
         </section>

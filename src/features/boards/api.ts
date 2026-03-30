@@ -1,5 +1,12 @@
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
-import type { BoardListItem, BoardSearchCondition } from "./types";
+import type {
+    BoardCategoryOption,
+    BoardComment,
+    BoardListItem,
+    BoardPopularConfig,
+    BoardSearchCondition,
+    MemberEmoticon,
+} from "./types";
 
 export type FieldErrorResponse = {
     field: string;
@@ -71,5 +78,156 @@ export async function searchBoards(condition: BoardSearchCondition): Promise<Pag
         body: JSON.stringify(condition),
     });
     return result.data;
+}
+
+export async function fetchBoardCategories(): Promise<BoardCategoryOption[]> {
+    const result = await apiFetch<BoardCategoryOption[]>("/api/boards/categories", {
+        method: "GET",
+    });
+    return result.data ?? [];
+}
+
+export async function fetchBoardPopularConfig(): Promise<BoardPopularConfig> {
+    const result = await apiFetch<BoardPopularConfig>("/api/boards/popular-config", {
+        method: "GET",
+    });
+    const d = result.data;
+    return {
+        threshold: typeof d?.threshold === "number" ? d.threshold : 50,
+        badgeLabel: (d?.badgeLabel ?? "인기글").trim() || "인기글",
+    };
+}
+
+export async function fetchBoardDetail(boardSeq: number): Promise<BoardListItem> {
+    const result = await apiFetch<BoardListItem>(`/api/boards/detail/${boardSeq}`, {
+        method: "GET",
+    });
+    return result.data;
+}
+
+export async function increaseBoardViewCount(boardSeq: number): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/view`, {
+        method: "POST",
+    });
+    return result.data ?? 0;
+}
+
+export async function likeBoard(boardSeq: number): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/like`, {
+        method: "POST",
+    });
+    return result.data ?? 0;
+}
+
+export async function dislikeBoard(boardSeq: number): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/dislike`, {
+        method: "POST",
+    });
+    return result.data ?? 0;
+}
+
+export async function reportBoard(boardSeq: number): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/report`, {
+        method: "POST",
+    });
+    return result.data ?? 0;
+}
+
+export async function deleteMyBoard(boardSeq: number): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/mine/${boardSeq}`, {
+        method: "DELETE",
+    });
+    return result.data ?? 0;
+}
+
+export async function updateBoard(payload: {
+    boardSeq: number;
+    categoryCode?: string;
+    title: string;
+    content: string;
+    showYn?: string;
+    highlightYn?: string;
+    commentAllowedYn?: string;
+    replyAllowedYn?: string;
+}): Promise<number> {
+    const result = await apiFetch<number>("/api/boards/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+    return result.data ?? 0;
+}
+
+export type BoardCommentSavePayload = {
+    content: string;
+    parentBoardCommentSeq?: number;
+    emoticonSeq1?: number;
+    emoticonSeq2?: number;
+    emoticonSeq3?: number;
+};
+
+export async function fetchBoardComments(boardSeq: number, sort: "latest" | "oldest" | "like" = "latest"): Promise<BoardComment[]> {
+    const q = encodeURIComponent(sort);
+    const result = await apiFetch<BoardComment[]>(`/api/boards/${boardSeq}/comments?sort=${q}`, {
+        method: "GET",
+    });
+    return result.data ?? [];
+}
+
+export async function createBoardComment(boardSeq: number, payload: BoardCommentSavePayload): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+    return Number(result.data ?? 0);
+}
+
+export async function likeBoardComment(boardSeq: number, commentSeq: number): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/comments/${commentSeq}/like`, {
+        method: "POST",
+    });
+    return result.data ?? 0;
+}
+
+export async function dislikeBoardComment(boardSeq: number, commentSeq: number): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/comments/${commentSeq}/dislike`, {
+        method: "POST",
+    });
+    return result.data ?? 0;
+}
+
+export async function reportBoardComment(boardSeq: number, commentSeq: number): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/comments/${commentSeq}/report`, {
+        method: "POST",
+    });
+    return result.data ?? 0;
+}
+
+export async function updateBoardComment(
+    boardSeq: number,
+    commentSeq: number,
+    payload: BoardCommentSavePayload
+): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/comments/${commentSeq}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+    return result.data ?? 0;
+}
+
+export async function deleteBoardComment(boardSeq: number, commentSeq: number): Promise<number> {
+    const result = await apiFetch<number>(`/api/boards/${boardSeq}/comments/${commentSeq}`, {
+        method: "DELETE",
+    });
+    return result.data ?? 0;
+}
+
+export async function fetchMyMemberEmoticons(): Promise<MemberEmoticon[]> {
+    const result = await apiFetch<MemberEmoticon[]>("/api/members/me/emoticons", {
+        method: "GET",
+    });
+    return result.data ?? [];
 }
 

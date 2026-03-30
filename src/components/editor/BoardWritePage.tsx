@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import BoardEditor from "./BoardEditor";
+import { fetchBoardCategories } from "@/features/boards/api";
+import type { BoardCategoryOption } from "@/features/boards/types";
+import { alertIfApiFailed, type ApiEnvelope } from "@/lib/alertApiFailure";
+import { defaultApiRequestInit } from "@/lib/http/requestInit";
+import { bumpWalletRefresh } from "@/stores/walletRefreshStore";
 
 export default function BoardWritePage() {
-  const [categoryCode, setCategoryCode] = useState("CHAT");
+  const router = useRouter();
+  const [categories, setCategories] = useState<BoardCategoryOption[]>([]);
+  const [categoryCode, setCategoryCode] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tagDraft, setTagDraft] = useState("");
@@ -13,6 +21,23 @@ export default function BoardWritePage() {
   const [commentAllowed, setCommentAllowed] = useState(true);
   const [replyAllowed, setReplyAllowed] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const list = await fetchBoardCategories();
+        setCategories(list);
+        if (list.length > 0) {
+          const free =
+            list.find((c) => String(c.value).trim().toUpperCase() === "FREE") ?? list[0];
+          setCategoryCode(free.value);
+        }
+      } catch {
+        setCategories([]);
+      }
+    };
+    void loadCategories();
+  }, []);
 
   function addTagsFromDraft() {
     const raw = tagDraft
@@ -38,6 +63,10 @@ export default function BoardWritePage() {
   }
 
   async function handleSubmit() {
+    if (!categoryCode) {
+      alert("카테고리를 선택해주세요.");
+      return;
+    }
     if (!title.trim()) {
       alert("제목을 입력해주세요.");
       return;
@@ -49,6 +78,7 @@ export default function BoardWritePage() {
 
     setSubmitting(true);
     const res = await fetch("/api/boards/create", {
+      ...defaultApiRequestInit,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -59,17 +89,26 @@ export default function BoardWritePage() {
         categoryCode,
         showYn: "Y",
         highlightYn: "N",
+        commentAllowedYn: commentAllowed ? "Y" : "N",
+        replyAllowedYn: replyAllowed ? "Y" : "N",
       }),
     });
 
-    if (!res.ok) {
-      alert("등록 실패");
+    let json: ApiEnvelope | null = null;
+    try {
+      json = (await res.json()) as ApiEnvelope;
+    } catch {
+      json = null;
+    }
+    if (alertIfApiFailed(res, json, "등록 실패")) {
       setSubmitting(false);
       return;
     }
 
+    bumpWalletRefresh();
     alert("등록 완료");
     setSubmitting(false);
+    router.push("/boards");
   }
 
   return (
@@ -107,9 +146,15 @@ export default function BoardWritePage() {
               onChange={(e) => setCategoryCode(e.target.value)}
               className="h-12 w-full rounded-xl border border-slate-700 bg-[#081326] px-4 text-slate-100 outline-none focus:border-sky-600"
             >
-              <option value="CHAT">잡담</option>
-              <option value="STOCK">주식/코인</option>
-              <option value="INFO">정보</option>
+              {categories.length === 0 ? (
+                <option value="">카테고리 없음</option>
+              ) : (
+                categories.map((category) => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
@@ -186,14 +231,17 @@ export default function BoardWritePage() {
                     type="radio"
                     name="commentAllowed"
                     checked={!commentAllowed}
-                    onChange={() => setCommentAllowed(false)}
+                    onChange={() => {
+                      setCommentAllowed(false);
+                      setReplyAllowed(false);
+                    }}
                   />
                   허용 안함
                 </label>
               </div>
             </div>
 
-            <div>
+            <div className={commentAllowed ? "" : "pointer-events-none opacity-50"}>
               <div className="text-sm font-semibold text-slate-200">답글 허용</div>
               <div className="mt-2 flex items-center gap-5 text-sm text-slate-300">
                 <label className="flex items-center gap-2">
@@ -201,6 +249,7 @@ export default function BoardWritePage() {
                     type="radio"
                     name="replyAllowed"
                     checked={replyAllowed}
+                    disabled={!commentAllowed}
                     onChange={() => setReplyAllowed(true)}
                   />
                   허용
@@ -210,15 +259,12 @@ export default function BoardWritePage() {
                     type="radio"
                     name="replyAllowed"
                     checked={!replyAllowed}
+                    disabled={!commentAllowed}
                     onChange={() => setReplyAllowed(false)}
                   />
                   허용 안함
                 </label>
               </div>
-            </div>
-
-            <div className="text-xs text-slate-500">
-              현재 댓글/답글 허용값은 화면용 상태로만 유지됩니다. 백엔드 저장이 필요하면 컬럼/DTO/API를 추가로 연결하면 됩니다.
             </div>
           </div>
         </div>

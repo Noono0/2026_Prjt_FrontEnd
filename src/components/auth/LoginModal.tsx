@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { signIn } from "next-auth/react";
+import { getProviders, signIn } from "next-auth/react";
 import { useAuthStore } from "@/stores/authStore";
 import { X } from "lucide-react";
 
@@ -14,11 +14,46 @@ type Props = {
 
 export default function LoginModal({ open, onClose }: Props) {
   const { login } = useAuthStore();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin1234");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [rememberId, setRememberId] = useState(false);
+  const [socialEnabled, setSocialEnabled] = useState<Record<string, boolean>>({
+    google: false,
+    kakao: false,
+    naver: false,
+  });
 
   const canSubmit = useMemo(() => username.trim() && password.trim(), [username, password]);
+
+  React.useEffect(() => {
+    if (!open) return;
+
+    const cookies = document.cookie.split(";").map((c) => c.trim());
+    const saved = cookies.find((c) => c.startsWith("savedMemberId="));
+    if (saved) {
+      const value = decodeURIComponent(saved.split("=")[1] ?? "");
+      setUsername(value);
+      setRememberId(Boolean(value));
+    } else {
+      setRememberId(false);
+    }
+
+    const loadProviders = async () => {
+      try {
+        const providers = await getProviders();
+        setSocialEnabled({
+          google: Boolean(providers?.google),
+          kakao: Boolean(providers?.kakao),
+          naver: Boolean(providers?.naver),
+        });
+      } catch {
+        setSocialEnabled({ google: false, kakao: false, naver: false });
+      }
+    };
+    void loadProviders();
+  }, [open]);
 
   if (!open) return null;
 
@@ -26,9 +61,19 @@ export default function LoginModal({ open, onClose }: Props) {
     e.preventDefault();
     if (!canSubmit || loading) return;
     setLoading(true);
+    setLoginError(null);
     try {
       const ok = await login(username, password);
-      if (ok) onClose();
+      if (ok) {
+        if (rememberId) {
+          document.cookie = `savedMemberId=${encodeURIComponent(username)}; Max-Age=86400; Path=/; SameSite=Lax`;
+        } else {
+          document.cookie = "savedMemberId=; Max-Age=0; Path=/; SameSite=Lax";
+        }
+        onClose();
+      } else {
+        setLoginError("아이디 또는 비밀번호가 올바르지 않습니다.");
+      }
     } finally {
       setLoading(false);
     }
@@ -58,6 +103,7 @@ export default function LoginModal({ open, onClose }: Props) {
               className="w-full rounded-xl border border-gray-500 bg-gray-700 px-4 py-3 text-sm text-white hover:bg-gray-600"
               onClick={() => signIn("google")}
               type="button"
+              disabled={!socialEnabled.google}
             >
               Google로 계속하기
             </button>
@@ -65,6 +111,7 @@ export default function LoginModal({ open, onClose }: Props) {
               className="w-full rounded-xl border border-gray-500 bg-gray-700 px-4 py-3 text-sm text-white hover:bg-gray-600"
               onClick={() => signIn("kakao")}
               type="button"
+              disabled={!socialEnabled.kakao}
             >
               Kakao로 계속하기
             </button>
@@ -72,6 +119,7 @@ export default function LoginModal({ open, onClose }: Props) {
               className="w-full rounded-xl border border-gray-500 bg-gray-700 px-4 py-3 text-sm text-white hover:bg-gray-600"
               onClick={() => signIn("naver")}
               type="button"
+              disabled={!socialEnabled.naver}
             >
               Naver로 계속하기
             </button>
@@ -113,6 +161,15 @@ export default function LoginModal({ open, onClose }: Props) {
             <div className="text-xs text-gray-400">
               * ID/PW 로그인은 백엔드(JWT) 기반입니다.
             </div>
+            <label className="flex items-center gap-2 text-xs text-gray-300">
+              <input
+                type="checkbox"
+                checked={rememberId}
+                onChange={(e) => setRememberId(e.target.checked)}
+              />
+              아이디 저장 (쿠키 1일)
+            </label>
+            {loginError && <div className="text-xs text-rose-300">{loginError}</div>}
 
             {/* [닫기] [로그인] 양옆 배치 */}
             <div className="flex gap-3 pt-2">

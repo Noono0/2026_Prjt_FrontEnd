@@ -1,0 +1,24 @@
+import { NextRequest, NextResponse } from "next/server";
+import { API_BASE_URL } from "@/lib/config";
+
+type Params = { params: Promise<{ blacklistReportSeq: string; commentSeq: string }> };
+
+export async function POST(req: NextRequest, { params }: Params) {
+    try {
+        const { blacklistReportSeq, commentSeq } = await params;
+        const cookie = req.headers.get("cookie") ?? "";
+        const res = await fetch(
+            `${API_BASE_URL}/api/blacklist-reports/${blacklistReportSeq}/comments/${commentSeq}/dislike`,
+            {
+                method: "POST",
+                cache: "no-store",
+                headers: cookie ? { cookie } : {},
+            }
+        );
+        const data = await res.json();
+        return NextResponse.json(data, { status: res.status });
+    } catch (error) {
+        console.error("POST blacklist comment dislike", error);
+        return NextResponse.json({ success: false, message: "댓글 비추천 실패" }, { status: 500 });
+    }
+}

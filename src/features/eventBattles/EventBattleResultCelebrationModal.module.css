@@ -1,0 +1,263 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: radial-gradient(ellipse 120% 80% at 50% 20%, rgba(91, 33, 182, 0.55), rgba(15, 8, 35, 0.92));
+    cursor: pointer;
+}
+
+.backdropGlow {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 15% 25%, rgba(250, 204, 21, 0.22) 0%, transparent 42%),
+        radial-gradient(circle at 85% 20%, rgba(244, 114, 182, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 50% 85%, rgba(34, 211, 238, 0.12) 0%, transparent 45%);
+    animation: pulseGlow 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from {
+        opacity: 0.75;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.shell {
+    position: relative;
+    z-index: 3;
+    cursor: default;
+    max-width: min(47.32rem, 100vw - 2rem);
+    width: 100%;
+}
+
+.inner {
+    position: relative;
+    z-index: 1;
+    padding: 3.38rem 2.54rem 2.93rem;
+    border-radius: 1.35rem;
+    border: 2px solid rgba(250, 204, 21, 0.45);
+    background: linear-gradient(165deg, rgba(59, 7, 100, 0.88) 0%, rgba(30, 15, 60, 0.95) 50%, rgba(15, 10, 40, 0.97) 100%);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 25px 60px rgba(0, 0, 0, 0.55),
+        0 0 80px rgba(168, 85, 247, 0.25);
+    backdrop-filter: blur(8px);
+    text-align: center;
+}
+
+.heroTitle {
+    margin: 0 0 1rem;
+    font-size: clamp(2.28rem, 8.45vw, 3.12rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #fef08a;
+    text-shadow:
+        0 0 2px rgba(0, 0, 0, 0.8),
+        0 2px 0 #713f12,
+        0 3px 0 #451a03,
+        0 4px 8px rgba(0, 0, 0, 0.45),
+        0 0 40px rgba(250, 204, 21, 0.35);
+    transform: rotate(-1deg);
+}
+
+.heroSub {
+    margin: 0 0 0.75rem;
+    font-size: 1.69rem;
+    font-weight: 700;
+    color: #e9d5ff;
+    line-height: 1.55;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.winnerBadge {
+    display: inline-block;
+    margin-top: 0.35rem;
+    font-size: clamp(1.95rem, 7.02vw, 2.47rem);
+    font-weight: 900;
+    color: #fff;
+    text-shadow:
+        0 1px 0 #7c2d12,
+        0 2px 0 #431407,
+        0 0 24px rgba(251, 191, 36, 0.5);
+}
+
+.heroCheer {
+    margin: 0 0 1rem;
+    font-size: 1.52rem;
+    font-weight: 700;
+    color: rgba(254, 243, 199, 0.95);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+
+.totalPoolLine {
+    margin: 0 0 1.1rem;
+    font-size: 1.61rem;
+    font-weight: 700;
+    color: rgba(226, 232, 240, 0.95);
+}
+
+.totalPoolNum {
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: #fde047;
+    text-shadow: 0 0 18px rgba(250, 204, 21, 0.35);
+}
+
+.rankPanel {
+    margin-bottom: 1rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 10, 35, 0.55);
+    padding: 1.43rem 1.3rem 1.3rem;
+    text-align: left;
+}
+
+.rankTitle {
+    margin: 0 0 0.65rem;
+    font-size: 1.22rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(196, 181, 253, 0.95);
+    text-align: center;
+}
+
+.rankHead {
+    display: grid;
+    grid-template-columns: 3.2rem minmax(0, 1fr) minmax(9rem, 10.5rem) minmax(9rem, 10.5rem);
+    gap: 0.35rem 0.8rem;
+    align-items: center;
+    padding: 0 0.7rem 0.5rem;
+    font-size: 1.11rem;
+    font-weight: 700;
+    color: rgba(148, 163, 184, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 0.6rem;
+}
+
+.rankHead span {
+    white-space: nowrap;
+}
+
+.rankHead span:first-child {
+    text-align: center;
+}
+
+.colStake {
+    text-align: right;
+}
+
+.colPay {
+    text-align: right;
+    min-width: 3.5rem;
+}
+
+.rankList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.rankRow {
+    display: grid;
+    grid-template-columns: 3.2rem minmax(0, 1fr) minmax(9rem, 10.5rem) minmax(9rem, 10.5rem);
+    gap: 0.35rem 0.8rem;
+    align-items: center;
+    font-size: 1.31rem;
+    padding: 0.78rem 0.9rem;
+    border-radius: 0.45rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rankNum {
+    font-family: ui-monospace, monospace;
+    font-weight: 800;
+    color: #fbbf24;
+    text-align: center;
+}
+
+.rankName {
+    font-weight: 700;
+    color: #f1f5f9;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rankStake {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: rgba(203, 213, 225, 0.95);
+    white-space: nowrap;
+    text-align: right;
+    font-size: 1.22rem;
+}
+
+.rankPts {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #6ee7b7;
+    white-space: nowrap;
+    text-align: right;
+    font-size: 1.22rem;
+}
+
+.summaryLine {
+    margin: 0 0 1.15rem;
+    font-size: 1.48rem;
+    line-height: 1.55;
+    color: rgba(226, 232, 240, 0.92);
+    text-align: center;
+}
+
+.summaryEm {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #fcd34d;
+}
+
+.summaryEm2 {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #6ee7b7;
+}
+
+.closeBtn {
+    width: 100%;
+    margin-top: 0.25rem;
+    padding: 1.27rem 1.69rem;
+    border-radius: 0.65rem;
+    border: 1px solid rgba(250, 204, 21, 0.5);
+    background: linear-gradient(180deg, rgba(250, 204, 21, 0.25), rgba(180, 83, 9, 0.35));
+    color: #fffbeb;
+    font-weight: 800;
+    font-size: 1.61rem;
+    cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.closeBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(250, 204, 21, 0.25);
+}
+
+.closeBtn:active {
+    transform: translateY(0);
+}

@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Tiptap Simple Editor (UI Components template) */
+@import "../styles/_variables.scss";
+@import "../styles/_keyframe-animations.scss";
+
 /* Light/Dark tokens */
 :root{
   --bg: 255 255 255;
@@ -27,4 +31,253 @@ body{ background: rgb(var(--bg)); color: rgb(var(--fg)); }
   --ag-border-color: rgb(var(--border));
   --ag-header-background-color: rgb(var(--card));
   --ag-odd-row-background-color: rgb(var(--card));
+}
+
+
+
+
+/*
+ * 게시판용 BoardEditor → Tiptap SimpleEditor
+ * 템플릿 기본(.simple-editor-wrapper 100vw/100vh)을 페이지 안에 넣을 때 테두리·본문 영역이 보이도록 함
+ */
+.board-simple-editor-root {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid #64748b;
+  background: #0f172a;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(100, 116, 139, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.board-simple-editor-root .simple-editor-wrapper {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 320px;
+  max-height: min(75vh, 900px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 툴바: 상단 고정 스택, 모바일 템플릿의 absolute bottom 제거 */
+.board-simple-editor-root .tiptap-toolbar[data-variant="fixed"] {
+  position: relative !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  flex-shrink: 0;
+  z-index: 2;
+  width: 100%;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+  border-top: none;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .board-simple-editor-root .tiptap-toolbar[data-variant="fixed"] {
+    border-radius: 0;
+    border-top: none;
+    padding-bottom: 0.5rem;
+  }
+}
+
+.board-simple-editor-root .simple-editor-content {
+  flex: 1 1 auto;
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+  height: auto !important;
+  min-height: 240px;
+  background: #0b1220;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.board-simple-editor-root .simple-editor-content .tiptap.ProseMirror.simple-editor {
+  flex: 1 1 auto;
+  min-height: 240px;
+  padding: 1rem 1.25rem 2.5rem !important;
+  color: #e2e8f0;
+  outline: none;
+}
+
+@media screen and (max-width: 480px) {
+  .board-simple-editor-root .simple-editor-content .tiptap.ProseMirror.simple-editor {
+    padding: 0.875rem 1rem 2rem !important;
+  }
+}
+
+/* Board Editor (legacy class names if used) */
+.board-editor {
+  line-height: 1.75;
+  caret-color: #f8fafc;
+}
+
+.board-editor:focus {
+  outline: none;
+}
+
+.board-editor > *:first-child {
+  margin-top: 0;
+}
+
+.board-editor > *:last-child {
+  margin-bottom: 0;
+}
+
+.board-editor p {
+  margin: 0.65rem 0;
+}
+
+.board-editor h1,
+.board-editor h2,
+.board-editor h3 {
+  margin: 1.1rem 0 0.7rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #f8fafc;
+}
+
+.board-editor h1 {
+  font-size: 1.75rem;
+}
+
+.board-editor h2 {
+  font-size: 1.45rem;
+}
+
+.board-editor h3 {
+  font-size: 1.2rem;
+}
+
+.board-editor ul,
+.board-editor ol {
+  margin: 0.8rem 0;
+  padding-left: 1.4rem;
+}
+
+.board-editor ul {
+  list-style: disc;
+}
+
+.board-editor ol {
+  list-style: decimal;
+}
+
+.board-editor li {
+  margin: 0.25rem 0;
+}
+
+.board-editor blockquote {
+  margin: 1rem 0;
+  border-left: 4px solid #6366f1;
+  padding: 0.2rem 0 0.2rem 1rem;
+  color: #cbd5e1;
+  background: rgba(99, 102, 241, 0.08);
+  border-radius: 0.4rem;
+}
+
+.board-editor hr {
+  margin: 1.25rem 0;
+  border: 0;
+  border-top: 1px solid #334155;
+}
+
+.board-editor pre {
+  margin: 1rem 0;
+  overflow-x: auto;
+  border-radius: 0.9rem;
+  border: 1px solid #334155;
+  background: #020817;
+  padding: 0.9rem 1rem;
+  color: #e2e8f0;
+}
+
+.board-editor code {
+  border-radius: 0.35rem;
+  background: rgba(148, 163, 184, 0.15);
+  padding: 0.15rem 0.35rem;
+  font-size: 0.9em;
+}
+
+.board-editor pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.board-editor a {
+  color: #38bdf8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.board-editor img.board-editor-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1rem auto;
+  border-radius: 0.9rem;
+  border: 1px solid #334155;
+}
+
+.board-editor .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #64748b;
+  pointer-events: none;
+  height: 0;
+}
+
+.ProseMirror-selectednode {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* Board detail content link style */
+.board-detail-content a[href] {
+  color: #38bdf8 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px;
+}
+
+.board-detail-content a[href]:hover {
+  color: #7dd3fc !important;
+}
+
+/* ------------------------------------------------------------------
+ * Light theme compatibility layer
+ * Many screens were authored with dark-first utility classes.
+ * Keep dark mode untouched, and normalize those classes in light mode.
+ * ------------------------------------------------------------------ */
+.light [class*="bg-[#0c1017]"] { background-color: #f8fafc !important; }
+.light [class*="bg-[#081326]"] { background-color: #ffffff !important; }
+.light [class*="bg-slate-950"] { background-color: #f8fafc !important; }
+.light [class*="bg-slate-900"] { background-color: #ffffff !important; }
+.light [class*="bg-slate-800"] { background-color: #f1f5f9 !important; }
+.light [class*="bg-slate-700"] { background-color: #e2e8f0 !important; }
+
+.light [class*="border-slate-900"] { border-color: #cbd5e1 !important; }
+.light [class*="border-slate-800"] { border-color: #cbd5e1 !important; }
+.light [class*="border-slate-700"] { border-color: #d1d5db !important; }
+.light [class*="border-slate-600"] { border-color: #d1d5db !important; }
+
+.light [class*="text-slate-100"] { color: #0f172a !important; }
+.light [class*="text-slate-200"] { color: #1e293b !important; }
+.light [class*="text-slate-300"] { color: #334155 !important; }
+.light [class*="text-slate-400"] { color: #475569 !important; }
+.light [class*="text-slate-500"] { color: #64748b !important; }
+.light [class*="text-slate-600"] { color: #64748b !important; }
+
+.light [class*="hover:bg-slate-900"]:hover { background-color: #f1f5f9 !important; }
+.light [class*="hover:bg-slate-800"]:hover { background-color: #e2e8f0 !important; }
+
+.light [class*="shadow-xl"],
+.light [class*="shadow-2xl"] {
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.08),
+    0 2px 8px rgba(15, 23, 42, 0.04) !important;
 }

@@ -36,6 +36,27 @@ const defaultMenu: MenuNode[] = [
     icon: "🗂️",
     children: [{ id: "m4-1", name: "공통코드 목록", path: "/common-codes" }],
   },
+  {
+    id: "m5",
+    name: "팝업 관리",
+    icon: "🪟",
+    children: [
+      { id: "m5-1", name: "사이트 팝업", path: "/site-popups" },
+      { id: "m5-2", name: "비속어·광고 필터", path: "/content-filter" },
+      { id: "m5-3", name: "포인트 정책", path: "/point-policy" },
+    ],
+  },
+  {
+    id: "m6",
+    name: "게시판",
+    icon: "📅",
+    children: [
+      { id: "m6-1", name: "자유게시판", path: "/boards" },
+      { id: "m6-1b", name: "블랙리스트 제보", path: "/blacklist-report" },
+      { id: "m6-2", name: "일정 달력", path: "/calendar-schedules" },
+      { id: "m6-3", name: "포인트 랭킹", path: "/point-ranking" },
+    ],
+  },
 ];
 
 type MenuState = {

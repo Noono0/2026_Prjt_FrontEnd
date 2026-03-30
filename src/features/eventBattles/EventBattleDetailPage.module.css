@@ -1,0 +1,102 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+.card {
+    position: relative;
+    border-radius: 1rem;
+    padding: 1px;
+    background: linear-gradient(145deg, rgba(56, 189, 248, 0.35), rgba(244, 63, 94, 0.25));
+    min-height: 280px;
+}
+
+.cardInner {
+    height: 100%;
+    border-radius: calc(1rem - 1px);
+    background: linear-gradient(180deg, #0f172a 0%, #0c1017 100%);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.badge {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #f472b6;
+    margin-bottom: 0.5rem;
+}
+
+.label {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    line-height: 1.35;
+    min-height: 3.2rem;
+    margin-bottom: 0.75rem;
+}
+
+.poolTotal {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+}
+
+.poolHint {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+.betRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
+    margin-bottom: 0.75rem;
+}
+
+.pointsInput {
+    flex: 1;
+    min-width: 0;
+    border-radius: 0.5rem;
+    border: 1px solid #334155;
+    background: #081326;
+    color: #e2e8f0;
+    padding: 0.65rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.pointsUnit {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.betBtn {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(15, 23, 42, 0.6);
+    color: #f8fafc;
+    font-weight: 700;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.betBtn:hover:not(:disabled) {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: rgba(56, 189, 248, 0.5);
+}
+
+.betBtn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}

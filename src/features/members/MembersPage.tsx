@@ -47,6 +47,7 @@ type MemberRow = {
     memberSeq?: number;
     memberId: string;
     memberName: string;
+    nickname?: string;
     birthYmd?: string;
     email?: string;
     gender?: string;
@@ -152,6 +153,7 @@ export default function MembersPage() {
             memberSeq: m.memberSeq,
             memberId: m.memberId ?? "",
             memberName: m.memberName ?? "",
+            nickname: m.nickname ?? "",
             birthYmd: m.birthYmd ?? "",
             email: m.email ?? "",
             gender: m.gender ?? "",
@@ -188,11 +190,21 @@ export default function MembersPage() {
                     gender: (detail.gender as Member["gender"]) ?? "M",
                     phone: detail.phone ?? "",
                     email: detail.email ?? "",
+                    profileImageUrl: detail.profileImageUrl ?? null,
+                    profileImageFileSeq: detail.profileImageFileSeq ?? null,
                     region: detail.region ?? "",
                     roleCode: detail.roleCode ?? "",
                     roleName: detail.roleName ?? "",
                     status: (detail.status as Member["status"]) ?? "ACTIVE",
                     lastLoginAt: detail.lastLoginAt ?? "",
+                    streamerProfile: {
+                        instagramUrl: detail.streamerProfile?.instagramUrl ?? "",
+                        youtubeUrl: detail.streamerProfile?.youtubeUrl ?? "",
+                        soopChannelUrl: detail.streamerProfile?.soopChannelUrl ?? "",
+                        companyCategoryCode: detail.streamerProfile?.companyCategoryCode ?? "",
+                        bloodType: detail.streamerProfile?.bloodType ?? "",
+                        careerHistory: detail.streamerProfile?.careerHistory ?? "",
+                    },
                 });
             } catch (error) {
                 const message =
@@ -238,6 +250,7 @@ export default function MembersPage() {
                 },
             },
             { headerName: "회원명", field: "memberName", width: 140 },
+            { headerName: "닉네임", field: "nickname", width: 120 },
             { headerName: "생년월일", field: "birthYmd", width: 120 },
             { headerName: "이메일", field: "email", minWidth: 220, flex: 1 },
             { headerName: "성별", field: "gender", width: 90 },

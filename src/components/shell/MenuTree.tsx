@@ -19,11 +19,13 @@ function normalizePath(p: string): string {
  * - 동일 path 를 쓰는 항목이 여러 개면 → 더 깊은 depth 우선, 그다음 id 로 결정
  * - /members/foo 처럼 하위 경로일 때 → path 길이가 긴(더 구체적인) 메뉴 우선
  */
+type ActivePick = { id: string; depth: number; pathLen: number };
+
 function findActiveMenuId(nodes: MenuNode[], pathname: string): string | null {
     const cur = normalizePath(pathname);
     if (!cur) return null;
 
-    let best: { id: string; depth: number; pathLen: number } | null = null;
+    const acc: { best: ActivePick | null } = { best: null };
 
     const consider = (id: string, depth: number, menuPath: string) => {
         const p = normalizePath(menuPath);
@@ -36,19 +38,20 @@ function findActiveMenuId(nodes: MenuNode[], pathname: string): string | null {
         if (!matches) return;
 
         const pathLen = p.length;
+        const best = acc.best;
         if (!best) {
-            best = { id, depth, pathLen };
+            acc.best = { id, depth, pathLen };
             return;
         }
         if (pathLen > best.pathLen) {
-            best = { id, depth, pathLen };
+            acc.best = { id, depth, pathLen };
             return;
         }
         if (pathLen === best.pathLen) {
             if (depth > best.depth) {
-                best = { id, depth, pathLen };
+                acc.best = { id, depth, pathLen };
             } else if (depth === best.depth && id < best.id) {
-                best = { id, depth, pathLen };
+                acc.best = { id, depth, pathLen };
             }
         }
     };
@@ -61,7 +64,7 @@ function findActiveMenuId(nodes: MenuNode[], pathname: string): string | null {
     }
 
     walk(nodes, 0);
-    return best?.id ?? null;
+    return acc.best?.id ?? null;
 }
 
 function getLevelClass(level: number) {

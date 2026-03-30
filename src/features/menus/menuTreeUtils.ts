@@ -23,10 +23,11 @@ export function depthIndex(flat: MenuRow[], menuId: number): number {
 
 /** ancestorId 가 nodeId 의 조상인지 (node 가 ancestor 아래에 있는지) */
 export function isDescendantOf(flat: MenuRow[], ancestorId: number, nodeId: number): boolean {
-    let cur = flat.find((m) => m.menuId === nodeId);
-    while (cur?.parentMenuId) {
+    let cur: MenuRow | undefined = flat.find((m) => m.menuId === nodeId);
+    while (cur != null && cur.parentMenuId != null) {
         if (cur.parentMenuId === ancestorId) return true;
-        cur = flat.find((m) => m.menuId === cur.parentMenuId);
+        const pid = cur.parentMenuId;
+        cur = flat.find((m) => m.menuId === pid);
     }
     return false;
 }
