@@ -5,12 +5,83 @@
     margin-top: 1.5rem;
 }
 
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.95rem;
+    border-radius: 0.9rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #e0f2fe;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    box-shadow:
+        0 0 0 1px rgba(56, 189, 248, 0.12),
+        0 14px 30px -22px rgba(56, 189, 248, 0.45);
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.backLink:hover {
+    transform: translateY(-1px);
+    border-color: rgba(56, 189, 248, 0.78);
+    background: rgba(2, 132, 199, 0.12);
+    box-shadow:
+        0 0 0 1px rgba(56, 189, 248, 0.22),
+        0 18px 36px -26px rgba(56, 189, 248, 0.55);
+}
+
+.backLink:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 1px rgba(56, 189, 248, 0.28),
+        0 0 0 4px rgba(56, 189, 248, 0.18),
+        0 18px 36px -26px rgba(56, 189, 248, 0.55);
+}
+
+.backLinkIcon {
+    font-size: 1.1rem;
+    line-height: 1;
+    color: #38bdf8;
+    text-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+}
+
 .card {
     position: relative;
     border-radius: 1rem;
     padding: 1px;
     background: linear-gradient(145deg, rgba(56, 189, 248, 0.35), rgba(244, 63, 94, 0.25));
     min-height: 280px;
+}
+
+/* 풀 대비 비중 1위 주제 — 갱신 시 다른 카드로 옮겨 감 */
+.cardTopShare {
+    background: linear-gradient(
+        145deg,
+        rgba(251, 191, 36, 0.65),
+        rgba(52, 211, 153, 0.45),
+        rgba(56, 189, 248, 0.5)
+    );
+    box-shadow:
+        0 0 0 1px rgba(251, 191, 36, 0.35),
+        0 12px 40px -8px rgba(251, 191, 36, 0.25);
+    animation: cardTopSharePulse 2.8s ease-in-out infinite;
+}
+
+@keyframes cardTopSharePulse {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 1px rgba(251, 191, 36, 0.35),
+            0 12px 40px -8px rgba(251, 191, 36, 0.22);
+    }
+    50% {
+        box-shadow:
+            0 0 0 1px rgba(52, 211, 153, 0.45),
+            0 16px 44px -6px rgba(52, 211, 153, 0.28);
+    }
 }
 
 .cardInner {
@@ -21,6 +92,31 @@
     display: flex;
     flex-direction: column;
     border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.cardInnerTopShare {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.99) 100%);
+    border-color: rgba(251, 191, 36, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.12);
+}
+
+/* 정산 종료 후 확정된 승리 주제 — 맥동 없이 고정 강조 */
+.cardWinner {
+    background: linear-gradient(
+        145deg,
+        rgba(52, 211, 153, 0.5),
+        rgba(16, 185, 129, 0.4),
+        rgba(56, 189, 248, 0.38)
+    );
+    box-shadow:
+        0 0 0 1px rgba(52, 211, 153, 0.42),
+        0 12px 36px -10px rgba(16, 185, 129, 0.28);
+}
+
+.cardInnerWinner {
+    background: linear-gradient(180deg, rgba(15, 61, 53, 0.42) 0%, rgba(15, 23, 42, 0.99) 100%);
+    border-color: rgba(52, 211, 153, 0.52);
+    box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.14);
 }
 
 .badge {
@@ -50,7 +146,61 @@
 .poolHint {
     font-size: 0.75rem;
     color: #64748b;
+    margin-bottom: 0.75rem;
+}
+
+.poolShare {
     margin-bottom: 1rem;
+}
+
+.poolShareMeta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 0.35rem;
+}
+
+.poolShareMeta strong {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.poolSharePct {
+    font-size: 2.0rem;
+    font-weight: 800;
+    color: #38bdf8;
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+    line-height: 1.1;
+}
+
+.poolSharePctTop {
+    color: #fcd34d;
+    text-shadow: 0 0 22px rgba(251, 191, 36, 0.45);
+}
+
+.poolSharePctWinner {
+    color: #6ee7b7;
+    text-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+}
+
+.poolShareTrack {
+    height: 0.45rem;
+    border-radius: 999px;
+    background: rgba(30, 41, 59, 0.9);
+    overflow: hidden;
+    border: 1px solid rgba(51, 65, 85, 0.75);
+}
+
+.poolShareFill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #0ea5e9, #a855f7 55%, #f472b6);
+    min-width: 0;
+    transition: width 0.35s ease-out;
 }
 
 .betRow {
@@ -99,4 +249,156 @@
 .betBtn:disabled {
     opacity: 0.45;
     cursor: not-allowed;
+}
+
+/* 주제 투표 — 베팅 카드와 동일한 그리드·높이 */
+.voteGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.voteCardShell {
+    position: relative;
+    border-radius: 1rem;
+    padding: 1px;
+    background: linear-gradient(145deg, rgba(139, 92, 246, 0.45), rgba(56, 189, 248, 0.25));
+    min-height: 280px;
+}
+
+.voteCardShellActive {
+    background: linear-gradient(145deg, rgba(167, 139, 250, 0.65), rgba(139, 92, 246, 0.48));
+    box-shadow:
+        0 0 0 1px rgba(167, 139, 250, 0.42),
+        0 14px 36px -12px rgba(139, 92, 246, 0.35);
+}
+
+.voteCardInner {
+    height: 100%;
+    min-height: 278px;
+    width: 100%;
+    border-radius: calc(1rem - 1px);
+    background: linear-gradient(180deg, #0f172a 0%, #0c1017 100%);
+    padding: 1.25rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    font: inherit;
+    color: inherit;
+}
+
+.voteCardInner:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 2px rgba(139, 92, 246, 0.85),
+        0 0 0 6px rgba(139, 92, 246, 0.18);
+}
+
+.voteCardInner:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.voteCardShellActive .voteCardInner {
+    border-color: rgba(167, 139, 250, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.12);
+}
+
+.voteCardBadge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #c4b5fd;
+    margin-bottom: 0.5rem;
+}
+
+.voteCardLabel {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    line-height: 1.35;
+    min-height: 3rem;
+    word-break: break-word;
+    flex: 1;
+}
+
+.voteCardMeta {
+    margin-top: auto;
+    padding-top: 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #a78bfa;
+}
+
+.votePickRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(51, 65, 85, 0.55);
+}
+
+.votePickHint {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #e9d5ff;
+}
+
+.voteRadio {
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    border: 3px solid rgba(148, 163, 184, 0.65);
+    background: rgba(15, 23, 42, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.voteRadioOn {
+    border-color: #a78bfa;
+    background: linear-gradient(145deg, #8b5cf6, #6366f1);
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.25);
+}
+
+.voteRadioDot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: #fff;
+}
+
+.voteCheckbox {
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.4rem;
+    border: 3px solid rgba(148, 163, 184, 0.65);
+    background: rgba(15, 23, 42, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.voteCheckboxOn {
+    border-color: #a78bfa;
+    background: linear-gradient(145deg, #8b5cf6, #6366f1);
+}
+
+.voteCheckboxCheck {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 900;
+    line-height: 1;
 }

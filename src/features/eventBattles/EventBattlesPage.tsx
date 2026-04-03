@@ -2,43 +2,34 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { searchEventBattles, createEventBattle, type EventBattleListItem } from "./api";
+import { useAuthStore } from "@/stores/authStore";
+import { AuthorCellWithMenu } from "@/components/author/AuthorCellWithMenu";
+import { EventBattleStatusBadge } from "./EventBattleStatusBadge";
+import { z } from "zod";
 
 const MIN_OPTIONS = 2;
-const MAX_OPTIONS = 5;
 
-function renderStatusBadge(status?: string) {
-    if (status === "OPEN") {
-        return (
-            <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-500/35">
-                진행중
-            </span>
-        );
-    }
-    if (status === "SETTLED") {
-        return (
-            <span className="inline-flex items-center rounded-full bg-slate-600/40 px-2.5 py-0.5 text-xs font-semibold text-slate-200 ring-1 ring-slate-500/50">
-                종료됨
-            </span>
-        );
-    }
-    if (status === "CANCELLED") {
-        return (
-            <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-200 ring-1 ring-amber-500/35">
-                취소
-            </span>
-        );
-    }
-    return <span className="text-xs text-slate-400">{status ?? "-"}</span>;
-}
+const createEventBattleSchema = z.object({
+    title: z.string().trim().min(1, "제목을 입력해 주세요."),
+    optionLabels: z
+        .array(z.string().trim().min(1))
+        .min(MIN_OPTIONS, `주제는 ${MIN_OPTIONS}개 이상 입력해 주세요.`),
+    voteLimitPerMember: z.number().int().min(1, "투표권은 1 이상이어야 합니다."),
+});
 
 export default function EventBattlesPage() {
+    const router = useRouter();
+    const user = useAuthStore((s) => s.user);
     const [items, setItems] = useState<EventBattleListItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [openCreate, setOpenCreate] = useState(false);
+    const [voteMode, setVoteMode] = useState(false);
     const [title, setTitle] = useState("");
     const [optionLabels, setOptionLabels] = useState<string[]>(["", ""]);
+    const [voteLimitPerMember, setVoteLimitPerMember] = useState(1);
     const [saving, setSaving] = useState(false);
 
     const load = useCallback(async () => {
@@ -59,7 +50,7 @@ export default function EventBattlesPage() {
     }, [load]);
 
     const addOption = () => {
-        setOptionLabels((prev) => (prev.length < MAX_OPTIONS ? [...prev, ""] : prev));
+        setOptionLabels((prev) => [...prev, ""]);
     };
 
     const removeOption = (index: number) => {
@@ -79,20 +70,33 @@ export default function EventBattlesPage() {
 
     const handleCreate = async () => {
         const labels = optionLabels.map((s) => s.trim()).filter(Boolean);
-        if (!title.trim()) {
-            alert("제목을 입력해 주세요.");
-            return;
-        }
-        if (labels.length < MIN_OPTIONS || labels.length > MAX_OPTIONS) {
-            alert(`주제는 ${MIN_OPTIONS}개 이상 ${MAX_OPTIONS}개 이하로 입력해 주세요.`);
+        const parsed = createEventBattleSchema.safeParse({
+            title,
+            optionLabels: labels,
+            voteLimitPerMember: voteMode ? voteLimitPerMember : 1,
+        });
+        if (!parsed.success) {
+            alert(parsed.error.issues[0]?.message ?? "입력값이 올바르지 않습니다.");
             return;
         }
         try {
             setSaving(true);
-            await createEventBattle({ title: title.trim(), optionLabels: labels });
+            const created = await createEventBattle({
+                title: parsed.data.title,
+                optionLabels: parsed.data.optionLabels,
+                voteLimitPerMember: voteMode ? parsed.data.voteLimitPerMember : 1,
+                voteOnly: voteMode,
+            });
+            const seq = created.eventBattleSeq;
+            /* 상세로 갈 때는 모달을 먼저 닫지 않음 — 닫으면 목록이 한 프레임 보였다가 이동함 */
+            if (seq != null && seq > 0) {
+                router.push(`/event-battles/${seq}`);
+                return;
+            }
             setOpenCreate(false);
             setTitle("");
             setOptionLabels(["", ""]);
+            setVoteLimitPerMember(1);
             await load();
         } catch (e) {
             alert(e instanceof Error ? e.message : "등록 실패");
@@ -107,7 +111,7 @@ export default function EventBattlesPage() {
                 <div>
                     <h1 className="text-2xl font-bold text-white">이벤트 대결</h1>
                     <p className="mt-1 text-sm text-slate-500">
-                        주제 2~5개 · 회원당 이벤트당 1회 베팅 · 폴링으로 집계 갱신 (Redis는 선택)
+                        주제 2개 이상 · 회원당 이벤트당 1회 베팅 · 폴링으로 집계 갱신 (Redis는 선택)
                     </p>
                 </div>
                 <div className="flex gap-2">
@@ -135,7 +139,20 @@ export default function EventBattlesPage() {
 
             {openCreate ? (
                 <div className="mb-6 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-                    <div className="mb-3 text-sm font-medium text-slate-300">새 이벤트 (관리자·스트리머 권한)</div>
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                        <div className="text-sm font-medium text-slate-300">새 이벤트 (관리자·스트리머 권한)</div>
+                        <button
+                            type="button"
+                            onClick={() => setVoteMode((v) => !v)}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                                voteMode
+                                    ? "bg-violet-600 text-white hover:bg-violet-500"
+                                    : "border border-slate-600 text-slate-200 hover:bg-slate-800"
+                            }`}
+                        >
+                            투표 모드
+                        </button>
+                    </div>
                     <label className="mb-4 block">
                         <span className="text-xs text-slate-500">제목</span>
                         <input
@@ -147,19 +164,15 @@ export default function EventBattlesPage() {
                     </label>
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                         <span className="text-xs text-slate-500">
-                            주제 ({MIN_OPTIONS}~{MAX_OPTIONS}개)
+                            주제 ({MIN_OPTIONS}개 이상)
                         </span>
-                        {optionLabels.length < MAX_OPTIONS ? (
-                            <button
-                                type="button"
-                                onClick={addOption}
-                                className="rounded-lg border border-dashed border-slate-600 px-2.5 py-1 text-xs text-slate-300 hover:bg-slate-800"
-                            >
-                                + 주제 추가
-                            </button>
-                        ) : (
-                            <span className="text-xs text-slate-600">최대 {MAX_OPTIONS}개</span>
-                        )}
+                        <button
+                            type="button"
+                            onClick={addOption}
+                            className="rounded-lg border border-dashed border-slate-600 px-2.5 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                        >
+                            + 주제 추가
+                        </button>
                     </div>
                     <div className="space-y-2">
                         {optionLabels.map((lab, idx) => (
@@ -185,6 +198,18 @@ export default function EventBattlesPage() {
                             </div>
                         ))}
                     </div>
+                    {voteMode ? (
+                        <label className="mt-3 block">
+                            <span className="text-xs text-slate-500">1인당 투표권(기본 1)</span>
+                            <input
+                                type="number"
+                                min={1}
+                                className="mt-1 w-full rounded border border-slate-700 bg-[#081326] px-3 py-2"
+                                value={voteLimitPerMember}
+                                onChange={(e) => setVoteLimitPerMember(Math.max(1, Number(e.target.value || 1)))}
+                            />
+                        </label>
+                    ) : null}
                     <div className="mt-4 flex gap-2">
                         <button
                             type="button"
@@ -233,8 +258,20 @@ export default function EventBattlesPage() {
                                     <td className="max-w-[280px] truncate px-4 py-3 text-xs text-slate-400">
                                         {row.optionLabelsPreview ?? "—"}
                                     </td>
-                                    <td className="px-4 py-3">{renderStatusBadge(row.status)}</td>
-                                    <td className="px-4 py-3 text-xs">{row.creatorDisplayName}</td>
+                                    <td className="px-4 py-3">
+                                        <EventBattleStatusBadge status={row.status} />
+                                    </td>
+                                    <td className="px-4 py-3 text-xs">
+                                        <AuthorCellWithMenu
+                                            memberSeq={row.creatorMemberSeq}
+                                            memberId={row.creatorMemberId}
+                                            nickname={row.creatorDisplayName}
+                                            displayName={row.creatorDisplayName}
+                                            profileImageUrl={row.creatorProfileImageUrl}
+                                            currentMemberSeq={user?.memberSeq}
+                                            variant="compact"
+                                        />
+                                    </td>
                                     <td className="px-4 py-3 text-xs text-slate-500">{row.createDt}</td>
                                 </tr>
                             );

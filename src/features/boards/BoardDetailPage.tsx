@@ -271,26 +271,46 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                 ) : (
                     <h1 className="text-2xl font-bold text-white">{item.title ?? "(제목 없음)"}</h1>
                 )}
-                <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-400">
-                    <span className={styles.authorMeta}>
-                        {item.writerProfileImageUrl ? (
-                            <img
-                                src={item.writerProfileImageUrl}
-                                alt="작성자 프로필"
-                                className={styles.authorAvatar}
-                            />
-                        ) : (
-                            <span className={styles.authorFallback}>
-                                {(item.writerName ?? "?").slice(0, 1)}
-                            </span>
-                        )}
-                        닉네임: {item.writerName ?? "-"}
-                    </span>
-                    <span>작성일: {formatDate(item.createDt)}</span>
-                    <span>조회: {item.viewCount ?? 0}</span>
-                    <span>추천: {item.likeCount ?? 0}</span>
-                    <span>비추천: {item.dislikeCount ?? 0}</span>
-                    <span>신고: {item.reportCount ?? 0}</span>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <span className={styles.authorMeta}>
+                            {item.writerProfileImageUrl ? (
+                                <img
+                                    src={item.writerProfileImageUrl}
+                                    alt="작성자 프로필"
+                                    className={styles.authorAvatar}
+                                />
+                            ) : (
+                                <span className={styles.authorFallback}>
+                                    {(item.writerName ?? "?").slice(0, 1)}
+                                </span>
+                            )}
+                            닉네임: {item.writerName ?? "-"}
+                        </span>
+                        <span>작성일: {formatDate(item.createDt)}</span>
+                        <span>조회: {item.viewCount ?? 0}</span>
+                        <span>추천: {item.likeCount ?? 0}</span>
+                        <span>비추천: {item.dislikeCount ?? 0}</span>
+                        <span>신고: {item.reportCount ?? 0}</span>
+                    </div>
+                    {isOwner && !editMode ? (
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={`/boards/${boardSeq}?mode=edit`}
+                                className="rounded-lg border border-sky-600 bg-sky-900/30 px-4 py-2.5 text-sm font-semibold text-sky-200 hover:bg-sky-900/50"
+                            >
+                                수정
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={() => void onDelete()}
+                                disabled={actionLoading !== null}
+                                className="rounded-lg border border-rose-700/80 bg-rose-950/40 px-4 py-2.5 text-sm font-semibold text-rose-200 hover:bg-rose-950/70 disabled:opacity-60"
+                            >
+                                삭제
+                            </button>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
@@ -420,24 +440,6 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                         >
                             신고🚨 ({item.reportCount ?? 0})
                         </button>
-                        {isOwner && (
-                            <>
-                                <Link
-                                    href={`/boards/${boardSeq}?mode=edit`}
-                                    className="rounded-lg border border-sky-600 bg-sky-900/30 px-4 py-3 text-sm font-semibold text-sky-200 hover:bg-sky-900/50"
-                                >
-                                    수정
-                                </Link>
-                                <button
-                                    type="button"
-                                    onClick={() => void onDelete()}
-                                    disabled={actionLoading !== null}
-                                    className="rounded-lg border border-rose-700/80 bg-rose-950/40 px-4 py-3 text-sm font-semibold text-rose-200 hover:bg-rose-950/70 disabled:opacity-60"
-                                >
-                                    삭제
-                                </button>
-                            </>
-                        )}
                     </div>
                 )}
 

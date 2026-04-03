@@ -6,16 +6,22 @@ export type EventBattleOption = {
     sortOrder?: number;
     label?: string;
     pointsTotal?: number;
+    voteCount?: number;
 };
 
 export type EventBattleListItem = {
     eventBattleSeq?: number;
     title?: string;
     status?: string;
+    voteLimitPerMember?: number;
+    /** Y: 투표 전용 이벤트 */
+    voteOnlyYn?: string;
     winnerOptionSeq?: number | null;
     winnerLabel?: string | null;
     creatorMemberSeq?: number;
+    creatorMemberId?: string;
     creatorDisplayName?: string;
+    creatorProfileImageUrl?: string;
     optionLabelsPreview?: string;
     createDt?: string;
     settleDt?: string | null;
@@ -78,6 +84,7 @@ export type EventBattleActivity = {
     myBet?: EventBattleMyBet | null;
     /** 로그인 사용자 본인 베팅(행 단위 금액, 최신순) */
     myBetHistory?: EventBattleBetRow[];
+    myVoteOptionSeqs?: number[];
     /** 이벤트 내 총 베팅액 상위 */
     bettorRanking?: EventBattleBettorRank[];
     /** 종료 후 — 승리 주제 베팅자 중 정산 지급 상위 5 */
@@ -179,6 +186,9 @@ export async function getEventBattleRecentBetsOlder(
 export async function createEventBattle(body: {
     title: string;
     optionLabels: string[];
+    voteLimitPerMember?: number;
+    /** true면 투표 전용(베팅 불가) */
+    voteOnly?: boolean;
 }): Promise<EventBattleListItem> {
     const res = await fetch("/api/event-battles", {
         ...defaultApiRequestInit,
@@ -210,6 +220,19 @@ export async function placeBet(
     }
 }
 
+export async function voteEventBattle(eventBattleSeq: number, optionSeqs: number[]): Promise<void> {
+    const res = await fetch(`/api/event-battles/${eventBattleSeq}/votes`, {
+        ...defaultApiRequestInit,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ optionSeqs }),
+    });
+    const json = (await res.json()) as ApiEnvelope<unknown>;
+    if (!res.ok || !json.success) {
+        throw new Error(json.message ?? "투표 실패");
+    }
+}
+
 export async function settleEventBattle(eventBattleSeq: number, winnerOptionSeq: number): Promise<void> {
     const res = await fetch(`/api/event-battles/${eventBattleSeq}/settle`, {
         ...defaultApiRequestInit,
@@ -220,5 +243,34 @@ export async function settleEventBattle(eventBattleSeq: number, winnerOptionSeq:
     const json = (await res.json()) as ApiEnvelope<unknown>;
     if (!res.ok || !json.success) {
         throw new Error(json.message ?? "정산 실패");
+    }
+}
+
+/** 투표 전용 이벤트: 투표 마감(종료). 이후 투표 API 불가 */
+export async function closeVoteOnlyEventBattle(eventBattleSeq: number): Promise<void> {
+    const res = await fetch(`/api/event-battles/${eventBattleSeq}/close-voting`, {
+        ...defaultApiRequestInit,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({}),
+    });
+    const json = (await res.json()) as ApiEnvelope<unknown>;
+    if (!res.ok || !json.success) {
+        throw new Error(json.message ?? "투표 마감 실패");
+    }
+}
+
+export async function cancelEventBattle(eventBattleSeq: number): Promise<void> {
+    const res = await fetch(`/api/event-battles/${eventBattleSeq}/cancel`, {
+        ...defaultApiRequestInit,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({}),
+    });
+    const json = (await res.json()) as ApiEnvelope<unknown>;
+    if (!res.ok || !json.success) {
+        throw new Error(json.message ?? "이벤트 취소 실패");
     }
 }

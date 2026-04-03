@@ -51,6 +51,7 @@ const defaultMenu: MenuNode[] = [
     name: "게시판",
     icon: "📅",
     children: [
+      { id: "m6-1a", name: "문의게시판", path: "/inquiry-boards" },
       { id: "m6-1", name: "자유게시판", path: "/boards" },
       { id: "m6-1b", name: "블랙리스트 제보", path: "/blacklist-report" },
       { id: "m6-2", name: "일정 달력", path: "/calendar-schedules" },

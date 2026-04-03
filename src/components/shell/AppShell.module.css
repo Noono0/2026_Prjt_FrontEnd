@@ -1,14 +1,17 @@
 .layout {
     min-height: 100vh;
     display: grid;
+    position: relative;
 }
 
 .layoutExpanded {
     grid-template-columns: 280px 1fr;
+    --sidebar-w: 280px;
 }
 
 .layoutCollapsed {
     grid-template-columns: 72px 1fr;
+    --sidebar-w: 72px;
 }
 
 .content {
@@ -17,6 +20,30 @@
 
 .main {
     padding: 16px;
+}
+
+.collapseToggle {
+    position: absolute;
+    top: 8px;
+    left: calc(var(--sidebar-w) - 14px);
+    z-index: 60;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid rgb(var(--border));
+    background: rgb(var(--card));
+    color: rgb(var(--fg));
+    cursor: pointer;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.06),
+        0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.collapseToggle:hover {
+    filter: brightness(1.03);
 }
 
 @media (min-width: 768px) {

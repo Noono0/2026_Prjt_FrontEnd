@@ -10,6 +10,8 @@ export type BoardListItem = {
     /** 회원 로그인 ID */
     writerMemberId?: string;
     writerName?: string;
+    secretYn?: string;
+    anonymousYn?: string;
     writerProfileImageUrl?: string;
     viewCount?: number;
     likeCount?: number;

@@ -231,19 +231,9 @@ export default function BoardsPage() {
 
     const getBoardHref = (row: BoardListItem) => {
         if (row.noticeBoardSeq != null) {
-            const isMine =
-                typeof user?.memberSeq === "number" &&
-                typeof row.writerMemberSeq === "number" &&
-                user.memberSeq === row.writerMemberSeq;
-            return isMine
-                ? `/notice-board/${row.noticeBoardSeq}?mode=edit`
-                : `/notice-board/${row.noticeBoardSeq}`;
+            return `/notice-board/${row.noticeBoardSeq}`;
         }
-        const isMine =
-            typeof user?.memberSeq === "number" &&
-            typeof row.writerMemberSeq === "number" &&
-            user.memberSeq === row.writerMemberSeq;
-        return isMine ? `/boards/${row.boardSeq}?mode=edit` : `/boards/${row.boardSeq}`;
+        return `/boards/${row.boardSeq}`;
     };
 
     const rowKey = (row: BoardListItem) =>

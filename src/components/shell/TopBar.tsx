@@ -4,11 +4,13 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
-import { Sun, Moon, LogIn, LogOut, ChevronDown, User } from "lucide-react";
+import { Sun, Moon, LogIn, LogOut, ChevronDown, User, Users } from "lucide-react";
 import LoginModal from "@/components/auth/LoginModal";
 import { useAuthStore } from "@/stores/authStore";
 import { useWalletRefreshStore } from "@/stores/walletRefreshStore";
 import { fetchMyWallet } from "@/features/members/walletApi";
+import { fetchVisitorOverview, sendVisitorHeartbeat, type VisitorOverview } from "@/features/analytics/api";
+import VisitorStatsModal from "@/components/analytics/VisitorStatsModal";
 
 // 1 = 윈도우 팝업, 2 = 모달 팝업
 const LOGIN_MODE: 1 | 2 = 2;
@@ -22,6 +24,11 @@ export default function TopBar() {
   const [mounted, setMounted] = useState(false);
   const [myMenuOpen, setMyMenuOpen] = useState(false);
   const [walletPoints, setWalletPoints] = useState<number | null>(null);
+  const [onlineCount, setOnlineCount] = useState<number>(0);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [stats, setStats] = useState<VisitorOverview | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -66,6 +73,54 @@ export default function TopBar() {
     };
   }, [isLoggedIn, user, walletRefreshTick]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const beat = async () => {
+      try {
+        await sendVisitorHeartbeat();
+      } catch {
+        // heartbeat 실패는 UI 흐름을 막지 않음
+      }
+    };
+    const refreshOnline = async () => {
+      try {
+        const data = await fetchVisitorOverview({ days: 7, weeks: 4, months: 3 });
+        if (!cancelled) {
+          setOnlineCount(data.onlineCount ?? 0);
+          setStats((prev) => prev ?? data);
+        }
+      } catch {
+        if (!cancelled) setOnlineCount(0);
+      }
+    };
+
+    void beat();
+    void refreshOnline();
+    const heartbeatTimer = window.setInterval(() => {
+      void beat();
+      void refreshOnline();
+    }, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(heartbeatTimer);
+    };
+  }, []);
+
+  const openStatsModal = async () => {
+    setStatsOpen(true);
+    setStatsError(null);
+    setStatsLoading(true);
+    try {
+      const data = await fetchVisitorOverview({ days: 30, weeks: 12, months: 12 });
+      setOnlineCount(data.onlineCount ?? 0);
+      setStats(data);
+    } catch (e) {
+      setStatsError(e instanceof Error ? e.message : "방문자 통계를 불러오지 못했습니다.");
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   const onLogout = async () => {
     if (user) await logout();
     if (session) await signOut({ callbackUrl: "/" });
@@ -91,6 +146,18 @@ export default function TopBar() {
         <div className="text-sm font-semibold">PRJT Admin</div>
 
         <div className="flex items-center gap-2">
+          <button
+            className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm hover:bg-muted"
+            onClick={openStatsModal}
+            type="button"
+            aria-label="현재 접속자 통계"
+            title="현재 접속자 통계"
+          >
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">현재접속자</span>
+            <span className="font-semibold text-emerald-500 dark:text-emerald-400">{onlineCount}</span>
+          </button>
+
           <button
             className="rounded-xl border px-3 py-2 text-sm hover:bg-muted"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -130,24 +197,27 @@ export default function TopBar() {
 
                 {myMenuOpen && (
                   <div
-                    className="absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-xl border bg-background shadow-xl"
+                    className="absolute right-0 z-50 mt-2 w-52 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white text-slate-900 shadow-lg dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40"
+                    role="menu"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {walletPoints != null ? (
-                      <div className="border-b px-4 py-2 text-xs text-muted-foreground">
+                      <div className="border-b border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
                         보유 포인트{" "}
-                        <span className="font-semibold text-foreground">{walletPoints.toLocaleString("ko-KR")}P</span>
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          {walletPoints.toLocaleString("ko-KR")}P
+                        </span>
                       </div>
                     ) : null}
                     <Link
                       href="/myInfo"
-                      className="block px-4 py-2 text-sm hover:bg-muted"
+                      className="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                       onClick={() => setMyMenuOpen(false)}
                     >
                       내 회원정보
                     </Link>
                     <button
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-muted"
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                       onClick={async () => {
                         setMyMenuOpen(false);
                         await onLogout();
@@ -175,6 +245,13 @@ export default function TopBar() {
       </div>
 
       <LoginModal open={open} onClose={() => setOpen(false)} />
+      <VisitorStatsModal
+        open={statsOpen}
+        onClose={() => setStatsOpen(false)}
+        data={stats}
+        loading={statsLoading}
+        error={statsError}
+      />
     </header>
   );
 }
