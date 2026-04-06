@@ -3,7 +3,7 @@ import { API_BASE_URL } from "@/lib/config";
 
 type Params = { params: Promise<{ eventBattleSeq: string }> };
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest, { params }: Params) {

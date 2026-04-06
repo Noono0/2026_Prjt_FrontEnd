@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+export const runtime = "edge";
+
 
 const handler = NextAuth(authOptions);
 

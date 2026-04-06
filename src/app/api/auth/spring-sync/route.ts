@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { API_BASE_URL } from "@/lib/config";
+export const runtime = "edge";
+
 
 /**
  * NextAuth(JWT)에 올라간 memberId·memberSeq 로 Spring JSESSIONID 를 맞춥니다.
