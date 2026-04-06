@@ -6,7 +6,9 @@
     "dev": "next dev --turbo -H localhost -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cf:build": "next build && next-on-pages",
+    "cf:deploy": "pnpm run cf:build && wrangler pages deploy .vercel/output/static --project-name=2026-prjt-frontend"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",
@@ -59,6 +61,7 @@
   },
   "devDependencies": {
     "@base-ui/react": "^1.3.0",
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/lodash.throttle": "^4.1.9",
@@ -72,6 +75,7 @@
     "sass": "^1.98.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.3",
+    "vercel": "47.0.4",
     "wrangler": "^4.80.0"
   },
   "packageManager": "pnpm@9.15.4",

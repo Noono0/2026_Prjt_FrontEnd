@@ -118,6 +118,31 @@ pnpm lint     # ESLint
 
 이 프로젝트는 로컬에서 **Wrangler CLI**로 정적 산출물(또는 Next용 어댑터 출력)을 **Cloudflare Pages**에 올리는 방식을 가정할 수 있습니다. (`wrangler pages deploy`는 **Pages** 제품이며, 실행은 Workers 기반 인프라입니다.)
 
+### Windows PowerShell에서는 WSL에 들어가서 배포할 것
+
+`@cloudflare/next-on-pages` 가 Windows 네이티브에서 **Vercel CLI 빌드를 불안정하게** 돌리는 경우가 많습니다. **Windows PowerShell에서 아래처럼 WSL(우분투 등) 셸로 전환한 뒤**, 같은 저장소 경로로 이동해 `pnpm` 명령을 실행하는 것을 권장합니다.
+
+PowerShell에서:
+
+```powershell
+wsl
+```
+
+WSL 안에서 (경로는 본인 PC의 프로젝트 위치에 맞게 조정 — Windows `C:\` 는 보통 `/mnt/c/`):
+
+```bash
+cd "/mnt/c/dev/2026 new prjt/real/prjt-frontend-operational"
+pnpm install
+pnpm exec wrangler login
+pnpm run cf:deploy
+```
+
+- 처음 한 번만 `wrangler login` 하면 됩니다.
+- `cf:deploy` 가 프로젝트 이름이 다르면 `package.json`의 `cf:deploy` 스크립트 또는 `wrangler pages deploy ... --project-name=` 을 본인 Pages 프로젝트명으로 바꿉니다.
+- WSL에 **Node 20 + pnpm**이 없다면 설치 후 위 명령을 실행합니다. (예: [Nodesource](https://github.com/nodesource/distributions) 또는 nvm으로 Node 20, `corepack enable` 후 `pnpm`.)
+
+**정리:** PowerShell에서 배포 빌드·업로드가 실패하거나 멈추면, **항상 `wsl` → 위 bash 명령** 순서로 진행하세요.
+
 ### 1. 의존성 설치
 
 ```bash
@@ -140,31 +165,36 @@ pnpm exec wrangler login
 pnpm exec wrangler whoami
 ```
 
-### 3. 배포할 빌드 산출물 준비
+### 3. 배포할 빌드 산출물 준비 (`pnpm build` 만으로는 폴더가 생기지 않음)
 
-**경로 `.vercel/output/static`** 은 보통 [**`@cloudflare/next-on-pages`**](https://developers.cloudflare.com/pages/framework-guides/nextjs/) 등으로 Next 앱을 Cloudflare용으로 빌드했을 때 생성됩니다.
-이 저장소에 해당 빌드 스크립트가 아직 없다면, Cloudflare 문서에 맞게 어댑터를 추가한 뒤 빌드를 실행해야 합니다.
+`wrangler pages deploy .vercel/output/static` 에서 **ENOENT** 가 나는 이유는, 일반 `next build` 만으로는 **`.vercel/output/static` 이 생성되지 않기 때문**입니다.
 
-예시(프로젝트에 어댑터를 연결한 PR/설정 이후):
+이 저장소는 devDependency로 [**`@cloudflare/next-on-pages`**](https://developers.cloudflare.com/pages/framework-guides/nextjs/) + **`vercel`**(peer) 을 두고, 아래 스크립트로 한 번에 만듭니다.
 
 ```bash
-# Cloudflare 문서/프로젝트 스크립트에 맞는 빌드 명령 실행 (예: next-on-pages 빌드)
-pnpm build
-# 또는 문서에 나온 pages 전용 빌드 명령
+pnpm run cf:build
 ```
 
-**완전 정적 내보내기(`output: 'export'`)**만 쓰는 경우에는 산출 폴더가 `out/` 일 수 있으므로, 그때는 아래 배포 명령의 경로를 `./out` 등으로 바꿉니다.
+- **`cf:build`** = `next build` 이후 `next-on-pages` 실행 → **`.vercel/output/static`** 생성
+
+위 **「Windows PowerShell에서는 WSL에 들어가서 배포」** 절을 먼저 참고하세요. 네이티브 Windows에서 실패하면 **GitHub Actions** 등 Linux 환경에서 빌드하는 방법도 있습니다.
+
+**완전 정적 내보내기(`output: 'export'`)**만 쓰는 프로젝트는 산출물이 `out/` 일 수 있으며, 그때는 배포 경로를 `./out` 으로 바꿉니다(본 앱은 App Router·API Routes 때문에 정적 export만으로는 대체로 부족합니다).
 
 ### 4. Pages 프로젝트에 배포
 
 Cloudflare 대시보드에서 **Pages** 프로젝트를 미리 만들었거나, 첫 배포 시 프로젝트 이름으로 생성됩니다.
 
 ```bash
+# 빌드 + 배포 한 번에 (프로젝트 이름은 본인 계정에 맞게)
+pnpm run cf:deploy
+
+# 이미 cf:build 를 실행한 뒤 배포만 할 때
 pnpm exec wrangler pages deploy .vercel/output/static --project-name=2026-prjt-frontend
 ```
 
-- `--project-name`: Cloudflare Pages의 프로젝트 이름(본인 계정에 맞게 변경)
-- 산출 폴더 경로는 실제 빌드 결과에 맞게 수정
+- 미커밋 변경 경고를 끄려면: `--commit-dirty=true` (wrangler 문서 참고)
+- `--project-name`: Cloudflare Pages 프로젝트 이름
 
 ### 5. 프로덕션 환경 변수
 
