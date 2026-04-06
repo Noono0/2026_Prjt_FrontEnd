@@ -232,12 +232,18 @@ export async function downloadBlacklistReportExcel(params: {
     keyword?: string;
     createDtFrom?: string;
     createDtTo?: string;
+    /** 목록 상단 카테고리 칩과 동일 필터 */
+    categoryCode?: string | null;
+    /** 백엔드 허용 camelCase 필드명, 쉼표로 연결해 전달 */
+    columns?: string[];
 }) {
     const sp = new URLSearchParams();
     if (params.blacklistTargetId?.trim()) sp.set("blacklistTargetId", params.blacklistTargetId.trim());
     if (params.keyword?.trim()) sp.set("keyword", params.keyword.trim());
     if (params.createDtFrom?.trim()) sp.set("createDtFrom", params.createDtFrom.trim());
     if (params.createDtTo?.trim()) sp.set("createDtTo", params.createDtTo.trim());
+    if (params.categoryCode?.trim()) sp.set("categoryCode", params.categoryCode.trim());
+    if (params.columns?.length) sp.set("columns", params.columns.join(","));
     const q = sp.toString();
     const res = await fetch(`/api/blacklist-reports/export${q ? `?${q}` : ""}`, {
         method: "GET",

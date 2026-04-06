@@ -13,7 +13,16 @@ import {
   type NodeWithPos,
 } from "@tiptap/react"
 
-export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+import { MAX_BOARD_IMAGE_UPLOAD_BYTES } from "@/lib/imageUploadConstants"
+import {
+  confirmShrinkOversizedImage,
+  UserCancelledImageUploadError,
+} from "@/lib/imageUploadConfirm"
+
+/** Spring multipart·에디터 공통 상한 */
+export const MAX_FILE_SIZE = MAX_BOARD_IMAGE_UPLOAD_BYTES
+
+export { UserCancelledImageUploadError }
 
 export const MAC_SYMBOLS: Record<string, string> = {
   mod: "⌘",
@@ -369,9 +378,9 @@ export const handleImageUpload = async (
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    throw new Error(
-      `File size exceeds maximum allowed (${MAX_FILE_SIZE / (1024 * 1024)}MB)`
-    )
+    if (!confirmShrinkOversizedImage(file, MAX_FILE_SIZE)) {
+      throw new UserCancelledImageUploadError()
+    }
   }
 
   if (abortSignal?.aborted) {

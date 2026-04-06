@@ -7,6 +7,15 @@ import { changeMyPassword, findMemberByMemberId, type MemberDetailResponse, upda
 import { uploadImageFile } from "@/lib/upload";
 import WalletSection from "@/features/members/WalletSection";
 
+function oauthProviderLabel(code?: string) {
+    if (!code) return "";
+    const u = code.toUpperCase();
+    if (u === "GOOGLE") return "Google";
+    if (u === "NAVER") return "네이버";
+    if (u === "KAKAO") return "카카오";
+    return code;
+}
+
 function toDateInputValue(birthYmd?: string) {
     if (!birthYmd) return "";
     if (/^\d{8}$/.test(birthYmd)) {
@@ -19,9 +28,10 @@ export default function MyInfoPage() {
     const { data: session } = useSession();
     const { user } = useAuthStore();
 
+    /** Spring member_id — OAuth 는 JWT 의 session.user.memberId (g_/n_/k_ 접두) 사용, 이메일·이름으로 조회하지 않음 */
     const memberId = useMemo(
-        () => user?.username ?? session?.user?.name ?? session?.user?.email ?? "",
-        [session?.user?.email, session?.user?.name, user?.username]
+        () => user?.username ?? session?.user?.memberId ?? "",
+        [session?.user?.memberId, user?.username]
     );
 
     const [info, setInfo] = useState<MemberDetailResponse | null>(null);
@@ -61,7 +71,10 @@ export default function MyInfoPage() {
     const handleFileChange = async (file?: File) => {
         if (!file) return;
         try {
-            const { fileUrl, fileSeq } = await uploadImageFile(file, "/myInfo");
+            const { fileUrl, fileSeq, optimizationNotice } = await uploadImageFile(file, "/myInfo", "profile");
+            if (optimizationNotice) {
+                window.alert(optimizationNotice);
+            }
             setInfo((prev) =>
                 prev
                     ? {
@@ -144,10 +157,37 @@ export default function MyInfoPage() {
                 <p className="text-sm text-slate-400">회원정보를 불러오는 중입니다.</p>
             ) : (
                 <div className="space-y-4">
+                    {info.oauthProvider ? (
+                        <p className="text-sm text-slate-400">
+                            소셜 로그인({oauthProviderLabel(info.oauthProvider)})으로 연동된 계정입니다. 성명·닉네임은 아래에서 수정 후 저장할 수
+                            있습니다.
+                        </p>
+                    ) : null}
                     <div className="grid gap-4 md:grid-cols-3">
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-                            <div className="mb-2 text-sm text-slate-400">아이디</div>
-                            <div className="text-lg">{info.memberId}</div>
+                            {info.oauthProvider ? (
+                                <>
+                                    <div className="mb-2 text-sm text-slate-400">로그인 · 연동</div>
+                                    <div className="text-lg font-medium text-slate-100">
+                                        {info.email?.trim() || session?.user?.email || "—"}
+                                    </div>
+                                    <div className="mt-1 text-xs text-slate-500">
+                                        {oauthProviderLabel(info.oauthProvider)}
+                                        {info.email || session?.user?.email
+                                            ? ""
+                                            : " · 이메일은 아래에서 입력·저장해 주세요"}
+                                    </div>
+                                    <div className="mt-3 border-t border-slate-800 pt-2 text-xs text-slate-500">
+                                        <span className="text-slate-500">시스템 ID (변경 불가)</span>
+                                        <div className="mt-0.5 font-mono text-[11px] text-slate-400">{info.memberId}</div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="mb-2 text-sm text-slate-400">아이디</div>
+                                    <div className="text-lg">{info.memberId}</div>
+                                </>
+                            )}
                         </div>
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
                             <div className="mb-2 text-sm text-slate-400">성명</div>
@@ -250,40 +290,50 @@ export default function MyInfoPage() {
                         {saving ? "저장 중..." : "회원정보 저장"}
                     </button>
 
-                    <div className="mt-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-                        <h2 className="mb-3 text-lg font-semibold text-white">비밀번호 변경</h2>
-                        <div className="grid gap-3 md:grid-cols-3">
-                            <input
-                                type="password"
-                                placeholder="현재 비밀번호"
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                className="rounded-lg border border-slate-700 bg-[#081326] px-3 py-2"
-                            />
-                            <input
-                                type="password"
-                                placeholder="새 비밀번호"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="rounded-lg border border-slate-700 bg-[#081326] px-3 py-2"
-                            />
-                            <input
-                                type="password"
-                                placeholder="새 비밀번호 확인"
-                                value={newPasswordConfirm}
-                                onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                                className="rounded-lg border border-slate-700 bg-[#081326] px-3 py-2"
-                            />
+                    {info.oauthProvider ? (
+                        <div className="mt-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                            <h2 className="mb-2 text-lg font-semibold text-white">비밀번호</h2>
+                            <p className="text-sm text-slate-400">
+                                이 계정은 {oauthProviderLabel(info.oauthProvider)} 로그인을 사용합니다. 비밀번호는 없으며, 앞으로도 같은 방식으로
+                                로그인하면 됩니다. ID/PW 로그인을 쓰려면 관리자에게 문의해 주세요.
+                            </p>
                         </div>
-                        <button
-                            type="button"
-                            onClick={handleChangePassword}
-                            disabled={passwordSaving}
-                            className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
-                        >
-                            {passwordSaving ? "변경 중..." : "비밀번호 변경"}
-                        </button>
-                    </div>
+                    ) : (
+                        <div className="mt-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                            <h2 className="mb-3 text-lg font-semibold text-white">비밀번호 변경</h2>
+                            <div className="grid gap-3 md:grid-cols-3">
+                                <input
+                                    type="password"
+                                    placeholder="현재 비밀번호"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    className="rounded-lg border border-slate-700 bg-[#081326] px-3 py-2"
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="새 비밀번호"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="rounded-lg border border-slate-700 bg-[#081326] px-3 py-2"
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="새 비밀번호 확인"
+                                    value={newPasswordConfirm}
+                                    onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                                    className="rounded-lg border border-slate-700 bg-[#081326] px-3 py-2"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleChangePassword}
+                                disabled={passwordSaving}
+                                className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+                            >
+                                {passwordSaving ? "변경 중..." : "비밀번호 변경"}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

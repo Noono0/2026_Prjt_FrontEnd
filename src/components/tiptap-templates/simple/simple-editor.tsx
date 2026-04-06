@@ -69,7 +69,11 @@ import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle"
 
 // --- Lib ---
-import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
+import {
+  handleImageUpload,
+  MAX_FILE_SIZE,
+  UserCancelledImageUploadError,
+} from "@/lib/tiptap-utils"
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
@@ -201,6 +205,11 @@ export function SimpleEditor({
   disabled = false,
   showThemeToggle = true,
 }: SimpleEditorProps = {}) {
+  /**
+   * Radix Tooltip/Dropdown 등은 SSR 시점과 클라이언트의 useId가 달라 hydration mismatch 가 난다.
+   * 마운트된 뒤에만 툴바·에디터 본문을 렌더링한다.
+   */
+  const [clientReady, setClientReady] = useState(false)
   const isMobile = useIsBreakpoint()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">(
@@ -221,15 +230,32 @@ export function SimpleEditor({
       },
       handlePaste(view, event) {
         const clipboardEvent = event as ClipboardEvent
-        const items = clipboardEvent.clipboardData?.items
-        if (!items || items.length === 0) return false
+        const data = clipboardEvent.clipboardData
+        if (!data) return false
 
+        /** 붙여넣기 시 items.getAsFile() 만 쓰면 0바이트 File 이 나오는 경우가 있어 files 목록을 우선한다. */
         const imageFiles: File[] = []
-        for (let i = 0; i < items.length; i += 1) {
-          const item = items[i]
-          if (item.kind === "file" && item.type.startsWith("image/")) {
-            const file = item.getAsFile()
-            if (file) imageFiles.push(file)
+        const seen = new Set<string>()
+        const add = (f: File) => {
+          if (!f.type.startsWith("image/") || f.size <= 0) return
+          const key = `${f.name}\0${f.size}\0${f.lastModified}\0${f.type}`
+          if (seen.has(key)) return
+          seen.add(key)
+          imageFiles.push(f)
+        }
+
+        const fileList = data.files
+        for (let i = 0; i < fileList.length; i += 1) {
+          add(fileList[i])
+        }
+        if (imageFiles.length === 0) {
+          const items = data.items
+          for (let i = 0; i < items.length; i += 1) {
+            const item = items[i]
+            if (item.kind === "file" && item.type.startsWith("image/")) {
+              const file = item.getAsFile()
+              if (file) add(file)
+            }
           }
         }
 
@@ -244,6 +270,7 @@ export function SimpleEditor({
               const tr = view.state.tr.replaceSelectionWith(imageNode).scrollIntoView()
               view.dispatch(tr)
             } catch (error) {
+              if (error instanceof UserCancelledImageUploadError) continue
               console.error("Paste image upload failed:", error)
             }
           }
@@ -309,6 +336,18 @@ export function SimpleEditor({
       editor.commands.setContent(next, { emitUpdate: false })
     }
   }, [editor, value])
+
+  useEffect(() => {
+    setClientReady(true)
+  }, [])
+
+  if (!clientReady) {
+    return (
+      <div className="simple-editor-wrapper" aria-busy="true">
+        <div className="simple-editor-content min-h-[min(70vh,28rem)] rounded-md border border-dashed border-current/15 bg-current/[0.03]" />
+      </div>
+    )
+  }
 
   return (
     <div className="simple-editor-wrapper">

@@ -7,7 +7,7 @@ import { signOut, useSession } from "next-auth/react";
 import { Sun, Moon, LogIn, LogOut, ChevronDown, User, Users } from "lucide-react";
 import LoginModal from "@/components/auth/LoginModal";
 import { useAuthStore } from "@/stores/authStore";
-import { useWalletRefreshStore } from "@/stores/walletRefreshStore";
+import { bumpWalletRefresh, useWalletRefreshStore } from "@/stores/walletRefreshStore";
 import { fetchMyWallet } from "@/features/members/walletApi";
 import { fetchVisitorOverview, sendVisitorHeartbeat, type VisitorOverview } from "@/features/analytics/api";
 import VisitorStatsModal from "@/components/analytics/VisitorStatsModal";
@@ -18,7 +18,7 @@ const LOGIN_MODE: 1 | 2 = 2;
 export default function TopBar() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
-  const { user, logout, restoreSession } = useAuthStore();
+  const { user, logout, restoreSession, setOAuthUser, markOAuthSpringDone, oauthSpringPending } = useAuthStore();
   const walletRefreshTick = useWalletRefreshStore((s) => s.tick);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -34,9 +34,55 @@ export default function TopBar() {
     setMounted(true);
   }, []);
 
+  /** NextAuth(OAuth) 세션이 있으면 여기서는 Spring 복원하지 않음 — 아래 effect 가 spring-sync 후 restore */
   useEffect(() => {
+    if (session?.user?.memberId) return;
     void restoreSession();
-  }, [restoreSession]);
+  }, [restoreSession, session?.user?.memberId]);
+
+  /** OAuth: spring-sync 먼저 → JSESSIONID 확보 후 restore + 지갑 API 재시도 */
+  useEffect(() => {
+    const mid = session?.user?.memberId;
+    const mseq = session?.user?.memberSeq;
+    if (!mid || mseq == null) return;
+
+    setOAuthUser({
+      username: mid,
+      memberSeq: mseq,
+      memberName: session.user?.name ?? undefined,
+      nickname: session.user?.name ?? undefined,
+      profileImageUrl: session.user?.image ?? undefined,
+    });
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const sync = await fetch("/api/auth/spring-sync", { method: "POST", credentials: "include" });
+        if (!cancelled && sync.ok) {
+          await restoreSession();
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelled) {
+          markOAuthSpringDone();
+          bumpWalletRefresh();
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    session?.user?.memberId,
+    session?.user?.memberSeq,
+    session?.user?.name,
+    session?.user?.image,
+    setOAuthUser,
+    restoreSession,
+    markOAuthSpringDone,
+  ]);
 
   useEffect(() => {
     const onClickOutside = () => setMyMenuOpen(false);
@@ -59,6 +105,7 @@ export default function TopBar() {
       setWalletPoints(null);
       return;
     }
+    if (oauthSpringPending) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -71,7 +118,7 @@ export default function TopBar() {
     return () => {
       cancelled = true;
     };
-  }, [isLoggedIn, user, walletRefreshTick]);
+  }, [isLoggedIn, user, oauthSpringPending, walletRefreshTick]);
 
   useEffect(() => {
     let cancelled = false;

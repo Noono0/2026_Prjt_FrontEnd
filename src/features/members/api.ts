@@ -96,6 +96,10 @@ export type MemberDetailResponse = {
     createDt?: string;
     modifyDt?: string;
     lastLoginAt?: string;
+    lastLoginIp?: string;
+    /** GOOGLE | NAVER | KAKAO — 있으면 소셜 연동 회원 */
+    oauthProvider?: string;
+    oauthSyncDt?: string;
     streamerProfile?: MemberStreamerProfileResponse | null;
 };
 

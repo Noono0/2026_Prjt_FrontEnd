@@ -11,9 +11,20 @@ export type User = {
 
 type AuthState = {
   user: User | null;
+  /** NextAuth 직후 Spring JSESSION 연동 대기 중이면 true — 지갑 등 /api/* 호출 전 spring-sync 필요 */
+  oauthSpringPending: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
+  /** NextAuth OAuth + Spring 동기화용 — DB member_id / memberSeq */
+  setOAuthUser: (u: {
+    username: string;
+    memberSeq?: number;
+    memberName?: string;
+    nickname?: string;
+    profileImageUrl?: string;
+  }) => void;
+  markOAuthSpringDone: () => void;
 };
 
 type LoginApiResponse = {
@@ -28,8 +39,9 @@ type LoginApiResponse = {
   };
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
+  oauthSpringPending: false,
   login: async (username, password) => {
     try {
       const res = await fetch("/api/auth/login", {
@@ -54,6 +66,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           profileImageUrl: json.data?.profileImageUrl,
           memberName: json.data?.memberName,
         },
+        oauthSpringPending: false,
       });
       return true;
     } catch {
@@ -67,7 +80,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         credentials: "include",
       });
     } finally {
-      set({ user: null });
+      set({ user: null, oauthSpringPending: false });
     }
   },
   restoreSession: async () => {
@@ -86,12 +99,27 @@ export const useAuthStore = create<AuthState>((set) => ({
             nickname: json.data.nickname,
             memberName: json.data.memberName,
           },
+          oauthSpringPending: false,
         });
-      } else {
+      } else if (!get().oauthSpringPending) {
         set({ user: null });
       }
     } catch {
-      set({ user: null });
+      if (!get().oauthSpringPending) {
+        set({ user: null });
+      }
     }
   },
+  setOAuthUser: (u) =>
+    set({
+      user: {
+        username: u.username,
+        memberSeq: u.memberSeq,
+        memberName: u.memberName,
+        nickname: u.nickname,
+        profileImageUrl: u.profileImageUrl,
+      },
+      oauthSpringPending: true,
+    }),
+  markOAuthSpringDone: () => set({ oauthSpringPending: false }),
 }));

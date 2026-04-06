@@ -982,7 +982,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                                     type="button"
                                     disabled={!open || busy}
                                     onClick={() => void onSubmitVotes()}
-                                    className="rounded bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"1
+                                    className="rounded bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                                 >
                                     투표 반영
                                 </button>

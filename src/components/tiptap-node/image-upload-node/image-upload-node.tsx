@@ -6,6 +6,7 @@ import { NodeViewWrapper } from "@tiptap/react"
 import { Button } from "@/components/tiptap-ui-primitive/button"
 import { CloseIcon } from "@/components/tiptap-icons/close-icon"
 import "@/components/tiptap-node/image-upload-node/image-upload-node.scss"
+import { UserCancelledImageUploadError } from "@/lib/imageUploadConfirm"
 import { focusNextNode, isValidPosition } from "@/lib/tiptap-utils"
 
 export interface FileItem {
@@ -86,14 +87,7 @@ function useFileUpload(options: UploadOptions) {
   const [fileItems, setFileItems] = useState<FileItem[]>([])
 
   const uploadFile = async (file: File): Promise<string | null> => {
-    if (file.size > options.maxSize) {
-      const error = new Error(
-        `File size exceeds maximum allowed (${options.maxSize / 1024 / 1024}MB)`
-      )
-      options.onError?.(error)
-      return null
-    }
-
+    /** 용량 초과 confirm 은 `handleImageUpload` 등 실제 업로드 함수 한 곳에서만 수행 */
     const abortController = new AbortController()
     const fileId = crypto.randomUUID()
 
@@ -140,6 +134,10 @@ function useFileUpload(options: UploadOptions) {
 
       return null
     } catch (error) {
+      if (error instanceof UserCancelledImageUploadError) {
+        setFileItems((prev) => prev.filter((item) => item.id !== fileId))
+        return null
+      }
       if (!abortController.signal.aborted) {
         setFileItems((prev) =>
           prev.map((item) =>
@@ -163,11 +161,11 @@ function useFileUpload(options: UploadOptions) {
     }
 
     if (options.limit && files.length > options.limit) {
-      options.onError?.(
-        new Error(
-          `Maximum ${options.limit} file${options.limit === 1 ? "" : "s"} allowed`
-        )
-      )
+      const msg = `한 번에 최대 ${options.limit}개의 파일만 선택할 수 있습니다.`
+      if (typeof window !== "undefined") {
+        window.alert(msg)
+      }
+      options.onError?.(new Error(msg))
       return []
     }
 

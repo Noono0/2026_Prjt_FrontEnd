@@ -13,6 +13,13 @@ import {
 } from "./api";
 import type { BlacklistReportListItem } from "./types";
 import { isNewWithin24Hours } from "@/lib/listDateUtils";
+import {
+    BLACKLIST_EXCEL_COLUMN_OPTIONS,
+    DEFAULT_BLACKLIST_EXCEL_KEYS,
+    loadStoredExcelColumnKeys,
+    normalizeExcelColumnKeys,
+    saveStoredExcelColumnKeys,
+} from "./excelExport";
 
 function categoryFilterToRequest(c: { label: string; value: string }): string | null {
     if (c.label === "전체") return null;
@@ -68,6 +75,8 @@ export default function BlacklistReportPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [exporting, setExporting] = useState(false);
+    const [excelColumnModalOpen, setExcelColumnModalOpen] = useState(false);
+    const [excelColumnDraft, setExcelColumnDraft] = useState<string[]>(DEFAULT_BLACKLIST_EXCEL_KEYS);
 
     const requestBody = useMemo(
         () => ({
@@ -117,6 +126,10 @@ export default function BlacklistReportPage() {
         void loadCategories();
     }, []);
 
+    useEffect(() => {
+        setExcelColumnDraft(loadStoredExcelColumnKeys());
+    }, []);
+
     const onCategoryClick = (code: string | null) => {
         setCategoryCode(code);
         setPage(1);
@@ -140,12 +153,16 @@ export default function BlacklistReportPage() {
         setAppliedDateTo(dt);
     };
 
+    const appliedExcelKeys = normalizeExcelColumnKeys(excelColumnDraft);
+
     const onExport = async () => {
         setExporting(true);
         try {
             await downloadBlacklistReportExcel({
                 blacklistTargetId: appliedBlacklistTargetId.trim() || undefined,
                 keyword: appliedKeyword.trim() || undefined,
+                categoryCode: categoryCode ?? undefined,
+                columns: appliedExcelKeys,
                 ...(dateRangeEnabled && appliedDateFrom && appliedDateTo
                     ? { createDtFrom: appliedDateFrom, createDtTo: appliedDateTo }
                     : {}),
@@ -155,6 +172,38 @@ export default function BlacklistReportPage() {
         } finally {
             setExporting(false);
         }
+    };
+
+    const openExcelColumnModal = () => {
+        setExcelColumnDraft(loadStoredExcelColumnKeys());
+        setExcelColumnModalOpen(true);
+    };
+
+    const toggleExcelColumn = (key: string) => {
+        setExcelColumnDraft((prev) => {
+            const set = new Set(prev);
+            if (set.has(key)) {
+                set.delete(key);
+            } else {
+                set.add(key);
+            }
+            return normalizeExcelColumnKeys([...set]);
+        });
+    };
+
+    const selectAllExcelColumns = () => {
+        setExcelColumnDraft(BLACKLIST_EXCEL_COLUMN_OPTIONS.map((o) => o.key));
+    };
+
+    const resetExcelColumnsDefault = () => {
+        setExcelColumnDraft([...DEFAULT_BLACKLIST_EXCEL_KEYS]);
+    };
+
+    const confirmExcelColumns = () => {
+        const next = normalizeExcelColumnKeys(excelColumnDraft);
+        saveStoredExcelColumnKeys(next);
+        setExcelColumnDraft(next);
+        setExcelColumnModalOpen(false);
     };
 
     return (
@@ -248,6 +297,13 @@ export default function BlacklistReportPage() {
                     </button>
                     <button
                         type="button"
+                        onClick={openExcelColumnModal}
+                        className="rounded-lg border border-slate-600 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
+                    >
+                        엑셀 칼럼
+                    </button>
+                    <button
+                        type="button"
                         disabled={exporting}
                         onClick={() => void onExport()}
                         className="rounded-lg border border-emerald-700 bg-emerald-950/40 px-4 py-2 text-sm font-medium text-emerald-200 hover:bg-emerald-900/50 disabled:opacity-50"
@@ -256,6 +312,76 @@ export default function BlacklistReportPage() {
                     </button>
                 </div>
             </form>
+
+            {excelColumnModalOpen ? (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="blacklist-excel-col-title"
+                >
+                    <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-2xl border border-slate-700 bg-[#0c1017] shadow-2xl">
+                        <div className="border-b border-slate-800 px-5 py-4">
+                            <h2 id="blacklist-excel-col-title" className="text-lg font-bold text-white">
+                                엑셀에 포함할 칼럼
+                            </h2>
+                            <p className="mt-1 text-xs text-slate-500">
+                                체크한 항목만 시트에 표시됩니다. 순서는 목록과 동일합니다. 설정은 이 브라우저에 저장됩니다.
+                            </p>
+                        </div>
+                        <div className="max-h-[50vh] overflow-y-auto px-5 py-3">
+                            <ul className="space-y-2">
+                                {BLACKLIST_EXCEL_COLUMN_OPTIONS.map((opt) => (
+                                    <li key={opt.key}>
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-2 py-1.5 hover:border-slate-700 hover:bg-slate-900/80">
+                                            <input
+                                                type="checkbox"
+                                                checked={excelColumnDraft.includes(opt.key)}
+                                                onChange={() => toggleExcelColumn(opt.key)}
+                                                className="rounded border-slate-600 text-emerald-600 focus:ring-emerald-600"
+                                            />
+                                            <span className="text-sm text-slate-200">{opt.label}</span>
+                                            <span className="ml-auto font-mono text-[10px] text-slate-600">{opt.key}</span>
+                                        </label>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 border-t border-slate-800 px-5 py-4">
+                            <button
+                                type="button"
+                                onClick={selectAllExcelColumns}
+                                className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800"
+                            >
+                                전체 선택
+                            </button>
+                            <button
+                                type="button"
+                                onClick={resetExcelColumnsDefault}
+                                className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800"
+                            >
+                                기본값
+                            </button>
+                            <div className="ml-auto flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setExcelColumnModalOpen(false)}
+                                    className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-900"
+                                >
+                                    취소
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={confirmExcelColumns}
+                                    className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+                                >
+                                    저장
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
 
             {error && (
                 <div className="mx-5 mt-4 rounded-lg border border-amber-900/60 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">

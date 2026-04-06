@@ -11,7 +11,8 @@ import {
     type MemberWalletSummary,
     type WalletLedgerRow,
 } from "./walletApi";
-import { bumpWalletRefresh } from "@/stores/walletRefreshStore";
+import { bumpWalletRefresh, useWalletRefreshStore } from "@/stores/walletRefreshStore";
+import { useAuthStore } from "@/stores/authStore";
 
 function fmt(n: number | undefined | null) {
     if (n == null || Number.isNaN(n)) return "0";
@@ -24,6 +25,9 @@ function fmtDelta(n: number | undefined | null) {
 }
 
 export default function WalletSection() {
+    const oauthSpringPending = useAuthStore((s) => s.oauthSpringPending);
+    const walletTick = useWalletRefreshStore((s) => s.tick);
+
     const [wallet, setWallet] = useState<MemberWalletSummary | null>(null);
     const [ledger, setLedger] = useState<WalletLedgerRow[]>([]);
     const [page, setPage] = useState(1);
@@ -70,12 +74,14 @@ export default function WalletSection() {
     }, [loadWallet, size]);
 
     useEffect(() => {
+        if (oauthSpringPending) return;
         void loadWallet();
-    }, [loadWallet]);
+    }, [loadWallet, oauthSpringPending, walletTick]);
 
     useEffect(() => {
+        if (oauthSpringPending) return;
         void loadLedger();
-    }, [loadLedger]);
+    }, [loadLedger, oauthSpringPending, walletTick]);
 
     const rates = wallet?.rates;
     const totalPages = Math.max(1, Math.ceil(total / size));

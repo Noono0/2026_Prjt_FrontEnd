@@ -215,52 +215,54 @@
     opacity: 0.82;
 }
 
-/* ag-grid 다크/라이트 톤 보정 */
-:global(.ag-theme-quartz),
-:global(.ag-theme-quartz-dark) {
-    --ag-border-color: transparent;
-    --ag-wrapper-border-radius: 16px;
-    --ag-row-border-color: var(--border);
-    --ag-header-column-separator-color: var(--border);
-    --ag-font-size: 14px;
-    --ag-font-family: inherit;
-}
+/* ag-grid 다크/라이트 톤 보정 (:global 블록 — VS Code 등이 :global() 나열 구문을 오진하는 경우 완화) */
+:global {
+    .ag-theme-quartz,
+    .ag-theme-quartz-dark {
+        --ag-border-color: transparent;
+        --ag-wrapper-border-radius: 16px;
+        --ag-row-border-color: var(--border);
+        --ag-header-column-separator-color: var(--border);
+        --ag-font-size: 14px;
+        --ag-font-family: inherit;
+    }
 
-:global(.ag-theme-quartz) {
-    --ag-background-color: #ffffff;
-    --ag-foreground-color: #162033;
-    --ag-header-background-color: #eef3fb;
-    --ag-header-foreground-color: #24324a;
-    --ag-odd-row-background-color: #fbfcfe;
-    --ag-row-hover-color: #eef5ff;
-    --ag-selected-row-background-color: #dbeafe;
-}
+    .ag-theme-quartz {
+        --ag-background-color: #ffffff;
+        --ag-foreground-color: #162033;
+        --ag-header-background-color: #eef3fb;
+        --ag-header-foreground-color: #24324a;
+        --ag-odd-row-background-color: #fbfcfe;
+        --ag-row-hover-color: #eef5ff;
+        --ag-selected-row-background-color: #dbeafe;
+    }
 
-:global(.ag-theme-quartz-dark) {
-    --ag-background-color: #111a2b;
-    --ag-foreground-color: #e8eefb;
-    --ag-header-background-color: #1a2740;
-    --ag-header-foreground-color: #dbe7ff;
-    --ag-odd-row-background-color: #142035;
-    --ag-row-hover-color: #1b2b46;
-    --ag-selected-row-background-color: rgba(59, 130, 246, 0.22);
-}
+    .ag-theme-quartz-dark {
+        --ag-background-color: #111a2b;
+        --ag-foreground-color: #e8eefb;
+        --ag-header-background-color: #1a2740;
+        --ag-header-foreground-color: #dbe7ff;
+        --ag-odd-row-background-color: #142035;
+        --ag-row-hover-color: #1b2b46;
+        --ag-selected-row-background-color: rgba(59, 130, 246, 0.22);
+    }
 
-:global(.ag-theme-quartz .ag-header),
-:global(.ag-theme-quartz-dark .ag-header) {
-    border-bottom: 1px solid var(--border);
-}
+    .ag-theme-quartz .ag-header,
+    .ag-theme-quartz-dark .ag-header {
+        border-bottom: 1px solid var(--border);
+    }
 
-:global(.ag-theme-quartz .ag-root-wrapper),
-:global(.ag-theme-quartz-dark .ag-root-wrapper) {
-    border: none;
-    border-radius: 16px;
-}
+    .ag-theme-quartz .ag-root-wrapper,
+    .ag-theme-quartz-dark .ag-root-wrapper {
+        border: none;
+        border-radius: 16px;
+    }
 
-:global(.ag-theme-quartz .ag-cell),
-:global(.ag-theme-quartz-dark .ag-cell) {
-    display: flex;
-    align-items: center;
+    .ag-theme-quartz .ag-cell,
+    .ag-theme-quartz-dark .ag-cell {
+        display: flex;
+        align-items: center;
+    }
 }
 
 @media (max-width: 1200px) {

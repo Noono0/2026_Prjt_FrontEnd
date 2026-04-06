@@ -21,6 +21,9 @@ coverage/
 .env
 .env.*
 !.env.example
+!.env.local.example
+!.env.development.example
+!.env.production.example
 
 ### IDE
 .idea/
