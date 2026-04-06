@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 import { API_BASE_URL } from "@/lib/config";
-export const runtime = "edge";
 
+export const runtime = "edge";
 
 /**
  * NextAuth(JWT)에 올라간 memberId·memberSeq 로 Spring JSESSIONID 를 맞춥니다.
@@ -11,7 +10,7 @@ export const runtime = "edge";
  */
 export async function POST(req: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         const memberId = session?.user?.memberId;
         const memberSeq = session?.user?.memberSeq;
         if (!memberId || memberSeq == null) {
