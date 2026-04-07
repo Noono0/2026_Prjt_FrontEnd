@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { forwardSpringSetCookies } from "@/lib/forwardSpringSetCookies";
 
 type Ctx = { params: Promise<{ path?: string[] }> };
 
@@ -46,15 +47,7 @@ async function proxy(req: NextRequest, ctx: Ctx): Promise<Response> {
     }
 
     const out = new NextResponse(res.body, { status: res.status });
-    const setCookies = res.headers.getSetCookie?.() ?? [];
-    if (setCookies.length) {
-        for (const c of setCookies) {
-            out.headers.append("Set-Cookie", c);
-        }
-    } else {
-        const single = res.headers.get("set-cookie");
-        if (single) out.headers.set("Set-Cookie", single);
-    }
+    forwardSpringSetCookies(res, out);
     const ct = res.headers.get("content-type");
     if (ct) out.headers.set("Content-Type", ct);
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { forwardSpringSetCookies } from "@/lib/forwardSpringSetCookies";
 
 export async function GET(req: NextRequest) {
     try {
@@ -14,10 +15,7 @@ export async function GET(req: NextRequest) {
 
         const data = await res.json();
         const response = NextResponse.json(data, { status: res.status });
-        const setCookie = res.headers.get("set-cookie");
-        if (setCookie) {
-            response.headers.set("set-cookie", setCookie);
-        }
+        forwardSpringSetCookies(res, response);
         return response;
     } catch (error) {
         console.error("GET /api/auth/me error =", error);
