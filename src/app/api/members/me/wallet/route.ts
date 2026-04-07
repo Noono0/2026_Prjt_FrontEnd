@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { forwardSpringSetCookies } from "@/lib/forwardSpringSetCookies";
 import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 export async function GET(req: NextRequest) {
@@ -11,8 +12,7 @@ export async function GET(req: NextRequest) {
         });
         const data = await res.json();
         const response = NextResponse.json(data, { status: res.status });
-        const setCookie = res.headers.get("set-cookie");
-        if (setCookie) response.headers.set("set-cookie", setCookie);
+        forwardSpringSetCookies(res, response);
         return response;
     } catch (e) {
         console.error("GET /api/members/me/wallet", e);

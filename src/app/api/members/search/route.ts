@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { forwardSpringSetCookies } from "@/lib/forwardSpringSetCookies";
 import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 export async function POST(req: NextRequest) {
@@ -14,7 +15,9 @@ export async function POST(req: NextRequest) {
         });
 
         const data = await res.json();
-        return NextResponse.json(data, { status: res.status });
+        const response = NextResponse.json(data, { status: res.status });
+        forwardSpringSetCookies(res, response);
+        return response;
     } catch (error) {
         console.error("POST /api/members/search error =", error);
         return NextResponse.json(

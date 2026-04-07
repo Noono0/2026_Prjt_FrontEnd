@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { forwardSpringSetCookies } from "@/lib/forwardSpringSetCookies";
 import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 export async function POST(req: NextRequest) {
@@ -12,7 +13,9 @@ export async function POST(req: NextRequest) {
             cache: "no-store",
         });
         const data = await res.json();
-        return NextResponse.json(data, { status: res.status });
+        const response = NextResponse.json(data, { status: res.status });
+        forwardSpringSetCookies(res, response);
+        return response;
     } catch (e) {
         console.error("POST exchange silver-gold", e);
         return NextResponse.json({ success: false, message: "교환 실패" }, { status: 500 });
