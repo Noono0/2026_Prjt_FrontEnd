@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
-export const runtime = "edge";
-
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ seq: string }> }) {
     try {

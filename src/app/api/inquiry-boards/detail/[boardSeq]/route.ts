@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
-export const runtime = "edge";
-
 
 type Params = { params: Promise<{ boardSeq: string }> };
 
@@ -19,4 +17,3 @@ export async function GET(req: NextRequest, { params }: Params) {
         return NextResponse.json({ success: false, message: "문의게시판 상세 조회 실패" }, { status: 500 });
     }
 }
-

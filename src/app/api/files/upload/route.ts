@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
-export const runtime = "edge";
-
 
 /**
  * 공통 파일 업로드 → Spring `/api/files/upload` (attach_file 메타 + 디스크 저장)

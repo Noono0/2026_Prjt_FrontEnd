@@ -12,13 +12,13 @@ Next.js(App Router) 기반 운영/관리 프론트엔드 스캐폴드입니다.
 | 프레임워크 | [Next.js](https://nextjs.org/) 15 (App Router), React 19, TypeScript |
 | 스타일 | [Tailwind CSS](https://tailwindcss.com/) v4, PostCSS, Sass |
 | 상태·데이터 | [TanStack Query](https://tanstack.com/query), [Zustand](https://zustand-demo.pmnd.rs/) |
-| 인증·테마 | [NextAuth.js](https://next-auth.js.org/) v4, [next-themes](https://github.com/pacocoursey/next-themes) |
+| 인증·테마 | [Auth.js / next-auth](https://authjs.dev/) v5, [next-themes](https://github.com/pacocoursey/next-themes) |
 | 그리드·차트 | [AG Grid](https://www.ag-grid.com/) React, [Recharts](https://recharts.org/) |
 | 에디터 | [Tiptap](https://tiptap.dev/) |
 | 캘린더 | [FullCalendar](https://fullcalendar.io/) |
 | UI·기타 | Radix UI, Floating UI, Framer Motion, Lucide, Zod, date-fns, react-arborist 등 |
 | 패키지 관리 | [pnpm](https://pnpm.io/) 9.x (`packageManager` 필드 참고) |
-| 배포(선택) | [Wrangler](https://developers.cloudflare.com/workers/wrangler/) → **Cloudflare Pages**에 프론트 배포 |
+| 배포 | [Vercel](https://vercel.com/) 권장 (Next.js 기본, Node 런타임·API Routes 호환) |
 
 ## 사전 준비
 
@@ -62,7 +62,7 @@ pnpm add ag-grid-community ag-grid-react
 pnpm add @radix-ui/react-dropdown-menu @radix-ui/react-popover @floating-ui/react framer-motion lucide-react classnames canvas-confetti date-fns date-holidays lodash.throttle react-arborist react-custom-roulette react-hotkeys-hook recharts zod
 
 # 개발 의존성
-pnpm add -D @tailwindcss/postcss tailwindcss postcss sass typescript @types/node @types/react @types/react-dom @types/canvas-confetti @types/lodash.throttle eslint eslint-config-next wrangler @base-ui/react class-variance-authority
+pnpm add -D @tailwindcss/postcss tailwindcss postcss sass typescript @types/node @types/react @types/react-dom @types/canvas-confetti @types/lodash.throttle eslint eslint-config-next @base-ui/react class-variance-authority
 ```
 
 Windows / PowerShell에서도 그대로 실행할 수 있게 **한 줄짜리 명령**만 두었습니다.  
@@ -114,98 +114,49 @@ pnpm lint     # ESLint
 
 ---
 
-## Cloudflare Pages로 배포 (Wrangler)
+## Vercel 수동 배포 (CLI, Git 연동 없음)
 
-이 프로젝트는 로컬에서 **Wrangler CLI**로 정적 산출물(또는 Next용 어댑터 출력)을 **Cloudflare Pages**에 올리는 방식을 가정할 수 있습니다. (`wrangler pages deploy`는 **Pages** 제품이며, 실행은 Workers 기반 인프라입니다.)
+저장소를 Vercel에 연결하지 않고, **로컬에서 CLI만**으로 빌드·업로드하는 흐름입니다. [`vercel`](https://vercel.com/docs/cli)은 이 프로젝트의 `devDependencies`에 포함되어 있습니다.
 
-### Windows PowerShell에서는 WSL에 들어가서 배포할 것
+### 최초 1회
 
-`@cloudflare/next-on-pages` 가 Windows 네이티브에서 **Vercel CLI 빌드를 불안정하게** 돌리는 경우가 많습니다. **Windows PowerShell에서 아래처럼 WSL(우분투 등) 셸로 전환한 뒤**, 같은 저장소 경로로 이동해 `pnpm` 명령을 실행하는 것을 권장합니다.
+1. [Vercel](https://vercel.com/) 웹에서 계정을 준비합니다.
+2. 프로젝트 루트에서 로그인합니다.
 
-PowerShell에서:
+   ```bash
+   pnpm exec vercel login
+   ```
 
-```powershell
-wsl
-```
+3. 같은 디렉터리에서 프로젝트를 링크합니다(질문에 따라 팀·프로젝트 이름을 선택).
 
-WSL 안에서 (경로는 본인 PC의 프로젝트 위치에 맞게 조정 — Windows `C:\` 는 보통 `/mnt/c/`):
+   ```bash
+   pnpm exec vercel link
+   ```
 
-```bash
-cd "/mnt/c/dev/2026 new prjt/real/prjt-frontend-operational"
-pnpm install
-pnpm exec wrangler login
-pnpm run cf:deploy
-```
+4. **환경 변수**는 [대시보드](https://vercel.com/dashboard) → 해당 프로젝트 → **Settings → Environment Variables**에 로컬 `.env.local`과 맞춰 넣거나, 터미널에서 `pnpm exec vercel env add`로 추가합니다.  
+   필수 예: `NEXT_PUBLIC_*`, `AUTH_SECRET` 또는 `NEXTAUTH_SECRET`, OAuth 클라이언트, 프로덕션 **`NEXTAUTH_URL`**.
 
-- 처음 한 번만 `wrangler login` 하면 됩니다.
-- `cf:deploy` 가 프로젝트 이름이 다르면 `package.json`의 `cf:deploy` 스크립트 또는 `wrangler pages deploy ... --project-name=` 을 본인 Pages 프로젝트명으로 바꿉니다.
-- WSL에 **Node 20 + pnpm**이 없다면 설치 후 위 명령을 실행합니다. (예: [Nodesource](https://github.com/nodesource/distributions) 또는 nvm으로 Node 20, `corepack enable` 후 `pnpm`.)
+### 배포할 때마다
 
-**정리:** PowerShell에서 배포 빌드·업로드가 실패하거나 멈추면, **항상 `wsl` → 위 bash 명령** 순서로 진행하세요.
+- **프로덕션**(실서비스 도메인에 연결된 배포):
 
-### 1. 의존성 설치
+  ```bash
+  pnpm run vercel:deploy
+  ```
 
-```bash
-pnpm install
-```
+  (`vercel --prod`와 동일)
 
-(`wrangler`는 `devDependencies`에 포함되어 있습니다.)
+- **프리뷰**(임시 URL만 바꿔 보고 싶을 때):
 
-### 2. Cloudflare 로그인
+  ```bash
+  pnpm run vercel:preview
+  ```
 
-```bash
-pnpm exec wrangler login
-```
+Vercel이 원격에서 `pnpm install` → `next build`를 수행합니다. 로컬 **Install Command**를 쓰려면 대시보드 → **Settings → General → Install Command**에 `pnpm install`을 지정하면 됩니다.
 
-브라우저가 열리면 Cloudflare 계정으로 승인합니다. 터미널-only 환경이면 표시되는 링크로 수동 로그인할 수 있습니다.
+배포 후 커스텀 도메인(예: `admin.gamcompany.kr`)은 대시보드 **Domains**에서 연결하고, **`NEXTAUTH_URL`**을 그 공개 URL과 동일하게 맞춥니다.
 
-확인:
-
-```bash
-pnpm exec wrangler whoami
-```
-
-### 3. 배포할 빌드 산출물 준비 (`pnpm build` 만으로는 폴더가 생기지 않음)
-
-`wrangler pages deploy .vercel/output/static` 에서 **ENOENT** 가 나는 이유는, 일반 `next build` 만으로는 **`.vercel/output/static` 이 생성되지 않기 때문**입니다.
-
-이 저장소는 devDependency로 [**`@cloudflare/next-on-pages`**](https://developers.cloudflare.com/pages/framework-guides/nextjs/) + **`vercel`**(peer) 을 두고, 아래 스크립트로 한 번에 만듭니다.
-
-```bash
-pnpm run cf:build
-```
-
-- **`cf:build`** = `next build` 이후 `next-on-pages` 실행 → **`.vercel/output/static`** 생성
-
-위 **「Windows PowerShell에서는 WSL에 들어가서 배포」** 절을 먼저 참고하세요. 네이티브 Windows에서 실패하면 **GitHub Actions** 등 Linux 환경에서 빌드하는 방법도 있습니다.
-
-**완전 정적 내보내기(`output: 'export'`)**만 쓰는 프로젝트는 산출물이 `out/` 일 수 있으며, 그때는 배포 경로를 `./out` 으로 바꿉니다(본 앱은 App Router·API Routes 때문에 정적 export만으로는 대체로 부족합니다).
-
-### 4. Pages 프로젝트에 배포
-
-Cloudflare 대시보드에서 **Pages** 프로젝트를 미리 만들었거나, 첫 배포 시 프로젝트 이름으로 생성됩니다.
-
-```bash
-# 빌드 + 배포 한 번에 (프로젝트 이름은 본인 계정에 맞게)
-pnpm run cf:deploy
-
-# 이미 cf:build 를 실행한 뒤 배포만 할 때
-pnpm exec wrangler pages deploy .vercel/output/static --project-name=2026-prjt-frontend
-```
-
-- 미커밋 변경 경고를 끄려면: `--commit-dirty=true` (wrangler 문서 참고)
-- `--project-name`: Cloudflare Pages 프로젝트 이름
-
-### 5. 프로덕션 환경 변수
-
-Cloudflare 대시보드 → 해당 **Pages 프로젝트** → **Settings** → **Environment variables** 에서  
-로컬 `.env.local`과 동일한 키(`NEXT_PUBLIC_*`, NextAuth에 필요한 시크릿 등)를 **Production**(및 Preview)에 등록합니다.  
-변수 추가·변경 후에는 재배포가 필요할 수 있습니다.
-
-### 6. (선택) Git 연동 자동 배포
-
-대시보드에서 저장소를 연결해 `git push`마다 빌드·배포하도록 설정할 수 있습니다.  
-이 경우에도 빌드 커맨드·산출 디렉터리는 위와 같이 Cloudflare/Next 어댑터 문서에 맞춥니다.
+자세한 서브도메인·DNS·CORS는 [docs/DEPLOY-GAMCOMPANY.md](./docs/DEPLOY-GAMCOMPANY.md)를 참고하세요.
 
 ---
 
@@ -213,6 +164,5 @@ Cloudflare 대시보드 → 해당 **Pages 프로젝트** → **Settings** → *
 
 - **Windows**: 경로에 공백이 있으면 터미널에서 큰따옴표로 감싸 실행합니다.
 - **`pnpm install` 시 esbuild가 ELF(리눅스) 바이너리 오류**: 같은 폴더를 WSL과 Windows가 공유하면 `node_modules`가 섞일 수 있습니다. **프로젝트 루트에서 `node_modules` 폴더를 삭제한 뒤, 지금 쓰는 OS에서 다시 `pnpm install`** 하세요.
-- **`next-on-pages` / `cf:build`**: 공식 경고대로 **네이티브 Windows보다 WSL(리눅스)에서 실행**하는 편이 안정적입니다.
-- **Auth.js(next-auth v5) 시크릿**: Cloudflare·로컬 모두 **`AUTH_SECRET`**(또는 기존과 동일 값의 **`NEXTAUTH_SECRET`**)이 필요합니다. `src/auth.ts`는 둘 다 읽습니다.
+- **Auth.js(next-auth v5) 시크릿**: Vercel·로컬 모두 **`AUTH_SECRET`**(또는 기존과 동일 값의 **`NEXTAUTH_SECRET`**)이 필요합니다. `src/auth.ts`는 둘 다 읽습니다.
 - **pnpm / Node 버전**: `package.json`의 `volta`·`packageManager` 필드와 맞추면 재현이 쉽습니다.

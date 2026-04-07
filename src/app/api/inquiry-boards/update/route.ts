@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
-export const runtime = "edge";
-
 
 export async function PUT(req: NextRequest) {
     try {
@@ -17,4 +15,3 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ success: false, message: "문의게시판 수정 실패" }, { status: 500 });
     }
 }
-

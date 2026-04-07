@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
-export const runtime = "edge";
-
 
 type Params = {
     params: Promise<{ boardSeq: string }>;

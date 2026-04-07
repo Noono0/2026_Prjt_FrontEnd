@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { API_BASE_URL } from "@/lib/config";
 
-export const runtime = "edge";
-
 /**
  * NextAuth(JWT)에 올라간 memberId·memberSeq 로 Spring JSESSIONID 를 맞춥니다.
  * 브라우저는 Secret 을 모릅니다 — 서버에서만 백엔드 호출.

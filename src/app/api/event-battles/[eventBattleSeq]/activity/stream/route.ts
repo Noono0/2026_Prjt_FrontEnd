@@ -3,7 +3,7 @@ import { API_BASE_URL } from "@/lib/config";
 
 type Params = { params: Promise<{ eventBattleSeq: string }> };
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest, { params }: Params) {
@@ -38,4 +38,3 @@ export async function GET(req: NextRequest, { params }: Params) {
         return NextResponse.json({ success: false, message: "SSE 스트림 실패" }, { status: 500 });
     }
 }
-

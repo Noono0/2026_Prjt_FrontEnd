@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
-export const runtime = "edge";
-
 
 type Params = { params: Promise<{ eventBattleSeq: string }> };
 
@@ -25,4 +23,3 @@ export async function POST(req: NextRequest, { params }: Params) {
         return NextResponse.json({ success: false, message: "투표 실패" }, { status: 500 });
     }
 }
-
