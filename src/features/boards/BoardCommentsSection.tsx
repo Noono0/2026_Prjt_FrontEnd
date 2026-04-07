@@ -223,7 +223,7 @@ function ComposeEditor({
                 <div className={styles.composeMeta}>
                     {user?.username ? (
                         <span className={styles.composeDisplayName}>
-                            {user.nickname?.trim() || user.memberName?.trim() || user.username}
+                            {user.nickname?.trim() || user.username}
                         </span>
                     ) : (
                         <span className={styles.composeDisplayName}>로그인 후 댓글을 작성할 수 있습니다</span>
@@ -357,7 +357,7 @@ function ComposeEditor({
                 <div className={styles.avatarCol}>
                     <CommentAvatar
                         imageUrl={user?.profileImageUrl}
-                        displayLabel={user?.nickname?.trim() || user?.memberName?.trim() || user?.username || "나"}
+                        displayLabel={user?.nickname?.trim() || user?.username || "나"}
                         small
                     />
                 </div>
@@ -371,7 +371,7 @@ function ComposeEditor({
             <div className={styles.avatarCol}>
                 <CommentAvatar
                     imageUrl={user?.profileImageUrl}
-                    displayLabel={user?.nickname?.trim() || user?.memberName?.trim() || user?.username || "게스트"}
+                    displayLabel={user?.nickname?.trim() || user?.username || "게스트"}
                     small={false}
                 />
             </div>

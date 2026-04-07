@@ -49,7 +49,6 @@ export default function TopBar() {
     setOAuthUser({
       username: mid,
       memberSeq: mseq,
-      memberName: session.user?.name ?? undefined,
       nickname: session.user?.name ?? undefined,
       profileImageUrl: session.user?.image ?? undefined,
     });
@@ -93,7 +92,6 @@ export default function TopBar() {
 
   const displayName =
     user?.nickname?.trim() ||
-    user?.memberName?.trim() ||
     user?.username ||
     (session?.user?.name || session?.user?.email) ||
     null;

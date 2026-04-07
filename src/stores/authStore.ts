@@ -64,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           username: json.data?.memberId ?? username,
           memberSeq: json.data?.memberSeq,
           profileImageUrl: json.data?.profileImageUrl,
-          memberName: json.data?.memberName,
+          nickname: json.data?.nickname,
         },
         oauthSpringPending: false,
       });
@@ -97,7 +97,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             memberSeq: json.data.memberSeq,
             profileImageUrl: json.data.profileImageUrl,
             nickname: json.data.nickname,
-            memberName: json.data.memberName,
           },
           oauthSpringPending: false,
         });
@@ -115,7 +114,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       user: {
         username: u.username,
         memberSeq: u.memberSeq,
-        memberName: u.memberName,
         nickname: u.nickname,
         profileImageUrl: u.profileImageUrl,
       },

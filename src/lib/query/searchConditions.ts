@@ -7,12 +7,13 @@ import type { RoleSearchCondition } from "@/features/roles/api";
 export function normalizeMemberSearchCondition(
     c: MemberSearchCondition
 ): MemberSearchCondition {
+    const statusCode =
+        c.statusCode?.trim() || c.status?.trim() ? (c.statusCode?.trim() || c.status?.trim()) : undefined;
     return {
-        ...c,
         memberId: c.memberId?.trim() ? c.memberId.trim() : undefined,
         memberName: c.memberName?.trim() ? c.memberName.trim() : undefined,
         roleCode: c.roleCode?.trim() ? c.roleCode.trim() : undefined,
-        status: c.status?.trim() ? c.status.trim() : undefined,
+        statusCode,
         page: c.page,
         size: c.size,
         sortBy: c.sortBy,
@@ -30,7 +31,7 @@ export function sameMemberSearchCondition(
         (na.memberId ?? "") === (nb.memberId ?? "") &&
         (na.memberName ?? "") === (nb.memberName ?? "") &&
         (na.roleCode ?? "") === (nb.roleCode ?? "") &&
-        (na.status ?? "") === (nb.status ?? "") &&
+        (na.statusCode ?? "") === (nb.statusCode ?? "") &&
         na.page === nb.page &&
         na.size === nb.size &&
         (na.sortBy ?? "") === (nb.sortBy ?? "") &&

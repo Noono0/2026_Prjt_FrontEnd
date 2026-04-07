@@ -16,7 +16,7 @@ import type {
 
 import MemberFormModal, { type Member } from "@/components/members/MemberFormModal";
 import { useMemberModalStore } from "@/stores/memberModalStore";
-import { fetchMemberDetail, type MemberListItemResponse } from "./api";
+import { fetchMemberDetail, memberPrimaryRoleCode, type MemberListItemResponse } from "./api";
 import {
     useDeleteMembersMutation,
     useMembersQuery,
@@ -149,21 +149,24 @@ export default function MembersPage() {
 
     const items = useMemo<MemberRow[]>(() => {
         const raw = membersQuery.data?.items ?? [];
-        return raw.map((m: MemberListItemResponse) => ({
-            memberSeq: m.memberSeq,
-            memberId: m.memberId ?? "",
-            memberName: m.memberName ?? "",
-            nickname: m.nickname ?? "",
-            birthYmd: m.birthYmd ?? "",
-            email: m.email ?? "",
-            gender: m.gender ?? "",
-            phone: m.phone ?? "",
-            roleCode: m.roleCode ?? "",
-            roleName: m.roleName ?? "",
-            status: m.status ?? "",
-            createDt: m.createDt ?? "",
-            modifyDt: m.modifyDt ?? "",
-        }));
+        return raw.map((m: MemberListItemResponse) => {
+            const code = memberPrimaryRoleCode(m);
+            return {
+                memberSeq: m.memberSeq,
+                memberId: m.memberId ?? "",
+                memberName: m.memberName ?? "",
+                nickname: m.nickname ?? "",
+                birthYmd: m.birthYmd ?? "",
+                email: m.email ?? "",
+                gender: m.gender ?? "",
+                phone: m.phone ?? "",
+                roleCode: code,
+                roleName: "",
+                status: m.statusCode ?? m.status ?? "",
+                createDt: m.createDt ?? "",
+                modifyDt: m.modifyDt ?? "",
+            };
+        });
     }, [membersQuery.data?.items]);
 
     const busy =
@@ -180,6 +183,7 @@ export default function MembersPage() {
                 setDetailLoading(true);
 
                 const detail = await fetchMemberDetail(row.memberSeq);
+                const code = memberPrimaryRoleCode(detail);
 
                 openEdit({
                     memberSeq: detail.memberSeq,
@@ -193,9 +197,9 @@ export default function MembersPage() {
                     profileImageUrl: detail.profileImageUrl ?? null,
                     profileImageFileSeq: detail.profileImageFileSeq ?? null,
                     region: detail.region ?? "",
-                    roleCode: detail.roleCode ?? "",
-                    roleName: detail.roleName ?? "",
-                    status: (detail.status as Member["status"]) ?? "ACTIVE",
+                    roleCode: code,
+                    roleName: roleNameMap.get(code) ?? detail.roleName ?? "",
+                    status: (detail.statusCode ?? detail.status ?? "ACTIVE") as Member["status"],
                     lastLoginAt: detail.lastLoginAt ?? "",
                     streamerProfile: {
                         instagramUrl: detail.streamerProfile?.instagramUrl ?? "",
@@ -214,7 +218,7 @@ export default function MembersPage() {
                 setDetailLoading(false);
             }
         },
-        [openEdit]
+        [openEdit, roleNameMap]
     );
 
     const colDefs = useMemo<ColDef<MemberRow>[]>(
@@ -353,7 +357,8 @@ export default function MembersPage() {
 
     const handleSortChanged = async (event: SortChangedEvent<MemberRow>) => {
         const sortModel = event.api.getColumnState().find((col) => col.sort);
-        const nextSortBy = sortModel?.colId ?? "memberSeq";
+        const colId = sortModel?.colId ?? "memberSeq";
+        const nextSortBy = colId === "status" ? "statusCode" : colId;
         const nextSortDir = (sortModel?.sort as "asc" | "desc") ?? "desc";
 
         setListParams((prev) => ({

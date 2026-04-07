@@ -33,6 +33,9 @@ export type MemberSearchCondition = {
     memberId?: string;
     memberName?: string;
     roleCode?: string;
+    /** Spring: MemberSearchCondition.statusCode */
+    statusCode?: string;
+    /** 검색 폼용 — 정규화 시 statusCode 로 합쳐 전송 */
     status?: string;
     page?: number;
     size?: number;
@@ -54,9 +57,14 @@ export type MemberListItemResponse = {
     gender?: string;
     phone?: string;
     region?: string;
+    /** 레거시·호환(백엔드 기본은 roleCodes / roleCodesDisplay) */
     roleCode?: string;
     roleName?: string;
+    roleCodes?: string[];
+    roleCodesDisplay?: string;
     status?: string;
+    statusCode?: string;
+    statusName?: string;
     createDt?: string;
     modifyDt?: string;
     lastLoginAt?: string;
@@ -90,9 +98,11 @@ export type MemberDetailResponse = {
     roleCode?: string;
     roleName?: string;
     roleCodes?: string[];
+    roleCodesDisplay?: string;
     gradeCode?: string;
     statusCode?: string;
     status?: string;
+    statusName?: string;
     createDt?: string;
     modifyDt?: string;
     lastLoginAt?: string;
@@ -102,6 +112,22 @@ export type MemberDetailResponse = {
     oauthSyncDt?: string;
     streamerProfile?: MemberStreamerProfileResponse | null;
 };
+
+/** 목록/상세 공통: 첫 시스템 역할 코드 (백엔드는 roleCodes 배열 또는 roleCodesDisplay) */
+export function memberPrimaryRoleCode(m: {
+    roleCodes?: string[];
+    roleCodesDisplay?: string;
+    roleCode?: string;
+}): string {
+    const fromList = m.roleCodes?.find((c) => (c ?? "").trim());
+    if (fromList) return fromList.trim();
+    const disp = m.roleCodesDisplay?.trim();
+    if (disp) {
+        const first = disp.split(",")[0]?.trim();
+        if (first) return first;
+    }
+    return (m.roleCode ?? "").trim();
+}
 
 export class ApiError extends Error {
     code?: string;
@@ -198,6 +224,7 @@ function toStreamerPayload(sp: MemberStreamerProfileFields | null | undefined) {
 }
 
 export async function saveMember(member: Member, mode: "create" | "edit") {
+    const rc = (member.roleCode ?? "").trim();
     const payload = {
         memberSeq: member.memberSeq,
         memberId: member.memberId,
@@ -211,8 +238,8 @@ export async function saveMember(member: Member, mode: "create" | "edit") {
         email: member.email ?? "",
         profileImageUrl: member.profileImageUrl ?? null,
         profileImageFileSeq: member.profileImageFileSeq ?? null,
-        roleCode: member.roleCode ?? "",
-        status: member.status ?? "ACTIVE",
+        roleCodes: rc ? [rc] : [],
+        statusCode: member.status ?? "ACTIVE",
         streamerProfile: toStreamerPayload(member.streamerProfile),
     };
 

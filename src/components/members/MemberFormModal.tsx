@@ -119,7 +119,6 @@ export default function MemberFormModal({
 
   const [saving, setSaving] = useState(false);
   const { data: roleOptions = [], isLoading: rolesLoading } = useRolesQuery();
-  console.log("roleOptions >>>", roleOptions);
   const [emailLocal, setEmailLocal] = useState("");
   const [emailDomain, setEmailDomain] = useState("naver.com");
   const [phone1, setPhone1] = useState("010");

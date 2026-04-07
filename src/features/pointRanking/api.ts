@@ -11,7 +11,8 @@ export type PointRankingEntry = {
     rank: number;
     memberSeq: number;
     memberId: string;
-    memberName: string;
+    /** 닉네임 또는 닉네임 미설정 시 아이디 */
+    displayLabel: string;
     pointsEarned: number;
     breakdown?: PointRankingReasonBreakdown[];
 };

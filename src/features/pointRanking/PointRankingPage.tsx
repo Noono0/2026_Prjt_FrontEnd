@@ -88,7 +88,7 @@ export default function PointRankingPage() {
                         <tr className="border-b border-slate-800 bg-slate-900/80 text-slate-400">
                             <th className="px-4 py-3 font-medium">순위</th>
                             <th className="px-4 py-3 font-medium">아이디</th>
-                            <th className="px-4 py-3 font-medium">이름</th>
+                            <th className="px-4 py-3 font-medium">닉네임</th>
                             <th className="px-4 py-3 font-medium text-right">획득 포인트</th>
                         </tr>
                     </thead>
@@ -104,7 +104,7 @@ export default function PointRankingPage() {
                             <tr key={r.memberSeq} className="border-b border-slate-800/80 hover:bg-slate-900/40">
                                 <td className="px-4 py-3 font-semibold text-sky-400">{r.rank}</td>
                                 <td className="px-4 py-3 text-slate-200">{r.memberId}</td>
-                                <td className="px-4 py-3 text-slate-300">{r.memberName ?? "—"}</td>
+                                <td className="px-4 py-3 text-slate-300">{r.displayLabel ?? "—"}</td>
                                 <td className="px-4 py-3 text-right align-top tabular-nums text-slate-100">
                                     <div className="font-medium">{r.pointsEarned.toLocaleString("ko-KR")} P</div>
                                     {r.breakdown && r.breakdown.length > 0 ? (
