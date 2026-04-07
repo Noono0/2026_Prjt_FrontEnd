@@ -1,7 +1,6 @@
 import { ApiError, type ApiResponse, type RoleRow } from "@/features/roles/api";
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+import { buildPublicApiUrl } from "@/lib/public-api";
 
 export type RoleMenuAssignment = {
     menuId: number;
@@ -26,7 +25,7 @@ export type RoleMenuMappingSaveItem = {
 };
 
 function buildApiUrl(path: string): string {
-    return `${API_BASE_URL}${path}`;
+    return buildPublicApiUrl(path);
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<ApiResponse<T>> {

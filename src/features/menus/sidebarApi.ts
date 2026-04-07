@@ -1,8 +1,6 @@
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
+import { buildPublicApiUrl } from "@/lib/public-api";
 import type { MenuNode } from "@/stores/menuStore";
-
-const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 type ApiResponse<T> = {
     success: boolean;
@@ -40,7 +38,7 @@ const RESERVED_MENU_CODES = new Set([
 ]);
 
 function buildApiUrl(path: string) {
-    return `${API_BASE_URL}${path}`;
+    return buildPublicApiUrl(path);
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
