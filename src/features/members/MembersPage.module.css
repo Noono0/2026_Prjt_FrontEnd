@@ -215,9 +215,9 @@
     opacity: 0.82;
 }
 
-/* ag-grid 다크/라이트 톤 보정 (Turbopack CSS Modules: :global { } 블록 비지원 → 선택자별 :global(...)) */
-:global(.ag-theme-quartz),
-:global(.ag-theme-quartz-dark) {
+/* ag-grid 톤 보정 — webpack CSS Modules는 “순수” 선택자(로컬 클래스 포함) 필요: .gridWrap은 MembersPage 래퍼 */
+.gridWrap:global(.ag-theme-quartz),
+.gridWrap:global(.ag-theme-quartz-dark) {
     --ag-border-color: transparent;
     --ag-wrapper-border-radius: 16px;
     --ag-row-border-color: var(--border);
@@ -226,7 +226,7 @@
     --ag-font-family: inherit;
 }
 
-:global(.ag-theme-quartz) {
+.gridWrap:global(.ag-theme-quartz) {
     --ag-background-color: #ffffff;
     --ag-foreground-color: #162033;
     --ag-header-background-color: #eef3fb;
@@ -236,7 +236,7 @@
     --ag-selected-row-background-color: #dbeafe;
 }
 
-:global(.ag-theme-quartz-dark) {
+.gridWrap:global(.ag-theme-quartz-dark) {
     --ag-background-color: #111a2b;
     --ag-foreground-color: #e8eefb;
     --ag-header-background-color: #1a2740;
@@ -246,19 +246,19 @@
     --ag-selected-row-background-color: rgba(59, 130, 246, 0.22);
 }
 
-:global(.ag-theme-quartz .ag-header),
-:global(.ag-theme-quartz-dark .ag-header) {
+.gridWrap:global(.ag-theme-quartz) :global(.ag-header),
+.gridWrap:global(.ag-theme-quartz-dark) :global(.ag-header) {
     border-bottom: 1px solid var(--border);
 }
 
-:global(.ag-theme-quartz .ag-root-wrapper),
-:global(.ag-theme-quartz-dark .ag-root-wrapper) {
+.gridWrap:global(.ag-theme-quartz) :global(.ag-root-wrapper),
+.gridWrap:global(.ag-theme-quartz-dark) :global(.ag-root-wrapper) {
     border: none;
     border-radius: 16px;
 }
 
-:global(.ag-theme-quartz .ag-cell),
-:global(.ag-theme-quartz-dark .ag-cell) {
+.gridWrap:global(.ag-theme-quartz) :global(.ag-cell),
+.gridWrap:global(.ag-theme-quartz-dark) :global(.ag-cell) {
     display: flex;
     align-items: center;
 }
