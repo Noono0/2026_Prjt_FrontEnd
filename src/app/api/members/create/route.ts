@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 export async function POST(req: NextRequest) {
     try {
@@ -7,7 +8,7 @@ export async function POST(req: NextRequest) {
 
         const res = await fetch(`${API_BASE_URL}/api/members/create`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: springProxyHeaders(req, { "Content-Type": "application/json" }),
             body: JSON.stringify(body),
             cache: "no-store",
         });

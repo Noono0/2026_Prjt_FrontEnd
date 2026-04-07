@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const cookie = req.headers.get("cookie") ?? "";
         const res = await fetch(`${API_BASE_URL}/api/members/me/wallet/exchange/gold-diamond`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", ...(cookie ? { cookie } : {}) },
+            headers: springProxyHeaders(req, { "Content-Type": "application/json" }),
             body: JSON.stringify(body),
             cache: "no-store",
         });

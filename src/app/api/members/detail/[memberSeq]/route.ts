@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 type Params = {
     params: Promise<{
@@ -7,12 +8,13 @@ type Params = {
     }>;
 };
 
-export async function GET(_req: NextRequest, { params }: Params) {
+export async function GET(req: NextRequest, { params }: Params) {
     try {
         const { memberSeq } = await params;
 
         const res = await fetch(`${API_BASE_URL}/api/members/detail/${memberSeq}`, {
             method: "GET",
+            headers: springProxyHeaders(req),
             cache: "no-store",
         });
 

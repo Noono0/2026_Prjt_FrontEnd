@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 type Params = {
     params: Promise<{ memberSeq: string }>;
 };
 
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
     try {
         const { memberSeq } = await params;
 
         const res = await fetch(`${API_BASE_URL}/api/members/delete/${memberSeq}`, {
             method: "DELETE",
+            headers: springProxyHeaders(req),
             cache: "no-store",
         });
 

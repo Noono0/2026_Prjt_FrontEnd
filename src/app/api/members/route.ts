@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 export async function GET(req: NextRequest) {
   try {
@@ -7,6 +8,7 @@ export async function GET(req: NextRequest) {
 
     const res = await fetch(`${API_BASE_URL}/api/members${search}`, {
       method: "GET",
+      headers: springProxyHeaders(req),
       cache: "no-store",
     });
 
@@ -36,9 +38,7 @@ export async function POST(req: NextRequest) {
 
     const res = await fetch(targetUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: springProxyHeaders(req, { "Content-Type": "application/json" }),
       body: JSON.stringify(body),
       cache: "no-store",
     });
@@ -60,9 +60,7 @@ export async function PUT(req: NextRequest) {
 
     const res = await fetch(`${API_BASE_URL}/api/members/updateMember`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: springProxyHeaders(req, { "Content-Type": "application/json" }),
       body: JSON.stringify(body),
       cache: "no-store",
     });
@@ -84,9 +82,7 @@ export async function DELETE(req: NextRequest) {
 
     const res = await fetch(`${API_BASE_URL}/api/members/deleteMember`, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: springProxyHeaders(req, { "Content-Type": "application/json" }),
       body: JSON.stringify(body),
       cache: "no-store",
     });

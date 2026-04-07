@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 export async function GET(req: NextRequest) {
     try {
-        const cookie = req.headers.get("cookie") ?? "";
         const period = req.nextUrl.searchParams.get("period") ?? "DAY";
         const res = await fetch(`${API_BASE_URL}/api/members/point-ranking?period=${encodeURIComponent(period)}`, {
             method: "GET",
-            headers: cookie ? { cookie } : {},
+            headers: springProxyHeaders(req),
             cache: "no-store",
         });
         const data = await res.json();

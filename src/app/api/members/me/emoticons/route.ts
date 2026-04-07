@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { springProxyHeaders } from "@/lib/spring-proxy-request";
 
 export async function GET(req: NextRequest) {
     try {
-        const cookie = req.headers.get("cookie") ?? "";
         const res = await fetch(`${API_BASE_URL}/api/members/me/emoticons`, {
             method: "GET",
             cache: "no-store",
-            headers: cookie ? { cookie } : {},
+            headers: springProxyHeaders(req),
         });
         const data = await res.json();
         return NextResponse.json(data, { status: res.status });
@@ -20,10 +20,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const cookie = req.headers.get("cookie") ?? "";
         const res = await fetch(`${API_BASE_URL}/api/members/me/emoticons`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", ...(cookie ? { cookie } : {}) },
+            headers: springProxyHeaders(req, { "Content-Type": "application/json" }),
             body: JSON.stringify(body),
             cache: "no-store",
         });
