@@ -4,6 +4,8 @@ node_modules/
 ### Next.js
 .next/
 out/
+# 로컬 `vercel build` 산출물 — 커밋 시 Vercel이 옛 Next 버전으로 prebuilt 배포를 시도해 보안 검사에 막힐 수 있음
+.vercel/output/
 *.tsbuildinfo
 .next/cache/
 
