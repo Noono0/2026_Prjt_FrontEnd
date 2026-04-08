@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { serverLog } from "@/lib/serverLog";
 
 export async function POST(req: NextRequest) {
     try {
@@ -16,7 +17,9 @@ export async function POST(req: NextRequest) {
         const data = await res.json();
         return NextResponse.json(data, { status: res.status });
     } catch (error) {
-        console.error("POST /api/analytics/heartbeat", error);
+        serverLog("error", "POST /api/analytics/heartbeat", {
+            err: error instanceof Error ? error.message : String(error),
+        });
         return NextResponse.json({ success: false, message: "heartbeat 전송 실패" }, { status: 500 });
     }
 }

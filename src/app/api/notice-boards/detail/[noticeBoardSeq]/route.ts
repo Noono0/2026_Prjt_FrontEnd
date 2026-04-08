@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { proxyAuthHeaders } from "@/lib/server/proxyAuthHeaders";
 
 type Params = {
     params: Promise<{
@@ -10,12 +11,9 @@ type Params = {
 export async function GET(req: NextRequest, { params }: Params) {
     try {
         const { noticeBoardSeq } = await params;
-        const cookie = req.headers.get("cookie") ?? "";
         const res = await fetch(`${API_BASE_URL}/api/notice-boards/detail/${noticeBoardSeq}`, {
             method: "GET",
-            headers: {
-                ...(cookie ? { cookie } : {}),
-            },
+            headers: proxyAuthHeaders(req),
             cache: "no-store",
         });
         const data = await res.json();

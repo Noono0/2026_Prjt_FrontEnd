@@ -1,4 +1,4 @@
-import type { Member, MemberStreamerProfileFields } from "@/components/members/MemberFormModal";
+import type { Member, MemberStreamerProfileFields } from "@/components/members/memberTypes";
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
 
 export type RoleItem = {
@@ -134,10 +134,7 @@ export class ApiError extends Error {
     errors?: FieldErrorResponse[];
     status?: number;
 
-    constructor(
-        message: string,
-        options?: { code?: string; errors?: FieldErrorResponse[]; status?: number }
-    ) {
+    constructor(message: string, options?: { code?: string; errors?: FieldErrorResponse[]; status?: number }) {
         super(message);
         this.name = "ApiError";
         this.code = options?.code;
@@ -178,9 +175,7 @@ async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiR
     return json;
 }
 
-export async function searchMembers(
-    condition: MemberSearchCondition
-): Promise<PageResponse<MemberListItemResponse>> {
+export async function searchMembers(condition: MemberSearchCondition): Promise<PageResponse<MemberListItemResponse>> {
     const result = await apiFetch<PageResponse<MemberListItemResponse>>("/api/members/search", {
         method: "POST",
         headers: {
@@ -230,8 +225,7 @@ export async function saveMember(member: Member, mode: "create" | "edit") {
         memberId: member.memberId,
         memberName: member.memberName,
         nickname: member.nickname ?? "",
-        memberPwd:
-            mode === "edit" && !member.memberPwd?.trim() ? undefined : member.memberPwd,
+        memberPwd: mode === "edit" && !member.memberPwd?.trim() ? undefined : member.memberPwd,
         birthYmd: member.birthYmd ?? "",
         gender: member.gender ?? "M",
         phone: member.phone ?? "",

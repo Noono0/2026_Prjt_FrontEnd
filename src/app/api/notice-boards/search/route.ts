@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { proxyAuthHeaders } from "@/lib/server/proxyAuthHeaders";
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const cookie = req.headers.get("cookie") ?? "";
         const res = await fetch(`${API_BASE_URL}/api/notice-boards/search`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                ...(cookie ? { cookie } : {}),
+                ...proxyAuthHeaders(req),
             },
             body: JSON.stringify(body),
             cache: "no-store",

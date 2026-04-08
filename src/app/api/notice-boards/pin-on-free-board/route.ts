@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { proxyAuthHeaders } from "@/lib/server/proxyAuthHeaders";
 
 export async function GET(req: NextRequest) {
     try {
-        const cookie = req.headers.get("cookie") ?? "";
         const res = await fetch(`${API_BASE_URL}/api/notice-boards/pin-on-free-board`, {
             method: "GET",
             cache: "no-store",
-            headers: cookie ? { cookie } : {},
+            headers: proxyAuthHeaders(req),
         });
         const data = await res.json();
         return NextResponse.json(data, { status: res.status });

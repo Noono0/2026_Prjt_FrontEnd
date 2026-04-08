@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
 import { forwardSpringSetCookies } from "@/lib/forwardSpringSetCookies";
+import { serverLog } from "@/lib/serverLog";
 
 export async function POST(req: NextRequest) {
     try {
@@ -22,10 +23,9 @@ export async function POST(req: NextRequest) {
         forwardSpringSetCookies(res, response);
         return response;
     } catch (error) {
-        console.error("POST /api/auth/login error =", error);
-        return NextResponse.json(
-            { success: false, message: "로그인 실패" },
-            { status: 500 }
-        );
+        serverLog("error", "POST /api/auth/login", {
+            err: error instanceof Error ? error.message : String(error),
+        });
+        return NextResponse.json({ success: false, message: "로그인 실패" }, { status: 500 });
     }
 }

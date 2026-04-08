@@ -6,27 +6,14 @@ import { useTheme } from "next-themes";
 import { AgGridReact } from "ag-grid-react";
 import styles from "./MembersPage.module.css";
 
-import type {
-    ColDef,
-    GridApi,
-    GridReadyEvent,
-    SortChangedEvent,
-    ValueGetterParams,
-} from "ag-grid-community";
+import type { ColDef, GridApi, GridReadyEvent, SortChangedEvent, ValueGetterParams } from "ag-grid-community";
 
-import MemberFormModal, { type Member } from "@/components/members/MemberFormModal";
+import MemberFormModal from "@/components/members/MemberFormModal";
+import type { Member } from "@/components/members/memberTypes";
 import { useMemberModalStore } from "@/stores/memberModalStore";
 import { fetchMemberDetail, memberPrimaryRoleCode, type MemberListItemResponse } from "./api";
-import {
-    useDeleteMembersMutation,
-    useMembersQuery,
-    useRolesQuery,
-    useSaveMemberMutation,
-} from "./queries";
-import {
-    normalizeMemberSearchCondition,
-    sameMemberSearchCondition,
-} from "@/lib/query/searchConditions";
+import { useDeleteMembersMutation, useMembersQuery, useRolesQuery, useSaveMemberMutation } from "./queries";
+import { normalizeMemberSearchCondition, sameMemberSearchCondition } from "@/lib/query/searchConditions";
 
 type MemberFilters = {
     memberId: string;
@@ -120,9 +107,7 @@ export default function MembersPage() {
     useEffect(() => {
         if (!membersQuery.isError || !membersQuery.error) return;
         const message =
-            membersQuery.error instanceof Error
-                ? membersQuery.error.message
-                : "회원 목록 조회 중 오류가 발생했습니다.";
+            membersQuery.error instanceof Error ? membersQuery.error.message : "회원 목록 조회 중 오류가 발생했습니다.";
         alert(message);
     }, [membersQuery.isError, membersQuery.error]);
 
@@ -169,11 +154,7 @@ export default function MembersPage() {
         });
     }, [membersQuery.data?.items]);
 
-    const busy =
-        membersQuery.isFetching ||
-        deleteMutation.isPending ||
-        saveMutation.isPending ||
-        detailLoading;
+    const busy = membersQuery.isFetching || deleteMutation.isPending || saveMutation.isPending || detailLoading;
 
     const handleOpenDetail = useCallback(
         async (row: MemberRow) => {
@@ -211,8 +192,7 @@ export default function MembersPage() {
                     },
                 });
             } catch (error) {
-                const message =
-                    error instanceof Error ? error.message : "회원 상세조회 중 오류가 발생했습니다.";
+                const message = error instanceof Error ? error.message : "회원 상세조회 중 오류가 발생했습니다.";
                 alert(message);
             } finally {
                 setDetailLoading(false);
@@ -338,8 +318,7 @@ export default function MembersPage() {
                 setListParams((p) => ({ ...p, page: p.page - 1 }));
             }
         } catch (error) {
-            const message =
-                error instanceof Error ? error.message : "회원 삭제 중 오류가 발생했습니다.";
+            const message = error instanceof Error ? error.message : "회원 삭제 중 오류가 발생했습니다.";
             alert(message);
         }
     };
@@ -349,8 +328,7 @@ export default function MembersPage() {
             await saveMutation.mutateAsync({ member, mode: modalMode });
             close();
         } catch (error) {
-            const message =
-                error instanceof Error ? error.message : "회원 저장 중 오류가 발생했습니다.";
+            const message = error instanceof Error ? error.message : "회원 저장 중 오류가 발생했습니다.";
             alert(message);
         }
     };
@@ -513,13 +491,7 @@ export default function MembersPage() {
                 </button>
             </div>
 
-            <MemberFormModal
-                open={modalOpen}
-                mode={modalMode}
-                initial={selected}
-                onClose={close}
-                onSave={handleSave}
-            />
+            <MemberFormModal open={modalOpen} mode={modalMode} initial={selected} onClose={close} onSave={handleSave} />
         </div>
     );
 }

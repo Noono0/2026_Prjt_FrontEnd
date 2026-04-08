@@ -1,14 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Member } from "@/components/members/MemberFormModal";
-import {
-    deleteMembers,
-    fetchRoles,
-    saveMember,
-    searchMembers,
-    type MemberSearchCondition,
-} from "./api";
+import type { Member } from "@/components/members/memberTypes";
+import { deleteMembers, fetchRoles, saveMember, searchMembers, type MemberSearchCondition } from "./api";
 
 export const memberKeys = {
     all: ["members"] as const,
@@ -36,13 +30,7 @@ export function useSaveMemberMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            member,
-            mode,
-        }: {
-            member: Member;
-            mode: "create" | "edit";
-        }) => saveMember(member, mode),
+        mutationFn: ({ member, mode }: { member: Member; mode: "create" | "edit" }) => saveMember(member, mode),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: memberKeys.all });
         },

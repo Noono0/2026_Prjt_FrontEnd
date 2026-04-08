@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Member } from "@/components/members/MemberFormModal";
+import type { Member } from "@/components/members/memberTypes";
 
 type MemberModalMode = "create" | "edit";
 
