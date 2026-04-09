@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { proxyAuthHeaders } from "@/lib/server/proxyAuthHeaders";
 
 type Params = {
     params: Promise<{
@@ -7,21 +8,19 @@ type Params = {
     }>;
 };
 
-export async function POST(_req: NextRequest, { params }: Params) {
+export async function POST(req: NextRequest, { params }: Params) {
     try {
         const { boardSeq } = await params;
         const res = await fetch(`${API_BASE_URL}/api/boards/${boardSeq}/like`, {
             method: "POST",
             cache: "no-store",
+            headers: proxyAuthHeaders(req),
         });
 
         const data = await res.json();
         return NextResponse.json(data, { status: res.status });
     } catch (error) {
         console.error("POST /api/boards/[boardSeq]/like error =", error);
-        return NextResponse.json(
-            { success: false, message: "좋아요 처리 실패" },
-            { status: 500 }
-        );
+        return NextResponse.json({ success: false, message: "좋아요 처리 실패" }, { status: 500 });
     }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { proxyAuthHeaders } from "@/lib/server/proxyAuthHeaders";
 
 type Params = {
     params: Promise<{ boardSeq: string }>;
@@ -9,15 +10,11 @@ export async function GET(req: NextRequest, { params }: Params) {
     try {
         const { boardSeq } = await params;
         const sort = req.nextUrl.searchParams.get("sort") || "latest";
-        const cookie = req.headers.get("cookie") ?? "";
-        const res = await fetch(
-            `${API_BASE_URL}/api/boards/${boardSeq}/comments?sort=${encodeURIComponent(sort)}`,
-            {
-                method: "GET",
-                cache: "no-store",
-                headers: cookie ? { cookie } : {},
-            }
-        );
+        const res = await fetch(`${API_BASE_URL}/api/boards/${boardSeq}/comments?sort=${encodeURIComponent(sort)}`, {
+            method: "GET",
+            cache: "no-store",
+            headers: proxyAuthHeaders(req),
+        });
         const data = await res.json();
         return NextResponse.json(data, { status: res.status });
     } catch (error) {
@@ -30,12 +27,11 @@ export async function POST(req: NextRequest, { params }: Params) {
     try {
         const { boardSeq } = await params;
         const body = await req.json();
-        const cookie = req.headers.get("cookie") ?? "";
         const res = await fetch(`${API_BASE_URL}/api/boards/${boardSeq}/comments`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                ...(cookie ? { cookie } : {}),
+                ...proxyAuthHeaders(req),
             },
             body: JSON.stringify(body),
             cache: "no-store",

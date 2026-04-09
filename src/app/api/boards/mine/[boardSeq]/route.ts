@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { proxyAuthHeaders } from "@/lib/server/proxyAuthHeaders";
 
 type Params = {
     params: Promise<{ boardSeq: string }>;
@@ -8,10 +9,9 @@ type Params = {
 export async function DELETE(req: NextRequest, { params }: Params) {
     try {
         const { boardSeq } = await params;
-        const cookie = req.headers.get("cookie") ?? "";
         const res = await fetch(`${API_BASE_URL}/api/boards/mine/${boardSeq}`, {
             method: "DELETE",
-            headers: cookie ? { cookie } : {},
+            headers: proxyAuthHeaders(req),
             cache: "no-store",
         });
         const data = await res.json();

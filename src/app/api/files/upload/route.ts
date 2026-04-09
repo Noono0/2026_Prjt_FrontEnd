@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { proxyAuthHeaders } from "@/lib/server/proxyAuthHeaders";
 
 /**
  * 공통 파일 업로드 → Spring `/api/files/upload` (attach_file 메타 + 디스크 저장)
@@ -23,12 +24,10 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const cookie = req.headers.get("cookie") ?? "";
-
         const res = await fetch(`${API_BASE_URL}/api/files/upload`, {
             method: "POST",
             body: outgoing,
-            headers: cookie ? { cookie } : {},
+            headers: proxyAuthHeaders(req),
             cache: "no-store",
         });
 
@@ -57,9 +56,6 @@ export async function POST(req: NextRequest) {
         return response;
     } catch (error) {
         console.error("POST /api/files/upload error =", error);
-        return NextResponse.json(
-            { success: false, message: "파일 업로드 프록시 실패" },
-            { status: 500 }
-        );
+        return NextResponse.json({ success: false, message: "파일 업로드 프록시 실패" }, { status: 500 });
     }
 }

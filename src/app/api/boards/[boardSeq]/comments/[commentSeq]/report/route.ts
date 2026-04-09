@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
+import { proxyAuthHeaders } from "@/lib/server/proxyAuthHeaders";
 
 type Params = {
     params: Promise<{ boardSeq: string; commentSeq: string }>;
@@ -8,11 +9,10 @@ type Params = {
 export async function POST(req: NextRequest, { params }: Params) {
     try {
         const { boardSeq, commentSeq } = await params;
-        const cookie = req.headers.get("cookie") ?? "";
         const res = await fetch(`${API_BASE_URL}/api/boards/${boardSeq}/comments/${commentSeq}/report`, {
             method: "POST",
             cache: "no-store",
-            headers: cookie ? { cookie } : {},
+            headers: proxyAuthHeaders(req),
         });
         const data = await res.json();
         return NextResponse.json(data, { status: res.status });
