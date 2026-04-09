@@ -50,11 +50,7 @@ function shouldCompressImage(file: File): boolean {
 }
 
 /** Canvas 로 JPEG 재인코딩(서버 ImageIO 호환). 실패 시 null */
-async function encodeRasterToJpeg(
-    file: File,
-    maxLongEdge: number,
-    quality: number
-): Promise<File | null> {
+async function encodeRasterToJpeg(file: File, maxLongEdge: number, quality: number): Promise<File | null> {
     if (typeof window === "undefined") return null;
     if (!shouldCompressImage(file)) return null;
     try {
@@ -104,9 +100,7 @@ async function compressImageIfNeeded(file: File): Promise<File> {
 async function compressUntilUnderLimit(file: File, maxBytes: number): Promise<File> {
     if (file.size <= maxBytes) return file;
     if (!shouldCompressImage(file)) {
-        throw new Error(
-            "이 형식(GIF 등)은 자동 압축으로 용량을 맞출 수 없습니다. 더 작은 파일을 사용해 주세요."
-        );
+        throw new Error("이 형식(GIF 등)은 자동 압축으로 용량을 맞출 수 없습니다. 더 작은 파일을 사용해 주세요.");
     }
 
     const maxEdges = [1600, 1280, 1024, 800, 640, 480];
@@ -123,9 +117,7 @@ async function compressUntilUnderLimit(file: File, maxBytes: number): Promise<Fi
     }
 
     if (best.size > maxBytes) {
-        throw new Error(
-            "압축·리사이즈 후에도 업로드 한도를 넘습니다. 더 작은 이미지를 사용해 주세요."
-        );
+        throw new Error("압축·리사이즈 후에도 업로드 한도를 넘습니다. 더 작은 이미지를 사용해 주세요.");
     }
     return best;
 }
@@ -175,9 +167,7 @@ export async function uploadImageFile(
     try {
         payload = raw ? (JSON.parse(raw) as ApiEnvelope) : {};
     } catch {
-        throw new Error(
-            raw?.trim().slice(0, 160) || "이미지 업로드에 실패했습니다. (응답 파싱 오류)"
-        );
+        throw new Error(raw?.trim().slice(0, 160) || "이미지 업로드에 실패했습니다. (응답 파싱 오류)");
     }
 
     if (!res.ok || payload.success === false) {
@@ -189,19 +179,19 @@ export async function uploadImageFile(
     }
 
     const data = payload.data;
-    const imageUrl = data?.fileUrl;
     const rawSeq = data?.fileSeq;
 
-    if (!imageUrl) {
-        throw new Error("업로드 응답에 fileUrl이 없습니다.");
-    }
     if (rawSeq == null || !Number.isFinite(Number(rawSeq))) {
         throw new Error("업로드 응답에 fileSeq가 없습니다.");
     }
+    const fileSeq = Number(rawSeq);
+    // Spring 이 주는 absolute fileUrl(백엔드 Host/IP)을 img src 로 쓰면: HTTPS 사이트에서 HTTP 혼합 콘텐츠 차단,
+    // 또는 사용자 PC 가 :8080 미노출 시 X박스. Next BFF 와 동일 출처 상대 경로만 사용.
+    const fileUrl = `/api/files/view/${fileSeq}`;
 
     return {
-        fileUrl: imageUrl,
-        fileSeq: Number(rawSeq),
+        fileUrl,
+        fileSeq,
         imageDowngraded: data?.imageDowngraded,
         optimizationNotice: data?.optimizationNotice,
     };
@@ -217,8 +207,6 @@ export async function uploadImage(file: File, menuUrl?: string): Promise<string>
 
 /** @deprecated 호환용 — 내부적으로 uploadImage와 동일 */
 export async function uploadBoardImage(file: File, menuUrl?: string): Promise<string> {
-    const path =
-        menuUrl ??
-        (typeof window !== "undefined" ? window.location.pathname : undefined);
+    const path = menuUrl ?? (typeof window !== "undefined" ? window.location.pathname : undefined);
     return uploadImage(file, path);
 }
