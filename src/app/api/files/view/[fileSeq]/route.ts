@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/config";
 import { proxyAuthHeaders } from "@/lib/server/proxyAuthHeaders";
+import { serverLog } from "@/lib/serverLog";
 
 type Params = {
     params: Promise<{
@@ -20,6 +21,18 @@ export async function GET(req: NextRequest, { params }: Params) {
         });
 
         if (!res.ok) {
+            const hint =
+                res.status === 404
+                    ? "Spring로그_[attach-file]_조회실패_메타없음_또는_저장소바이너리없음"
+                    : res.status >= 500
+                      ? "Spring_저장소_IO_등_서버오류"
+                      : "백엔드_응답_확인";
+            serverLog("warn", "[files-view] Spring_이미지_조회_실패", {
+                fileSeq,
+                backendStatus: res.status,
+                springUrl: `${API_BASE_URL}/api/files/view/${fileSeq}`,
+                hint,
+            });
             return new NextResponse(null, { status: res.status });
         }
 
@@ -31,7 +44,9 @@ export async function GET(req: NextRequest, { params }: Params) {
 
         return new NextResponse(res.body, { status: 200, headers });
     } catch (error) {
-        console.error("GET /api/files/view/[fileSeq] error =", error);
+        serverLog("error", "[files-view] 프록시_예외", {
+            err: error instanceof Error ? error.message : String(error),
+        });
         return new NextResponse(null, { status: 500 });
     }
 }
