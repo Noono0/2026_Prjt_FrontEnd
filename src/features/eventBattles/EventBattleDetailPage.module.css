@@ -20,7 +20,10 @@
     box-shadow:
         0 0 0 1px rgba(56, 189, 248, 0.12),
         0 14px 30px -22px rgba(56, 189, 248, 0.45);
-    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease,
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease,
         box-shadow 0.15s ease;
 }
 
@@ -58,12 +61,7 @@
 
 /* 풀 대비 비중 1위 주제 — 갱신 시 다른 카드로 옮겨 감 */
 .cardTopShare {
-    background: linear-gradient(
-        145deg,
-        rgba(251, 191, 36, 0.65),
-        rgba(52, 211, 153, 0.45),
-        rgba(56, 189, 248, 0.5)
-    );
+    background: linear-gradient(145deg, rgba(251, 191, 36, 0.65), rgba(52, 211, 153, 0.45), rgba(56, 189, 248, 0.5));
     box-shadow:
         0 0 0 1px rgba(251, 191, 36, 0.35),
         0 12px 40px -8px rgba(251, 191, 36, 0.25);
@@ -102,12 +100,7 @@
 
 /* 정산 종료 후 확정된 승리 주제 — 맥동 없이 고정 강조 */
 .cardWinner {
-    background: linear-gradient(
-        145deg,
-        rgba(52, 211, 153, 0.5),
-        rgba(16, 185, 129, 0.4),
-        rgba(56, 189, 248, 0.38)
-    );
+    background: linear-gradient(145deg, rgba(52, 211, 153, 0.5), rgba(16, 185, 129, 0.4), rgba(56, 189, 248, 0.38));
     box-shadow:
         0 0 0 1px rgba(52, 211, 153, 0.42),
         0 12px 36px -10px rgba(16, 185, 129, 0.28);
@@ -169,7 +162,7 @@
 }
 
 .poolSharePct {
-    font-size: 2.0rem;
+    font-size: 2rem;
     font-weight: 800;
     color: #38bdf8;
     letter-spacing: -0.02em;
@@ -238,7 +231,9 @@
     font-weight: 700;
     padding: 0.75rem 1rem;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition:
+        background 0.15s,
+        border-color 0.15s;
 }
 
 .betBtn:hover:not(:disabled) {
@@ -287,7 +282,9 @@
     text-align: left;
     border: 1px solid rgba(51, 65, 85, 0.6);
     cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
     font: inherit;
     color: inherit;
 }
@@ -328,20 +325,12 @@
     flex: 1;
 }
 
-.voteCardMeta {
-    margin-top: auto;
-    padding-top: 1rem;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #a78bfa;
-}
-
 .votePickRow {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-top: 1rem;
+    margin-top: auto;
     padding-top: 0.75rem;
     border-top: 1px solid rgba(51, 65, 85, 0.55);
 }
@@ -362,7 +351,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: border-color 0.15s, background 0.15s;
+    transition:
+        border-color 0.15s,
+        background 0.15s;
 }
 
 .voteRadioOn {
@@ -388,7 +379,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: border-color 0.15s, background 0.15s;
+    transition:
+        border-color 0.15s,
+        background 0.15s;
 }
 
 .voteCheckboxOn {

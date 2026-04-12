@@ -33,6 +33,9 @@ const BET_STEP = 100;
 const BET_DEFAULT = 1000;
 const BET_MIN = 100;
 
+/** 투표 전용: 주제 카드·투표 현황 목록 공통 정렬 */
+type VoteListSortMode = "votes" | "topic";
+
 /** SSE `activity` 이벤트는 서버가 모든 클라이언트에 동일 payload를 보내므로 내 베팅 필드는 이전 값을 유지 */
 function mergeActivityFromBroadcast(
     incoming: EventBattleActivity,
@@ -43,7 +46,9 @@ function mergeActivityFromBroadcast(
         myBet: prev?.myBet ?? incoming.myBet ?? null,
         myVoteOptionSeqs: prev?.myVoteOptionSeqs ?? incoming.myVoteOptionSeqs ?? [],
         myBetHistory:
-            prev?.myBetHistory != null && prev.myBetHistory.length > 0 ? prev.myBetHistory : (incoming.myBetHistory ?? []),
+            prev?.myBetHistory != null && prev.myBetHistory.length > 0
+                ? prev.myBetHistory
+                : (incoming.myBetHistory ?? []),
     };
 }
 
@@ -138,8 +143,7 @@ function OptionBetCard({
     const voteCount = opt.voteCount ?? 0;
     const poolTotal = totalPool > 0 ? totalPool : 0;
     const sharePct = poolTotal > 0 ? Math.min(100, (total / poolTotal) * 100) : 0;
-    const canBetAmount =
-        maxPts != null && maxPts >= BET_MIN && localPts >= BET_MIN && localPts <= maxPts;
+    const canBetAmount = maxPts != null && maxPts >= BET_MIN && localPts >= BET_MIN && localPts <= maxPts;
     const cardDisabled = disabled || lockedOther || busy || optSeq < 1;
 
     const cardOuterClass = highlightLeadingShare
@@ -251,7 +255,9 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
     const [rouletteRotation, setRouletteRotation] = useState(0);
     const [rouletteWinnerSeq, setRouletteWinnerSeq] = useState<number | null>(null);
     const [voteSelections, setVoteSelections] = useState<number[]>([]);
-    const [voteStatusVisible, setVoteStatusVisible] = useState(false);
+    /** 투표 현황: 주제별 막대(비율) 표시 여부 — 득표 수 숫자는 표시하지 않음 */
+    const [voteStatusDetailBySeq, setVoteStatusDetailBySeq] = useState<Record<number, boolean>>({});
+    const [voteListSort, setVoteListSort] = useState<VoteListSortMode>("topic");
     const [voteResultCelebrationOpen, setVoteResultCelebrationOpen] = useState(false);
 
     useEffect(() => {
@@ -265,7 +271,8 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
         setCelebrationWinnerPayoutTop5([]);
         setCelebrationWinnerOtherCount(0);
         setCelebrationWinnerOtherTotal(0);
-        setVoteStatusVisible(false);
+        setVoteStatusDetailBySeq({});
+        setVoteListSort("topic");
         setVoteResultCelebrationOpen(false);
     }, [eventBattleSeq]);
 
@@ -420,7 +427,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
     }, [effectiveStatus, detail?.voteOnlyYn, detail?.winnerOptionSeq]);
 
     const mergedOptions: EventBattleOption[] = useMemo(
-        () => (activity?.options?.length ? activity.options : detail?.options ?? []),
+        () => (activity?.options?.length ? activity.options : (detail?.options ?? [])),
         [activity?.options, detail?.options]
     );
 
@@ -575,9 +582,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
 
     const onCancelEvent = async () => {
         const isVoteOnlyEvent = detail?.voteOnlyYn === "Y";
-        const msg = isVoteOnlyEvent
-            ? "이벤트를 취소할까요?"
-            : "이벤트를 취소하고 참가자 포인트를 모두 환불할까요?";
+        const msg = isVoteOnlyEvent ? "이벤트를 취소할까요?" : "이벤트를 취소하고 참가자 포인트를 모두 환불할까요?";
         if (!confirm(msg)) return;
         try {
             setBusy(true);
@@ -679,9 +684,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
         if (combined.length === 0) return;
         if (combined.length >= EVENT_BATTLE_RECENT_MAX_DISPLAY) return;
         if ((activity?.betCount ?? 0) <= combined.length) return;
-        const seqs = combined
-            .map((b) => b.eventBattleBetSeq)
-            .filter((s): s is number => s != null && s > 0);
+        const seqs = combined.map((b) => b.eventBattleBetSeq).filter((s): s is number => s != null && s > 0);
         if (seqs.length === 0) return;
         const beforeBetSeq = Math.min(...seqs);
 
@@ -720,8 +723,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
         io.observe(el);
         return () => io.disconnect();
     }, [canLoadMoreRecent, allRecentBets.length, eventBattleSeq]);
-    const hasBet =
-        myBetHistory.length > 0 || (myBet != null && (myBet.pointAmount ?? 0) > 0);
+    const hasBet = myBetHistory.length > 0 || (myBet != null && (myBet.pointAmount ?? 0) > 0);
     const myOptSeq = myBet?.eventBattleOptionSeq ?? myBetHistory[0]?.eventBattleOptionSeq;
     const options = mergedOptions;
     const totalPoolForBars = useMemo(() => {
@@ -748,10 +750,40 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
     }, [mergedOptions, totalPoolForBars]);
 
     const voteOnly = detail?.voteOnlyYn === "Y";
-    const totalVoteCount = useMemo(
-        () => mergedOptions.reduce((s, o) => s + (o.voteCount ?? 0), 0),
-        [mergedOptions]
-    );
+    const totalVoteCount = useMemo(() => mergedOptions.reduce((s, o) => s + (o.voteCount ?? 0), 0), [mergedOptions]);
+
+    /** 투표 전용 UI: 정렬 버튼(투표 많은 순 / 주제 번호 순)에 따라 순서 결정 */
+    const voteOrderedOptions = useMemo(() => {
+        const next = [...mergedOptions];
+        if (voteListSort === "votes") {
+            next.sort((a, b) => {
+                const d = (b.voteCount ?? 0) - (a.voteCount ?? 0);
+                if (d !== 0) return d;
+                return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+            });
+        } else {
+            next.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        }
+        return next;
+    }, [mergedOptions, voteListSort]);
+
+    const showAllVoteStatusDetails = useCallback(() => {
+        const next: Record<number, boolean> = {};
+        for (const o of mergedOptions) {
+            const s = o.eventBattleOptionSeq ?? 0;
+            if (s > 0) next[s] = true;
+        }
+        setVoteStatusDetailBySeq(next);
+    }, [mergedOptions]);
+
+    const hideAllVoteStatusDetails = useCallback(() => {
+        setVoteStatusDetailBySeq({});
+    }, []);
+
+    const toggleVoteStatusDetail = useCallback((seq: number) => {
+        if (seq < 1) return;
+        setVoteStatusDetailBySeq((p) => ({ ...p, [seq]: !p[seq] }));
+    }, []);
 
     /** 투표 전용 종료 후 · 폭죽 모달용 득표 비율·승리/동점 */
     const voteShareCelebration = useMemo(() => {
@@ -806,7 +838,9 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
             </div>
 
             {err ? (
-                <div className="mb-4 rounded-lg border border-amber-800 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">{err}</div>
+                <div className="mb-4 rounded-lg border border-amber-800 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">
+                    {err}
+                </div>
             ) : null}
 
             {!detail ? (
@@ -815,11 +849,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                 <>
                     <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
                         <h1 className="text-2xl font-bold text-white">{detail.title}</h1>
-                        <EventBattleStatusBadge
-                            status={effectiveStatus}
-                            settledText="종료"
-                            showPlaceholder={false}
-                        />
+                        <EventBattleStatusBadge status={effectiveStatus} settledText="종료" showPlaceholder={false} />
                         {voteOnly ? (
                             <span className="inline-flex shrink-0 items-center rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-semibold text-violet-200 ring-1 ring-violet-500/35">
                                 투표 전용
@@ -833,8 +863,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                                 {detail.winnerLabel ? (
                                     <>
                                         {" "}
-                                        · 승리 주제:{" "}
-                                        <span className="text-emerald-400">「{detail.winnerLabel}」</span>
+                                        · 승리 주제: <span className="text-emerald-400">「{detail.winnerLabel}」</span>
                                     </>
                                 ) : null}
                             </>
@@ -882,17 +911,17 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
 
                     {voteOnly ? (
                         <div className="mt-4 text-sm text-slate-400">
-                            총 투표{" "}
-                            <span className="text-violet-200">{totalVoteCount.toLocaleString()}</span>표 · 1인당 투표권{" "}
-                            <span className="text-violet-300">{detail.voteLimitPerMember ?? 1}</span>개
+                            1인당 투표권 <span className="text-violet-300">{detail.voteLimitPerMember ?? 1}</span>개 ·
+                            실시간 득표 수는 화면에 표시하지 않습니다.
                             <span className="ml-2 text-xs text-slate-600">
                                 {effectiveStatus === "OPEN" ? "(SSE로 갱신중)" : "(종료됨)"}
                             </span>
                         </div>
                     ) : (
                         <div className="mt-4 text-sm text-slate-400">
-                            총 풀: <span className="text-slate-200">{(activity?.totalPool ?? 0).toLocaleString()} P</span> · 참여자{" "}
-                            <span className="text-slate-200">{activity?.participantCount ?? 0}</span>명 · 베팅{" "}
+                            총 풀:{" "}
+                            <span className="text-slate-200">{(activity?.totalPool ?? 0).toLocaleString()} P</span> ·
+                            참여자 <span className="text-slate-200">{activity?.participantCount ?? 0}</span>명 · 베팅{" "}
                             <span className="text-slate-200">{activity?.betCount ?? 0}</span>건
                             <span className="ml-2 text-xs text-slate-600">
                                 {effectiveStatus === "OPEN" ? "(SSE로 갱신중)" : "(종료됨)"}
@@ -901,12 +930,44 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                     )}
 
                     {voteOnly ? (
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-medium text-slate-500">정렬</span>
+                            <button
+                                type="button"
+                                onClick={() => setVoteListSort("votes")}
+                                className={
+                                    voteListSort === "votes"
+                                        ? "rounded-lg border border-violet-500/80 bg-violet-950/55 px-3 py-1.5 text-sm font-semibold text-violet-50 ring-1 ring-violet-500/45"
+                                        : "rounded-lg border border-slate-600/70 bg-slate-900/50 px-3 py-1.5 text-sm font-semibold text-slate-300 hover:bg-slate-800/80"
+                                }
+                            >
+                                투표 많은 순
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setVoteListSort("topic")}
+                                className={
+                                    voteListSort === "topic"
+                                        ? "rounded-lg border border-violet-500/80 bg-violet-950/55 px-3 py-1.5 text-sm font-semibold text-violet-50 ring-1 ring-violet-500/45"
+                                        : "rounded-lg border border-slate-600/70 bg-slate-900/50 px-3 py-1.5 text-sm font-semibold text-slate-300 hover:bg-slate-800/80"
+                                }
+                            >
+                                주제 번호 순
+                            </button>
+                        </div>
+                    ) : null}
+
+                    {voteOnly ? (
                         <div className="mt-4 rounded-xl border border-violet-800/50 bg-violet-950/20 p-4">
                             <div className="mb-2 text-sm font-medium text-violet-100">주제 투표</div>
                             <p className="mb-3 text-xs text-violet-300/90">
-                                이벤트당 최대 {detail.voteLimitPerMember ?? 1}개 선택 가능 · 포인트 베팅은 이 화면에서 할 수 없습니다.
+                                이벤트당 최대 {detail.voteLimitPerMember ?? 1}개 선택 가능 · 포인트 베팅은 이 화면에서
+                                할 수 없습니다.
                                 {(detail.voteLimitPerMember ?? 1) === 1 ? (
-                                    <span className="ml-1 text-violet-200/95"> · 투표권 1개일 때는 카드를 누르면 바로 주제가 바뀝니다.</span>
+                                    <span className="ml-1 text-violet-200/95">
+                                        {" "}
+                                        · 투표권 1개일 때는 카드를 누르면 바로 주제가 바뀝니다.
+                                    </span>
                                 ) : null}
                             </p>
                             <div
@@ -914,7 +975,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                                 role={(detail.voteLimitPerMember ?? 1) === 1 ? "radiogroup" : undefined}
                                 aria-label="주제 투표"
                             >
-                                {options.map((opt) => {
+                                {voteOrderedOptions.map((opt) => {
                                     const seq = opt.eventBattleOptionSeq ?? 0;
                                     const checked = seq > 0 && voteSelections.includes(seq);
                                     const voteLimit = detail.voteLimitPerMember ?? 1;
@@ -938,9 +999,6 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                                             >
                                                 <div className={styles.voteCardBadge}>주제 {opt.sortOrder ?? "—"}</div>
                                                 <div className={styles.voteCardLabel}>{opt.label}</div>
-                                                <div className={styles.voteCardMeta}>
-                                                    {(opt.voteCount ?? 0).toLocaleString()} 표
-                                                </div>
                                                 <div className={styles.votePickRow}>
                                                     <span className={styles.votePickHint}>
                                                         {voteLimit === 1
@@ -994,8 +1052,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                                 const seq = opt.eventBattleOptionSeq ?? 0;
                                 const lockedOther = Boolean(hasBet && myOptSeq != null && myOptSeq !== seq);
                                 const winnerSeq = detail?.winnerOptionSeq;
-                                const highlightLeadingShare =
-                                    isEventOpen && seq > 0 && topPoolOptionSeqs.has(seq);
+                                const highlightLeadingShare = isEventOpen && seq > 0 && topPoolOptionSeqs.has(seq);
                                 const highlightWinner =
                                     !isEventOpen &&
                                     effectiveStatus === "SETTLED" &&
@@ -1090,55 +1147,96 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                             <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <h2 className="text-lg font-semibold text-white">투표 현황</h2>
-                                    <p className="mt-0.5 text-xs text-slate-500">주제별 누적 투표 수 · 비율은 전체 투표 합계 기준</p>
+                                    <p className="mt-0.5 text-xs text-slate-500">
+                                        주제 순서는 상단 &quot;정렬&quot;과 동일합니다. 막대만 표시하며 숫자는 보이지
+                                        않습니다.
+                                    </p>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setVoteStatusVisible((v) => !v)}
-                                    className="shrink-0 rounded-lg border border-violet-600/80 bg-violet-950/40 px-3 py-1.5 text-sm font-semibold text-violet-100 hover:bg-violet-900/40"
-                                    aria-expanded={voteStatusVisible}
-                                >
-                                    {voteStatusVisible ? "숨기기" : "보기"}
-                                </button>
+                                <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+                                    <div className="flex flex-wrap justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setVoteListSort("votes")}
+                                            className={
+                                                voteListSort === "votes"
+                                                    ? "rounded-lg border border-violet-500/80 bg-violet-950/55 px-3 py-1.5 text-sm font-semibold text-violet-50 ring-1 ring-violet-500/45"
+                                                    : "rounded-lg border border-slate-600/70 bg-slate-900/50 px-3 py-1.5 text-sm font-semibold text-slate-300 hover:bg-slate-800/80"
+                                            }
+                                        >
+                                            투표 많은 순
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setVoteListSort("topic")}
+                                            className={
+                                                voteListSort === "topic"
+                                                    ? "rounded-lg border border-violet-500/80 bg-violet-950/55 px-3 py-1.5 text-sm font-semibold text-violet-50 ring-1 ring-violet-500/45"
+                                                    : "rounded-lg border border-slate-600/70 bg-slate-900/50 px-3 py-1.5 text-sm font-semibold text-slate-300 hover:bg-slate-800/80"
+                                            }
+                                        >
+                                            주제 번호 순
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-wrap justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={showAllVoteStatusDetails}
+                                            className="rounded-lg border border-violet-600/80 bg-violet-950/40 px-3 py-1.5 text-sm font-semibold text-violet-100 hover:bg-violet-900/40"
+                                        >
+                                            전체보기
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={hideAllVoteStatusDetails}
+                                            className="rounded-lg border border-slate-600/80 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/80"
+                                        >
+                                            전체숨기기
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            {voteStatusVisible ? (
-                                <ul className="mt-3 space-y-3">
-                                    {options.map((opt) => {
-                                        const v = opt.voteCount ?? 0;
-                                        const pct = totalVoteCount > 0 ? Math.min(100, (v / totalVoteCount) * 100) : 0;
-                                        return (
-                                            <li
-                                                key={opt.eventBattleOptionSeq ?? opt.sortOrder}
-                                                className="rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-3"
-                                            >
-                                                <div className="flex items-center justify-between gap-3 text-sm">
-                                                    <span className="font-medium text-slate-100">{opt.label}</span>
-                                                    <span className="shrink-0 tabular-nums text-violet-200">{v.toLocaleString()} 표</span>
-                                                </div>
+                            <ul className="mt-3 space-y-3">
+                                {voteOrderedOptions.map((opt) => {
+                                    const seq = opt.eventBattleOptionSeq ?? 0;
+                                    const v = opt.voteCount ?? 0;
+                                    const pct = totalVoteCount > 0 ? Math.min(100, (v / totalVoteCount) * 100) : 0;
+                                    const barVisible = voteStatusDetailBySeq[seq] === true;
+                                    return (
+                                        <li
+                                            key={opt.eventBattleOptionSeq ?? opt.sortOrder}
+                                            className="rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-3"
+                                        >
+                                            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                                                <span className="min-w-0 font-medium text-slate-100">{opt.label}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleVoteStatusDetail(seq)}
+                                                    className="shrink-0 rounded-md border border-violet-500/50 bg-violet-950/30 px-2.5 py-1 text-xs font-semibold text-violet-100 hover:bg-violet-900/40"
+                                                    aria-expanded={barVisible}
+                                                >
+                                                    {barVisible ? "숨기기" : "보기"}
+                                                </button>
+                                            </div>
+                                            {barVisible ? (
                                                 <div
                                                     className="mt-2 h-2 overflow-hidden rounded-full bg-slate-800"
                                                     role="progressbar"
                                                     aria-valuemin={0}
                                                     aria-valuemax={100}
                                                     aria-valuenow={Math.round(pct)}
+                                                    aria-label={`${(opt.label ?? "").trim() || "주제"} 상대 득표 비율`}
                                                 >
                                                     <div
                                                         className="h-full rounded-full bg-violet-500/80"
                                                         style={{ width: `${pct}%` }}
                                                     />
                                                 </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            ) : (
-                                <p className="mt-3 rounded-lg border border-dashed border-slate-700/80 bg-slate-950/30 px-4 py-6 text-center text-sm text-slate-500">
-                                    투표 현황을 숨겼습니다. 다시 보려면 &quot;보기&quot;를 누르세요.
-                                </p>
-                            )}
-                            {voteStatusVisible &&
-                            effectiveStatus === "SETTLED" &&
-                            voteShareCelebration.rows.length > 0 ? (
+                                            ) : null}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                            {effectiveStatus === "SETTLED" && voteShareCelebration.rows.length > 0 ? (
                                 <div className="mt-4 flex justify-center">
                                     <button
                                         type="button"
@@ -1151,123 +1249,136 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                             ) : null}
                         </div>
                     ) : (
-                    <div className="mt-10 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,2.5fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
-                        <div className="min-w-0 max-lg:max-w-full">
-                            <h2 className="text-lg font-semibold text-white">최근 베팅</h2>
-                            <p className="mt-0.5 text-xs text-slate-500">
-                                서버는 매번 {EVENT_BATTLE_RECENT_BETS_PAGE}건씩만 조회 · 스크롤 시 이전 내역 자동 로드 · 이 화면 최대{" "}
-                                {EVENT_BATTLE_RECENT_MAX_DISPLAY}건까지 표시
-                            </p>
-                            <ul
-                                ref={recentListScrollRef}
-                                className="mt-3 flex max-h-[22rem] flex-col gap-0 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/50"
-                            >
-                                {!isEventOpen ? (
-                                    <li className="list-none border-b border-slate-700/90 bg-slate-900/70 px-4 py-4 text-center text-sm leading-relaxed text-slate-200">
-                                        {effectiveStatus === "CANCELLED" ? (
-                                            "이벤트가 취소되었습니다."
-                                        ) : detail.winnerLabel?.trim() ? (
-                                            <>
-                                                「
-                                                <span className="font-medium text-amber-200/95">
-                                                    {detail.winnerLabel.trim()}
-                                                </span>
-                                                」 선택으로 종료되었습니다. 참가해 주신 분들 감사합니다.
-                                            </>
-                                        ) : (
-                                            "선택으로 종료되었습니다. 참가해 주신 분들 감사합니다."
-                                        )}
-                                    </li>
-                                ) : null}
-                                {allRecentBets.map((b) => {
-                                    const name = b.memberDisplayName?.trim() || "참가자";
-                                    const label = b.optionLabel?.trim() || "?";
-                                    const pts = b.pointAmount ?? 0;
-                                    return (
+                        <div className="mt-10 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,2.5fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
+                            <div className="min-w-0 max-lg:max-w-full">
+                                <h2 className="text-lg font-semibold text-white">최근 베팅</h2>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                    서버는 매번 {EVENT_BATTLE_RECENT_BETS_PAGE}건씩만 조회 · 스크롤 시 이전 내역 자동
+                                    로드 · 이 화면 최대 {EVENT_BATTLE_RECENT_MAX_DISPLAY}건까지 표시
+                                </p>
+                                <ul
+                                    ref={recentListScrollRef}
+                                    className="mt-3 flex max-h-[22rem] flex-col gap-0 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/50"
+                                >
+                                    {!isEventOpen ? (
+                                        <li className="list-none border-b border-slate-700/90 bg-slate-900/70 px-4 py-4 text-center text-sm leading-relaxed text-slate-200">
+                                            {effectiveStatus === "CANCELLED" ? (
+                                                "이벤트가 취소되었습니다."
+                                            ) : detail.winnerLabel?.trim() ? (
+                                                <>
+                                                    「
+                                                    <span className="font-medium text-amber-200/95">
+                                                        {detail.winnerLabel.trim()}
+                                                    </span>
+                                                    」 선택으로 종료되었습니다. 참가해 주신 분들 감사합니다.
+                                                </>
+                                            ) : (
+                                                "선택으로 종료되었습니다. 참가해 주신 분들 감사합니다."
+                                            )}
+                                        </li>
+                                    ) : null}
+                                    {allRecentBets.map((b) => {
+                                        const name = b.memberDisplayName?.trim() || "참가자";
+                                        const label = b.optionLabel?.trim() || "?";
+                                        const pts = b.pointAmount ?? 0;
+                                        return (
+                                            <li
+                                                key={b.eventBattleBetSeq ?? `${name}-${b.createDt}-${pts}`}
+                                                className="border-b border-slate-800/90 px-4 py-3 text-sm"
+                                            >
+                                                <p className="text-slate-200">
+                                                    <span className="font-medium text-sky-300">{name}</span>님이{" "}
+                                                    <span className="text-amber-100/95">「{label}」</span>에{" "}
+                                                    <span className="font-semibold text-emerald-300">
+                                                        {pts.toLocaleString()}포인트
+                                                    </span>{" "}
+                                                    베팅
+                                                </p>
+                                                {b.createDt ? (
+                                                    <p className="mt-1 text-xs text-slate-600">{b.createDt}</p>
+                                                ) : null}
+                                            </li>
+                                        );
+                                    })}
+                                    {canLoadMoreRecent ? (
                                         <li
-                                            key={b.eventBattleBetSeq ?? `${name}-${b.createDt}-${pts}`}
-                                            className="border-b border-slate-800/90 px-4 py-3 text-sm"
+                                            ref={recentSentinelRef}
+                                            className="flex min-h-[2.75rem] list-none items-center justify-center border-t border-slate-800/80 px-4 py-2 text-xs text-slate-500"
                                         >
-                                            <p className="text-slate-200">
-                                                <span className="font-medium text-sky-300">{name}</span>님이{" "}
-                                                <span className="text-amber-100/95">「{label}」</span>에{" "}
-                                                <span className="font-semibold text-emerald-300">{pts.toLocaleString()}포인트</span>{" "}
-                                                베팅
+                                            {loadingOlderRecent
+                                                ? "이전 베팅 불러오는 중…"
+                                                : "아래로 스크롤하면 이전 베팅을 불러옵니다"}
+                                        </li>
+                                    ) : null}
+                                </ul>
+                                {allRecentBets.length === 0 && isEventOpen ? (
+                                    <p className="mt-3 rounded-xl border border-dashed border-slate-800 py-8 text-center text-sm text-slate-600">
+                                        베팅 내역이 없습니다.
+                                    </p>
+                                ) : null}
+                                {allRecentBets.length > 0 &&
+                                totalBetRows > EVENT_BATTLE_RECENT_MAX_DISPLAY &&
+                                atRecentDisplayCap ? (
+                                    <p className="mt-2 text-xs text-slate-500">
+                                        이 화면에서는 최대 {EVENT_BATTLE_RECENT_MAX_DISPLAY.toLocaleString()}건까지만
+                                        표시합니다. (이벤트 전체 베팅 {totalBetRows.toLocaleString()}건 — 서버는 항상
+                                        소량씩만 조회합니다.)
+                                    </p>
+                                ) : null}
+                            </div>
+                            <aside className="min-w-0 rounded-xl border border-slate-700/80 bg-slate-900/40 p-4">
+                                <h2 className="text-base font-semibold text-white">포인트 랭킹</h2>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                    이 이벤트 누적 베팅액 상위 (닉네임 · 참가 주제 · 참가 포인트)
+                                </p>
+                                <div className="mt-3 overflow-x-auto">
+                                    <div className="min-w-[20.1rem]">
+                                        <div className="grid grid-cols-[2rem_minmax(0,1.15fr)_minmax(0,1fr)_auto] gap-x-2 gap-y-1 border-b border-slate-700/80 pb-2 text-[11px] font-medium text-slate-500">
+                                            <span className="text-center">순위</span>
+                                            <span>참가자 닉네임</span>
+                                            <span>참가 주제</span>
+                                            <span className="text-right tabular-nums">참가 포인트</span>
+                                        </div>
+                                        <ol className="mt-2 space-y-1.5">
+                                            {(activity?.bettorRanking ?? []).map((r) => {
+                                                const rankTopic = eventBattleRankTopicLabel(r);
+                                                const pts = r.totalPoints ?? 0;
+                                                return (
+                                                    <li
+                                                        key={`${r.rank}-${r.memberSeq}`}
+                                                        className="grid grid-cols-[2rem_minmax(0,1.15fr)_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-0.5 rounded-lg border border-slate-800/80 bg-[#0c1017] px-2 py-2 text-sm"
+                                                    >
+                                                        <span className="pt-0.5 text-center font-mono text-xs text-slate-500">
+                                                            {r.rank}
+                                                        </span>
+                                                        <span
+                                                            className="min-w-0 break-words font-medium leading-snug text-slate-100"
+                                                            title={r.memberDisplayName ?? ""}
+                                                        >
+                                                            {r.memberDisplayName ?? "—"}
+                                                        </span>
+                                                        <span
+                                                            className="min-w-0 break-words pt-0.5 leading-snug text-amber-100/95"
+                                                            title={rankTopic ? `「${rankTopic}」` : ""}
+                                                        >
+                                                            {rankTopic ? `「${rankTopic}」` : "—"}
+                                                        </span>
+                                                        <span className="shrink-0 pt-0.5 text-right text-sm font-semibold tabular-nums text-emerald-400">
+                                                            {pts.toLocaleString()} P
+                                                        </span>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ol>
+                                        {(activity?.bettorRanking ?? []).length === 0 ? (
+                                            <p className="mt-4 text-center text-xs text-slate-600">
+                                                랭킹 데이터가 없습니다.
                                             </p>
-                                            {b.createDt ? (
-                                                <p className="mt-1 text-xs text-slate-600">{b.createDt}</p>
-                                            ) : null}
-                                        </li>
-                                    );
-                                })}
-                                {canLoadMoreRecent ? (
-                                    <li
-                                        ref={recentSentinelRef}
-                                        className="flex min-h-[2.75rem] list-none items-center justify-center border-t border-slate-800/80 px-4 py-2 text-xs text-slate-500"
-                                    >
-                                        {loadingOlderRecent ? "이전 베팅 불러오는 중…" : "아래로 스크롤하면 이전 베팅을 불러옵니다"}
-                                    </li>
-                                ) : null}
-                            </ul>
-                            {allRecentBets.length === 0 && isEventOpen ? (
-                                <p className="mt-3 rounded-xl border border-dashed border-slate-800 py-8 text-center text-sm text-slate-600">
-                                    베팅 내역이 없습니다.
-                                </p>
-                            ) : null}
-                            {allRecentBets.length > 0 && totalBetRows > EVENT_BATTLE_RECENT_MAX_DISPLAY && atRecentDisplayCap ? (
-                                <p className="mt-2 text-xs text-slate-500">
-                                    이 화면에서는 최대 {EVENT_BATTLE_RECENT_MAX_DISPLAY.toLocaleString()}건까지만 표시합니다. (이벤트 전체 베팅{" "}
-                                    {totalBetRows.toLocaleString()}건 — 서버는 항상 소량씩만 조회합니다.)
-                                </p>
-                            ) : null}
+                                        ) : null}
+                                    </div>
+                                </div>
+                            </aside>
                         </div>
-                        <aside className="min-w-0 rounded-xl border border-slate-700/80 bg-slate-900/40 p-4">
-                            <h2 className="text-base font-semibold text-white">포인트 랭킹</h2>
-                            <p className="mt-0.5 text-xs text-slate-500">이 이벤트 누적 베팅액 상위 (닉네임 · 참가 주제 · 참가 포인트)</p>
-                            <div className="mt-3 overflow-x-auto">
-                            <div className="min-w-[20.1rem]">
-                            <div className="grid grid-cols-[2rem_minmax(0,1.15fr)_minmax(0,1fr)_auto] gap-x-2 gap-y-1 border-b border-slate-700/80 pb-2 text-[11px] font-medium text-slate-500">
-                                <span className="text-center">순위</span>
-                                <span>참가자 닉네임</span>
-                                <span>참가 주제</span>
-                                <span className="text-right tabular-nums">참가 포인트</span>
-                            </div>
-                            <ol className="mt-2 space-y-1.5">
-                                {(activity?.bettorRanking ?? []).map((r) => {
-                                    const rankTopic = eventBattleRankTopicLabel(r);
-                                    const pts = r.totalPoints ?? 0;
-                                    return (
-                                        <li
-                                            key={`${r.rank}-${r.memberSeq}`}
-                                            className="grid grid-cols-[2rem_minmax(0,1.15fr)_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-0.5 rounded-lg border border-slate-800/80 bg-[#0c1017] px-2 py-2 text-sm"
-                                        >
-                                            <span className="pt-0.5 text-center font-mono text-xs text-slate-500">{r.rank}</span>
-                                            <span
-                                                className="min-w-0 break-words font-medium leading-snug text-slate-100"
-                                                title={r.memberDisplayName ?? ""}
-                                            >
-                                                {r.memberDisplayName ?? "—"}
-                                            </span>
-                                            <span
-                                                className="min-w-0 break-words pt-0.5 leading-snug text-amber-100/95"
-                                                title={rankTopic ? `「${rankTopic}」` : ""}
-                                            >
-                                                {rankTopic ? `「${rankTopic}」` : "—"}
-                                            </span>
-                                            <span className="shrink-0 pt-0.5 text-right text-sm font-semibold tabular-nums text-emerald-400">
-                                                {pts.toLocaleString()} P
-                                            </span>
-                                        </li>
-                                    );
-                                })}
-                            </ol>
-                            {(activity?.bettorRanking ?? []).length === 0 ? (
-                                <p className="mt-4 text-center text-xs text-slate-600">랭킹 데이터가 없습니다.</p>
-                            ) : null}
-                            </div>
-                            </div>
-                        </aside>
-                    </div>
                     )}
                 </>
             )}
@@ -1316,14 +1427,26 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
                                 <svg
                                     viewBox="0 0 320 320"
                                     className="h-full w-full"
-                                    style={{ transform: `rotate(${rouletteRotation}deg)`, transition: rouletteSpinning ? "transform 4.2s cubic-bezier(0.17, 0.85, 0.25, 1)" : "none" }}
+                                    style={{
+                                        transform: `rotate(${rouletteRotation}deg)`,
+                                        transition: rouletteSpinning
+                                            ? "transform 4.2s cubic-bezier(0.17, 0.85, 0.25, 1)"
+                                            : "none",
+                                    }}
                                 >
                                     {options.map((opt, idx) => {
                                         const step = 360 / options.length;
                                         const start = idx * step;
                                         const end = start + step;
                                         const mid = start + step / 2;
-                                        const colors = ["#0ea5e9", "#8b5cf6", "#f43f5e", "#f59e0b", "#10b981", "#6366f1"];
+                                        const colors = [
+                                            "#0ea5e9",
+                                            "#8b5cf6",
+                                            "#f43f5e",
+                                            "#f59e0b",
+                                            "#10b981",
+                                            "#6366f1",
+                                        ];
                                         const fill = colors[idx % colors.length];
                                         const labelPos = polarToCartesian(160, 160, 102, mid);
                                         const baseTextAngle = mid;
