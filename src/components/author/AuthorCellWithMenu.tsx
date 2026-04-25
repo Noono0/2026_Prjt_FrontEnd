@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useId, useRef, useState } from "react";
 import { PointGiftModal } from "./PointGiftModal";
@@ -67,10 +68,7 @@ export function AuthorCellWithMenu({
 
     const hasMember = typeof memberSeq === "number" && memberSeq > 0;
     const isSelf =
-        hasMember &&
-        typeof currentMemberSeq === "number" &&
-        currentMemberSeq > 0 &&
-        memberSeq === currentMemberSeq;
+        hasMember && typeof currentMemberSeq === "number" && currentMemberSeq > 0 && memberSeq === currentMemberSeq;
     const showMenu = hasMember && !isSelf;
 
     const ctx: AuthorMenuContext = {

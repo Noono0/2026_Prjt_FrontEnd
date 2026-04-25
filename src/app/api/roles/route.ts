@@ -10,12 +10,9 @@ export async function GET(req: NextRequest) {
             cache: "no-store",
         });
 
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
-  } catch (error) {
-    return NextResponse.json(
-        { success: false, message: "권한 목록 조회 실패" },
-        { status: 500 }
-    );
-  }
+        const data = await res.json();
+        return NextResponse.json(data, { status: res.status });
+    } catch {
+        return NextResponse.json({ success: false, message: "권한 목록 조회 실패" }, { status: 500 });
+    }
 }

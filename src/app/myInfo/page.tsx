@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useAuthStore } from "@/stores/authStore";
-import { changeMyPassword, findMemberByMemberId, type MemberDetailResponse, updateMyInfo } from "@/features/members/api";
+import {
+    changeMyPassword,
+    findMemberByMemberId,
+    type MemberDetailResponse,
+    updateMyInfo,
+} from "@/features/members/api";
 import { uploadImageFile } from "@/lib/upload";
 import WalletSection from "@/features/members/WalletSection";
 
@@ -42,7 +47,7 @@ export default function MyInfoPage() {
     const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
     const [passwordSaving, setPasswordSaving] = useState(false);
 
-    const loadMyInfo = async () => {
+    const loadMyInfo = useCallback(async () => {
         if (!memberId) {
             alert("로그인 정보를 찾을 수 없습니다.");
             return;
@@ -61,12 +66,12 @@ export default function MyInfoPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [memberId]);
 
     useEffect(() => {
         if (!memberId) return;
         void loadMyInfo();
-    }, [memberId]);
+    }, [memberId, loadMyInfo]);
 
     const handleFileChange = async (file?: File) => {
         if (!file) return;
@@ -159,8 +164,8 @@ export default function MyInfoPage() {
                 <div className="space-y-4">
                     {info.oauthProvider ? (
                         <p className="text-sm text-slate-400">
-                            소셜 로그인({oauthProviderLabel(info.oauthProvider)})으로 연동된 계정입니다. 성명·닉네임은 아래에서 수정 후 저장할 수
-                            있습니다.
+                            소셜 로그인({oauthProviderLabel(info.oauthProvider)})으로 연동된 계정입니다. 성명·닉네임은
+                            아래에서 수정 후 저장할 수 있습니다.
                         </p>
                     ) : null}
                     <div className="grid gap-4 md:grid-cols-3">
@@ -179,7 +184,9 @@ export default function MyInfoPage() {
                                     </div>
                                     <div className="mt-3 border-t border-slate-800 pt-2 text-xs text-slate-500">
                                         <span className="text-slate-500">시스템 ID (변경 불가)</span>
-                                        <div className="mt-0.5 font-mono text-[11px] text-slate-400">{info.memberId}</div>
+                                        <div className="mt-0.5 font-mono text-[11px] text-slate-400">
+                                            {info.memberId}
+                                        </div>
                                     </div>
                                 </>
                             ) : (
@@ -193,7 +200,9 @@ export default function MyInfoPage() {
                             <div className="mb-2 text-sm text-slate-400">성명</div>
                             <input
                                 value={info.memberName ?? ""}
-                                onChange={(e) => setInfo((prev) => (prev ? { ...prev, memberName: e.target.value } : prev))}
+                                onChange={(e) =>
+                                    setInfo((prev) => (prev ? { ...prev, memberName: e.target.value } : prev))
+                                }
                                 className="w-full rounded-lg border border-slate-700 bg-[#081326] px-3 py-2"
                             />
                         </div>
@@ -201,7 +210,9 @@ export default function MyInfoPage() {
                             <div className="mb-2 text-sm text-slate-400">닉네임</div>
                             <input
                                 value={info.nickname ?? ""}
-                                onChange={(e) => setInfo((prev) => (prev ? { ...prev, nickname: e.target.value } : prev))}
+                                onChange={(e) =>
+                                    setInfo((prev) => (prev ? { ...prev, nickname: e.target.value } : prev))
+                                }
                                 className="w-full rounded-lg border border-slate-700 bg-[#081326] px-3 py-2"
                                 placeholder="게시글·댓글에 표시"
                             />
@@ -233,7 +244,9 @@ export default function MyInfoPage() {
                             <input
                                 type="date"
                                 value={toDateInputValue(info.birthYmd)}
-                                onChange={(e) => setInfo((prev) => (prev ? { ...prev, birthYmd: e.target.value } : prev))}
+                                onChange={(e) =>
+                                    setInfo((prev) => (prev ? { ...prev, birthYmd: e.target.value } : prev))
+                                }
                                 className="w-full rounded-lg border border-slate-700 bg-[#081326] px-3 py-2"
                             />
                         </div>
@@ -254,7 +267,12 @@ export default function MyInfoPage() {
                         <div className="mb-3 text-sm text-slate-400">프로필 이미지</div>
                         <div className="mb-3">
                             {info.profileImageUrl ? (
-                                <img src={info.profileImageUrl} alt="profile" className="h-28 w-28 rounded-full object-cover" />
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={info.profileImageUrl}
+                                    alt="profile"
+                                    className="h-28 w-28 rounded-full object-cover"
+                                />
                             ) : (
                                 <div className="flex h-28 w-28 items-center justify-center rounded-full bg-slate-800 text-xs text-slate-500">
                                     이미지 없음
@@ -294,8 +312,9 @@ export default function MyInfoPage() {
                         <div className="mt-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
                             <h2 className="mb-2 text-lg font-semibold text-white">비밀번호</h2>
                             <p className="text-sm text-slate-400">
-                                이 계정은 {oauthProviderLabel(info.oauthProvider)} 로그인을 사용합니다. 비밀번호는 없으며, 앞으로도 같은 방식으로
-                                로그인하면 됩니다. ID/PW 로그인을 쓰려면 관리자에게 문의해 주세요.
+                                이 계정은 {oauthProviderLabel(info.oauthProvider)} 로그인을 사용합니다. 비밀번호는
+                                없으며, 앞으로도 같은 방식으로 로그인하면 됩니다. ID/PW 로그인을 쓰려면 관리자에게
+                                문의해 주세요.
                             </p>
                         </div>
                     ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BoardEditor from "@/components/editor/BoardEditor";
@@ -30,31 +30,34 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
         secretPassword: "",
     });
 
-    const load = async (pw?: string) => {
-        setLoading(true);
-        try {
-            const detail = await fetchInquiryBoardDetail(boardSeq, pw);
-            setItem(detail);
-            setEditForm({
-                categoryCode: detail.categoryCode ?? "",
-                title: detail.title ?? "",
-                content: detail.content ?? "",
-                anonymous: detail.anonymousYn === "Y",
-                secret: detail.secretYn === "Y",
-                secretPassword: "",
-            });
-            setError(null);
-        } catch (e) {
-            setItem(null);
-            setError(e instanceof Error ? e.message : "상세 조회 실패");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const load = useCallback(
+        async (pw?: string) => {
+            setLoading(true);
+            try {
+                const detail = await fetchInquiryBoardDetail(boardSeq, pw);
+                setItem(detail);
+                setEditForm({
+                    categoryCode: detail.categoryCode ?? "",
+                    title: detail.title ?? "",
+                    content: detail.content ?? "",
+                    anonymous: detail.anonymousYn === "Y",
+                    secret: detail.secretYn === "Y",
+                    secretPassword: "",
+                });
+                setError(null);
+            } catch (e) {
+                setItem(null);
+                setError(e instanceof Error ? e.message : "상세 조회 실패");
+            } finally {
+                setLoading(false);
+            }
+        },
+        [boardSeq]
+    );
 
     useEffect(() => {
         void load();
-    }, [boardSeq]);
+    }, [load]);
 
     useEffect(() => {
         void (async () => {
@@ -78,8 +81,15 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
                 <h2 className="mb-3 text-lg font-semibold">비밀글</h2>
                 <p className="mb-3 text-sm text-slate-400">{error}</p>
                 <div className="flex gap-2">
-                    <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" className="rounded border border-slate-700 bg-slate-900 px-3 py-2" />
-                    <button onClick={() => void load(password)} className="rounded bg-sky-600 px-3 py-2 text-sm">확인</button>
+                    <input
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        type="password"
+                        className="rounded border border-slate-700 bg-slate-900 px-3 py-2"
+                    />
+                    <button onClick={() => void load(password)} className="rounded bg-sky-600 px-3 py-2 text-sm">
+                        확인
+                    </button>
                 </div>
             </div>
         );
@@ -149,7 +159,9 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
                         className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
                     >
                         {categories.map((c) => (
-                            <option key={c.value} value={c.value}>{c.label}</option>
+                            <option key={c.value} value={c.value}>
+                                {c.label}
+                            </option>
                         ))}
                     </select>
                     <input
@@ -162,7 +174,9 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
                 <h1 className="mb-2 text-2xl font-bold">{item.title}</h1>
             )}
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
-                <div>작성자: {item.writerName} · 작성일: {item.createDt}</div>
+                <div>
+                    작성자: {item.writerName} · 작성일: {item.createDt}
+                </div>
                 {isOwner ? (
                     <div className="flex items-center gap-2">
                         {!editMode ? (
@@ -216,7 +230,10 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
             </div>
             {editMode ? (
                 <>
-                    <BoardEditor value={editForm.content} onChange={(html) => setEditForm((p) => ({ ...p, content: html }))} />
+                    <BoardEditor
+                        value={editForm.content}
+                        onChange={(html) => setEditForm((p) => ({ ...p, content: html }))}
+                    />
                     <div className="mt-4 flex flex-wrap items-center gap-4">
                         <label className="flex items-center gap-2 text-sm">
                             <input
@@ -246,7 +263,10 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
                     </div>
                 </>
             ) : (
-                <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: item.content ?? "" }} />
+                <div
+                    className="prose prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: item.content ?? "" }}
+                />
             )}
             <div className="mt-6 flex items-center gap-2">
                 <Link href="/inquiry-boards" className="inline-block rounded border border-slate-700 px-3 py-2 text-sm">
@@ -256,4 +276,3 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
         </div>
     );
 }
-

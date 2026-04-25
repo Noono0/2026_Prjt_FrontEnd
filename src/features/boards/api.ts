@@ -1,3 +1,20 @@
+/**
+ * 자유게시판 — 브라우저에서 호출하는 API 래퍼 (Create 제외 대부분이 여기서 나감).
+ *
+ * [전체 데이터 경로]
+ *   React 화면 → fetch("/api/boards/...") → Next `src/app/api/boards/.../route.ts`
+ *   → Spring `API_BASE_URL` → DB
+ *
+ * [CRUD 빠른 매핑]
+ *   C  POST /api/boards/create     → BoardWritePage.tsx 안에서만 직접 fetch (이 파일에 함수 없음)
+ *   R  POST /api/boards/search     → searchBoards()      → BoardsPage
+ *   R  GET  /api/boards/detail/:id → fetchBoardDetail()  → BoardDetailPage
+ *   U  PUT  /api/boards/update     → updateBoard()       → BoardDetailPage 저장
+ *   D  DEL  /api/boards/mine/:id   → deleteMyBoard()     → BoardDetailPage 삭제
+ *
+ * 상세 설명: 같은 폴더의 `CRUD_FLOW.md`
+ */
+import { devLog } from "@/lib/devLog";
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
 import type {
     BoardCategoryOption,
@@ -43,7 +60,10 @@ export class ApiError extends Error {
     }
 }
 
+/** 공통: fetch 후 JSON 파싱, success가 아니면 ApiError. Network 탭에서 동일 URL 확인 가능. */
 async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiResponse<T>> {
+    devLog("자유게시판-api", "요청", String(input), init?.method ?? "GET");
+
     const res = await fetch(input, {
         ...defaultApiRequestInit,
         ...init,
@@ -61,6 +81,7 @@ async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiR
     }
 
     if (!res.ok || !json.success) {
+        devLog("자유게시판-api", "실패", { status: res.status, message: json?.message });
         throw new ApiError(json?.message ?? "요청 처리 중 오류가 발생했습니다.", {
             code: json?.code,
             errors: json?.errors ?? [],
@@ -68,9 +89,11 @@ async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiR
         });
     }
 
+    devLog("자유게시판-api", "성공", String(input), "success");
     return json;
 }
 
+/** Read·목록 — 검색/페이지 조건을 JSON으로 보냄 (GET이 아닌 POST인 이유: 조건 객체가 길 수 있어서) */
 export async function searchBoards(condition: BoardSearchCondition): Promise<PageResponse<BoardListItem>> {
     const result = await apiFetch<PageResponse<BoardListItem>>("/api/boards/search", {
         method: "POST",
@@ -98,6 +121,7 @@ export async function fetchBoardPopularConfig(): Promise<BoardPopularConfig> {
     };
 }
 
+/** Read·상세 — 글 번호(boardSeq) 하나로 본문까지 조회 */
 export async function fetchBoardDetail(boardSeq: number): Promise<BoardListItem> {
     const result = await apiFetch<BoardListItem>(`/api/boards/detail/${boardSeq}`, {
         method: "GET",
@@ -133,6 +157,7 @@ export async function reportBoard(boardSeq: number): Promise<number> {
     return result.data ?? 0;
 }
 
+/** Delete — 본인 글만 삭제 (백엔드에서 권한 검사) */
 export async function deleteMyBoard(boardSeq: number): Promise<number> {
     const result = await apiFetch<number>(`/api/boards/mine/${boardSeq}`, {
         method: "DELETE",
@@ -140,6 +165,7 @@ export async function deleteMyBoard(boardSeq: number): Promise<number> {
     return result.data ?? 0;
 }
 
+/** Update — 수정 시 boardSeq + 제목/내용/노출·댓글 설정 등 한 번에 전송 */
 export async function updateBoard(payload: {
     boardSeq: number;
     categoryCode?: string;
@@ -166,7 +192,10 @@ export type BoardCommentSavePayload = {
     emoticonSeq3?: number;
 };
 
-export async function fetchBoardComments(boardSeq: number, sort: "latest" | "oldest" | "like" = "latest"): Promise<BoardComment[]> {
+export async function fetchBoardComments(
+    boardSeq: number,
+    sort: "latest" | "oldest" | "like" = "latest"
+): Promise<BoardComment[]> {
     const q = encodeURIComponent(sort);
     const result = await apiFetch<BoardComment[]>(`/api/boards/${boardSeq}/comments?sort=${q}`, {
         method: "GET",
@@ -230,4 +259,3 @@ export async function fetchMyMemberEmoticons(): Promise<MemberEmoticon[]> {
     });
     return result.data ?? [];
 }
-

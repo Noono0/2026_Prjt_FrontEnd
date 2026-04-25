@@ -1,3 +1,4 @@
+/** Zustand — 지갑/포인트 UI 갱신용 tick. 요약: `src/lib/STATE-LIBS.md` */
 import { create } from "zustand";
 
 /**

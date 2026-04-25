@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -30,7 +31,10 @@ function formatDate(value?: string): string {
 function isEmptyBoardHtml(html: string): boolean {
     const t = html.trim();
     if (!t || t === "<p></p>") return true;
-    const plain = t.replace(/<[^>]+>/g, "").replace(/&nbsp;/gi, " ").trim();
+    const plain = t
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/gi, " ")
+        .trim();
     return plain.length === 0 && !t.toLowerCase().includes("<img");
 }
 
@@ -242,7 +246,7 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
                             ))}
                         </select>
                     ) : (
-                        item.categoryName ?? item.categoryCode ?? "-"
+                        (item.categoryName ?? item.categoryCode ?? "-")
                     )}
                 </div>
                 {editMode ? (
@@ -257,15 +261,9 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
                 <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-400">
                     <span className={styles.authorMeta}>
                         {item.writerProfileImageUrl ? (
-                            <img
-                                src={item.writerProfileImageUrl}
-                                alt="작성자 프로필"
-                                className={styles.authorAvatar}
-                            />
+                            <img src={item.writerProfileImageUrl} alt="작성자 프로필" className={styles.authorAvatar} />
                         ) : (
-                            <span className={styles.authorFallback}>
-                                {(item.writerName ?? "?").slice(0, 1)}
-                            </span>
+                            <span className={styles.authorFallback}>{(item.writerName ?? "?").slice(0, 1)}</span>
                         )}
                         작성자: {item.writerName ?? "-"}
                     </span>
@@ -372,17 +370,28 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
                         </div>
                     </>
                 ) : (
-                    <div className="board-detail-content prose prose-invert max-w-none break-words text-slate-100" dangerouslySetInnerHTML={{ __html: item.content ?? "" }} />
+                    <div
+                        className="board-detail-content prose prose-invert max-w-none break-words text-slate-100"
+                        dangerouslySetInnerHTML={{ __html: item.content ?? "" }}
+                    />
                 )}
             </div>
 
             <div className="border-t border-slate-800 px-5 py-6">
                 {editMode ? (
                     <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
-                        <button type="button" onClick={onSaveEdit} disabled={saving} className="rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60">
+                        <button
+                            type="button"
+                            onClick={onSaveEdit}
+                            disabled={saving}
+                            className="rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60"
+                        >
                             {saving ? "저장 중..." : "수정 저장"}
                         </button>
-                        <Link href={`/notice-board/${noticeBoardSeq}`} className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-800">
+                        <Link
+                            href={`/notice-board/${noticeBoardSeq}`}
+                            className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-800"
+                        >
                             취소
                         </Link>
                     </div>

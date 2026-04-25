@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type ReactNode, type RefObject } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -113,11 +114,7 @@ function CommentAvatar({
 }
 
 function escapeHtmlPlain(s: string): string {
-    return s
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 function buildCommentContent(bodyText: string, imageUrls: string[]): string {
@@ -129,9 +126,7 @@ function buildCommentContent(bodyText: string, imageUrls: string[]): string {
     for (const rawUrl of imageUrls) {
         const url = rawUrl.trim().replace(/"/g, "");
         if (!url) continue;
-        parts.push(
-            `<p><img src="${url}" alt="" style="max-width:min(200px,100%);border-radius:6px;" /></p>`
-        );
+        parts.push(`<p><img src="${url}" alt="" style="max-width:min(200px,100%);border-radius:6px;" /></p>`);
     }
     return parts.join("");
 }
@@ -222,9 +217,7 @@ function ComposeEditor({
             {!inline && (
                 <div className={styles.composeMeta}>
                     {user?.username ? (
-                        <span className={styles.composeDisplayName}>
-                            {user.nickname?.trim() || user.username}
-                        </span>
+                        <span className={styles.composeDisplayName}>{user.nickname?.trim() || user.username}</span>
                     ) : (
                         <span className={styles.composeDisplayName}>로그인 후 댓글을 작성할 수 있습니다</span>
                     )}
@@ -238,74 +231,71 @@ function ComposeEditor({
                     className={styles.textarea}
                 />
                 <div className={styles.composeToolbar}>
-                            <div className={styles.toolbarLeft}>
-                                <button
-                                    ref={emojiBtnRef}
-                                    type="button"
-                                    className={styles.iconToolBtn}
-                                    title="내 이모티콘"
-                                    disabled={!user?.memberSeq || remainingSlots <= 0}
-                                    onClick={() => setEmojiOpen(!emojiOpen)}
-                                >
-                                    <Smile size={18} strokeWidth={1.75} />
-                                </button>
-                                <button
-                                    type="button"
-                                    className={styles.iconToolBtn}
-                                    title="이미지 첨부"
-                                    disabled={
-                                        !user?.memberSeq || remainingSlots <= 0 || uploadingImage || submitting
-                                    }
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <ImageIcon size={18} strokeWidth={1.75} />
-                                </button>
-                                <span className={styles.attachHint}>
-                                    첨부 {usedSlots}/{MAX_COMMENT_ATTACH_TOTAL}
-                                    {uploadingImage ? " · 업로드 중…" : ""}
-                                </span>
-                                {emojiOpen ? (
-                                    <div ref={emojiPanelRef} className={styles.emojiPanel}>
-                                        {emojiList === undefined ? (
-                                            <div className={styles.emojiEmpty}>불러오는 중…</div>
-                                        ) : emojiList.length === 0 ? (
-                                            <div className={styles.emojiEmpty}>
-                                                등록된 이모티콘이 없습니다. 회원 메뉴에서 이미지 URL로 등록할 수
-                                                있습니다.
-                                            </div>
-                                        ) : (
-                                            <div className={styles.emojiGrid}>
-                                                {emojiList.map((em) => (
-                                                    <button
-                                                        key={em.memberEmoticonSeq}
-                                                        type="button"
-                                                        className={styles.emojiItemBtn}
-                                                        disabled={
-                                                            remainingSlots <= 0 ||
-                                                            em.memberEmoticonSeq == null ||
-                                                            selectedEmoticons.some(
-                                                                (s) => s.memberEmoticonSeq === em.memberEmoticonSeq
-                                                            )
-                                                        }
-                                                        onClick={() => addEmoticon(em)}
-                                                    >
-                                                        {em.imageUrl ? <img src={em.imageUrl} alt="" /> : null}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
+                    <div className={styles.toolbarLeft}>
+                        <button
+                            ref={emojiBtnRef}
+                            type="button"
+                            className={styles.iconToolBtn}
+                            title="내 이모티콘"
+                            disabled={!user?.memberSeq || remainingSlots <= 0}
+                            onClick={() => setEmojiOpen(!emojiOpen)}
+                        >
+                            <Smile size={18} strokeWidth={1.75} />
+                        </button>
+                        <button
+                            type="button"
+                            className={styles.iconToolBtn}
+                            title="이미지 첨부"
+                            disabled={!user?.memberSeq || remainingSlots <= 0 || uploadingImage || submitting}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <ImageIcon size={18} strokeWidth={1.75} />
+                        </button>
+                        <span className={styles.attachHint}>
+                            첨부 {usedSlots}/{MAX_COMMENT_ATTACH_TOTAL}
+                            {uploadingImage ? " · 업로드 중…" : ""}
+                        </span>
+                        {emojiOpen ? (
+                            <div ref={emojiPanelRef} className={styles.emojiPanel}>
+                                {emojiList === undefined ? (
+                                    <div className={styles.emojiEmpty}>불러오는 중…</div>
+                                ) : emojiList.length === 0 ? (
+                                    <div className={styles.emojiEmpty}>
+                                        등록된 이모티콘이 없습니다. 회원 메뉴에서 이미지 URL로 등록할 수 있습니다.
                                     </div>
-                                ) : null}
+                                ) : (
+                                    <div className={styles.emojiGrid}>
+                                        {emojiList.map((em) => (
+                                            <button
+                                                key={em.memberEmoticonSeq}
+                                                type="button"
+                                                className={styles.emojiItemBtn}
+                                                disabled={
+                                                    remainingSlots <= 0 ||
+                                                    em.memberEmoticonSeq == null ||
+                                                    selectedEmoticons.some(
+                                                        (s) => s.memberEmoticonSeq === em.memberEmoticonSeq
+                                                    )
+                                                }
+                                                onClick={() => addEmoticon(em)}
+                                            >
+                                                {em.imageUrl ? <img src={em.imageUrl} alt="" /> : null}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <button
-                                type="button"
-                                className={styles.submitBtn}
-                                disabled={!submitEnabled}
-                                onClick={() => void onSubmit()}
-                            >
-                                {submitting ? "등록 중…" : "등록"}
-                            </button>
-                        </div>
+                        ) : null}
+                    </div>
+                    <button
+                        type="button"
+                        className={styles.submitBtn}
+                        disabled={!submitEnabled}
+                        onClick={() => void onSubmit()}
+                    >
+                        {submitting ? "등록 중…" : "등록"}
+                    </button>
+                </div>
             </div>
             {attachedImages.length > 0 ? (
                 <div className={styles.selectedChips}>
@@ -513,9 +503,7 @@ function CommentBlock({
     const doDelete = async () => {
         if (seq == null) return;
         const confirmMsg =
-            depth === 0 && replyCount > 0
-                ? "이 댓글과 달린 답글을 모두 삭제할까요?"
-                : "이 댓글을 삭제할까요?";
+            depth === 0 && replyCount > 0 ? "이 댓글과 달린 답글을 모두 삭제할까요?" : "이 댓글을 삭제할까요?";
         if (!window.confirm(confirmMsg)) return;
         setBusyId(seq);
         try {
@@ -543,11 +531,7 @@ function CommentBlock({
         <div className={cardClass}>
             <div className={styles.cardInner}>
                 <div className={styles.avatarCol}>
-                    <CommentAvatar
-                        imageUrl={comment.writerProfileImageUrl}
-                        displayLabel={primary}
-                        small={small}
-                    />
+                    <CommentAvatar imageUrl={comment.writerProfileImageUrl} displayLabel={primary} small={small} />
                 </div>
                 <div className={styles.mainCol}>
                     <div className={styles.headerRow}>
@@ -991,12 +975,7 @@ export default function BoardCommentsSection({
 
             {openReplyThreadSeq === null && commentsAllowed ? (
                 <div className={styles.compose}>
-                    <ComposeEditor
-                        variant="top"
-                        user={user}
-                        {...composeEditorProps}
-                        onSubmit={onSubmit}
-                    />
+                    <ComposeEditor variant="top" user={user} {...composeEditorProps} onSubmit={onSubmit} />
                 </div>
             ) : null}
 

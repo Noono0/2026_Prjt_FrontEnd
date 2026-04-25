@@ -1,5 +1,6 @@
 "use client";
 
+/** TanStack Query — 공통코드 API. 요약: `src/lib/STATE-LIBS.md` */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     deleteCodeDetail,
@@ -20,16 +21,12 @@ export const commonCodeKeys = {
     all: ["commonCodes"] as const,
 
     groups: ["commonCodes", "groups"] as const,
-    groupList: (condition: CodeGroupSearchCondition) =>
-        ["commonCodes", "groups", "list", condition] as const,
-    groupDetail: (codeGroupSeq?: number) =>
-        ["commonCodes", "groups", "detail", codeGroupSeq] as const,
+    groupList: (condition: CodeGroupSearchCondition) => ["commonCodes", "groups", "list", condition] as const,
+    groupDetail: (codeGroupSeq?: number) => ["commonCodes", "groups", "detail", codeGroupSeq] as const,
 
     details: ["commonCodes", "details"] as const,
-    detailList: (condition: CodeDetailSearchCondition) =>
-        ["commonCodes", "details", "list", condition] as const,
-    detailDetail: (codeDetailSeq?: number) =>
-        ["commonCodes", "details", "detail", codeDetailSeq] as const,
+    detailList: (condition: CodeDetailSearchCondition) => ["commonCodes", "details", "list", condition] as const,
+    detailDetail: (codeDetailSeq?: number) => ["commonCodes", "details", "detail", codeDetailSeq] as const,
 };
 
 export function useCodeGroupsQuery(condition: CodeGroupSearchCondition) {
@@ -54,10 +51,7 @@ function defaultEnabledForCodeDetailSearch(c: CodeDetailSearchCondition): boolea
     return !!(c.parentDetailSeq || c.codeDetailSeq);
 }
 
-export function useCodeDetailsQuery(
-    condition: CodeDetailSearchCondition,
-    options?: { enabled?: boolean }
-) {
+export function useCodeDetailsQuery(condition: CodeDetailSearchCondition, options?: { enabled?: boolean }) {
     return useQuery({
         queryKey: commonCodeKeys.detailList(condition),
         queryFn: () => searchCodeDetails(condition),
@@ -77,13 +71,7 @@ export function useSaveCodeGroupMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            row,
-            mode,
-        }: {
-            row: CodeGroupRow;
-            mode: "create" | "edit";
-        }) => saveCodeGroup(row, mode),
+        mutationFn: ({ row, mode }: { row: CodeGroupRow; mode: "create" | "edit" }) => saveCodeGroup(row, mode),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: commonCodeKeys.groups });
         },
@@ -106,13 +94,7 @@ export function useSaveCodeDetailMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            row,
-            mode,
-        }: {
-            row: CodeDetailRow;
-            mode: "create" | "edit";
-        }) => saveCodeDetail(row, mode),
+        mutationFn: ({ row, mode }: { row: CodeDetailRow; mode: "create" | "edit" }) => saveCodeDetail(row, mode),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: commonCodeKeys.details });
         },

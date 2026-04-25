@@ -6,12 +6,19 @@ import { useTheme } from "next-themes";
 import { AgGridReact } from "ag-grid-react";
 import styles from "./MembersPage.module.css";
 
-import type { ColDef, GridApi, GridReadyEvent, SortChangedEvent, ValueGetterParams } from "ag-grid-community";
+import type {
+    ColDef,
+    GridApi,
+    GridReadyEvent,
+    SortChangedEvent,
+    ValueGetterParams,
+    ICellRendererParams,
+} from "ag-grid-community";
 
 import MemberFormModal from "@/components/members/MemberFormModal";
 import type { Member } from "@/components/members/memberTypes";
 import { useMemberModalStore } from "@/stores/memberModalStore";
-import { fetchMemberDetail, memberPrimaryRoleCode, type MemberListItemResponse } from "./api";
+import { fetchMemberDetail, memberPrimaryRoleCode, type MemberListItemResponse, type RoleItem } from "./api";
 import { useDeleteMembersMutation, useMembersQuery, useRolesQuery, useSaveMemberMutation } from "./queries";
 import { normalizeMemberSearchCondition, sameMemberSearchCondition } from "@/lib/query/searchConditions";
 
@@ -116,7 +123,7 @@ export default function MembersPage() {
     const roleNameMap = useMemo(() => {
         const map = new Map<string, string>();
 
-        roleOptions.forEach((r: any) => {
+        roleOptions.forEach((r: RoleItem) => {
             const code = r.roleCode ?? r.role_code ?? "";
             const name = r.roleName ?? r.role_name ?? "";
             if (code) {
@@ -218,14 +225,16 @@ export default function MembersPage() {
                 headerName: "아이디",
                 field: "memberId",
                 width: 140,
-                cellRenderer: (params: any) => {
+                cellRenderer: (params: ICellRendererParams<MemberRow>) => {
                     const memberId = params.value ?? "";
+                    const row = params.data;
                     return (
                         <span
                             className={styles.linkText}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                handleOpenDetail(params.data);
+                                if (!row) return;
+                                handleOpenDetail(row);
                             }}
                         >
                             {memberId}
@@ -390,7 +399,7 @@ export default function MembersPage() {
                         onChange={(e) => handleChangeDraft("roleCode", e.target.value)}
                     >
                         <option value="">전체</option>
-                        {roleOptions.map((r: any) => {
+                        {roleOptions.map((r: RoleItem) => {
                             const code = r.roleCode ?? r.role_code ?? "";
                             const name = r.roleName ?? r.role_name ?? "";
                             return (

@@ -19,10 +19,9 @@ export async function GET(req: NextRequest, { params }: Params) {
 
         if (!res.ok || !res.body) {
             const data = await res.json().catch(() => null);
-            return NextResponse.json(
-                data ?? { success: false, message: "활동 SSE 스트림 실패" },
-                { status: res.status }
-            );
+            return NextResponse.json(data ?? { success: false, message: "활동 SSE 스트림 실패" }, {
+                status: res.status,
+            });
         }
 
         const headers = new Headers();
@@ -32,7 +31,7 @@ export async function GET(req: NextRequest, { params }: Params) {
         // reverse-proxy 버퍼링 방지(환경에 따라 적용)
         headers.set("X-Accel-Buffering", "no");
 
-        return new NextResponse(res.body as any, { status: res.status, headers });
+        return new NextResponse(res.body, { status: res.status, headers });
     } catch (error) {
         console.error("GET /api/event-battles/.../activity/stream", error);
         return NextResponse.json({ success: false, message: "SSE 스트림 실패" }, { status: 500 });

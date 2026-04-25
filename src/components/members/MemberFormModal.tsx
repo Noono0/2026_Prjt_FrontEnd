@@ -1,10 +1,17 @@
 "use client";
 
+/**
+ * 회원 생성/수정 모달 — React Hook Form + Zod + zodResolver.
+ * - 스키마/기본값: `memberFormSchema.ts`
+ * - 역할 목록 등 서버 데이터: `features/members/queries.ts` 의 useRolesQuery (TanStack Query)
+ * 라이브러리 위치 요약: `src/lib/STATE-LIBS.md`
+ */
 import React, { useEffect, useMemo } from "react";
 import { useForm, type Resolver, type UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import styles from "./MemberFormModal.module.css";
 import { useRolesQuery } from "@/features/members/queries";
+import type { RoleItem } from "@/features/members/api";
 import type { Member } from "./memberTypes";
 import {
     buildMemberFormSchema,
@@ -129,7 +136,7 @@ export default function MemberFormModal({ open, mode, initial, onClose, onSave }
         if (!open) return;
         const base = initial ?? createEmptyMemberSeed();
         reset(seedToMemberFormValues(base));
-    }, [open, mode, initial?.memberSeq, initial?.memberId, reset]);
+    }, [open, mode, initial, initial?.memberSeq, initial?.memberId, reset]);
 
     if (!open) return null;
 
@@ -268,7 +275,7 @@ export default function MemberFormModal({ open, mode, initial, onClose, onSave }
                                     aria-invalid={Boolean(errors.roleCode)}
                                 >
                                     <option value="">{rolesLoading ? "불러오는 중..." : "선택하세요"}</option>
-                                    {roleOptions.map((r: any) => {
+                                    {roleOptions.map((r: RoleItem) => {
                                         const roleId = r.roleId ?? r.id ?? r.role_seq ?? r.role_seq_no ?? r.role_no;
                                         const roleCode =
                                             r.roleCode ??

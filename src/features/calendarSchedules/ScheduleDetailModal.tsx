@@ -37,7 +37,7 @@ export default function ScheduleDetailModal({ open, onClose, scheduleSeq }: Prop
                 setLoading(false);
             }
         })();
-    }, [open, scheduleSeq]);
+    }, [open, scheduleSeq, onClose]);
 
     if (!open || scheduleSeq == null) {
         return null;
@@ -46,7 +46,11 @@ export default function ScheduleDetailModal({ open, onClose, scheduleSeq }: Prop
     const kind = detail?.eventKind === "BIRTHDAY" ? "생일 (매년)" : "일정";
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal>
+        <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+            role="dialog"
+            aria-modal
+        >
             <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-[#0c1017] shadow-2xl">
                 <div className="flex shrink-0 items-center justify-between border-b border-slate-800 px-5 py-4">
                     <h2 className="text-lg font-semibold text-white">일정 상세</h2>
@@ -133,7 +137,9 @@ export default function ScheduleDetailModal({ open, onClose, scheduleSeq }: Prop
                             <div className="mb-2 text-xs font-medium text-slate-500">내용</div>
                             <div
                                 className="board-detail-content prose prose-invert max-w-none break-words text-slate-100"
-                                dangerouslySetInnerHTML={{ __html: detail.content?.trim() ? detail.content : "<p></p>" }}
+                                dangerouslySetInnerHTML={{
+                                    __html: detail.content?.trim() ? detail.content : "<p></p>",
+                                }}
                             />
                         </div>
                     </div>

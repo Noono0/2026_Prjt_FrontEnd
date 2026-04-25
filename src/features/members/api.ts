@@ -3,8 +3,16 @@ import { defaultApiRequestInit } from "@/lib/http/requestInit";
 
 export type RoleItem = {
     roleId?: number;
+    id?: number | string;
     roleName?: string;
+    role_name?: string;
+    name?: string;
     roleCode?: string;
+    role_code?: string;
+    code?: string;
+    role_seq?: number;
+    role_seq_no?: number;
+    role_no?: number;
     useYn?: string;
 };
 

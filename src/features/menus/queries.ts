@@ -1,14 +1,8 @@
 "use client";
 
+/** TanStack Query — 메뉴 관리 API. 요약: `src/lib/STATE-LIBS.md` */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-    deleteMenu,
-    fetchMenuTree,
-    saveMenu,
-    searchMenus,
-    type MenuRow,
-    type MenuSearchCondition,
-} from "./api";
+import { deleteMenu, fetchMenuTree, saveMenu, searchMenus, type MenuRow, type MenuSearchCondition } from "./api";
 
 export const menuAdminKeys = {
     all: ["menus-admin"] as const,
@@ -35,8 +29,7 @@ export function useMenusAdminQuery(condition: MenuSearchCondition) {
 export function useSaveMenuMutation() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ row, mode }: { row: MenuRow; mode: "create" | "edit" }) =>
-            saveMenu(row, mode),
+        mutationFn: ({ row, mode }: { row: MenuRow; mode: "create" | "edit" }) => saveMenu(row, mode),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: menuAdminKeys.all });
         },

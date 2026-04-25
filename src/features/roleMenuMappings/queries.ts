@@ -1,5 +1,6 @@
 "use client";
 
+/** TanStack Query — 역할–메뉴 매핑 API. 요약: `src/lib/STATE-LIBS.md` */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchActiveRoles, fetchRoleMenuAssignments, saveRoleMenuMappings } from "./api";
 

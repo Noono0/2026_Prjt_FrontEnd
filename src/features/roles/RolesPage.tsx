@@ -5,23 +5,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTheme } from "next-themes";
 import { AgGridReact } from "ag-grid-react";
 import styles from "@/features/members/MembersPage.module.css";
-import type {
-    ColDef,
-    GridApi,
-    GridReadyEvent,
-    RowClickedEvent,
-    SortChangedEvent,
-} from "ag-grid-community";
+import type { ColDef, GridApi, GridReadyEvent, RowClickedEvent, SortChangedEvent } from "ag-grid-community";
 import type { RoleRow, RoleSearchCondition } from "./api";
-import {
-    useDeleteRoleMutation,
-    useRolesAdminQuery,
-    useSaveRoleMutation,
-} from "./queries";
-import {
-    normalizeRoleSearchCondition,
-    sameRoleSearchCondition,
-} from "@/lib/query/searchConditions";
+import { useDeleteRoleMutation, useRolesAdminQuery, useSaveRoleMutation } from "./queries";
+import { normalizeRoleSearchCondition, sameRoleSearchCondition } from "@/lib/query/searchConditions";
 import RoleModal from "./components/RoleModal";
 
 type RoleFilters = {
@@ -89,9 +76,7 @@ export default function RolesPage() {
     useEffect(() => {
         if (!rolesQuery.isError || !rolesQuery.error) return;
         const message =
-            rolesQuery.error instanceof Error
-                ? rolesQuery.error.message
-                : "권한 목록 조회 중 오류가 발생했습니다.";
+            rolesQuery.error instanceof Error ? rolesQuery.error.message : "권한 목록 조회 중 오류가 발생했습니다.";
         alert(message);
     }, [rolesQuery.isError, rolesQuery.error]);
 
@@ -104,8 +89,7 @@ export default function RolesPage() {
 
     const items = useMemo(() => rolesQuery.data?.items ?? [], [rolesQuery.data?.items]);
 
-    const busy =
-        rolesQuery.isFetching || deleteMutation.isPending || saveMutation.isPending;
+    const busy = rolesQuery.isFetching || deleteMutation.isPending || saveMutation.isPending;
 
     const openEdit = useCallback((row: RoleRow) => {
         setModalMode("edit");
@@ -153,7 +137,7 @@ export default function RolesPage() {
             },
             { headerName: "사용", field: "useYn", width: 90 },
         ],
-        [openEdit, styles.linkText]
+        [openEdit]
     );
 
     const defaultColDef = useMemo<ColDef<RoleRow>>(
@@ -286,12 +270,7 @@ export default function RolesPage() {
             </div>
 
             <div className={styles.toolbar}>
-                <button
-                    type="button"
-                    className={styles.primaryButton}
-                    onClick={handleSearch}
-                    disabled={busy}
-                >
+                <button type="button" className={styles.primaryButton} onClick={handleSearch} disabled={busy}>
                     조회
                 </button>
                 <button type="button" onClick={handleReset} disabled={busy}>
@@ -327,9 +306,7 @@ export default function RolesPage() {
             </div>
 
             <div className={styles.sectionTitle}>권한 목록</div>
-            <div
-                className={`${isDark ? "ag-theme-quartz-dark" : "ag-theme-quartz"} ${styles.gridWrap}`}
-            >
+            <div className={`${isDark ? "ag-theme-quartz-dark" : "ag-theme-quartz"} ${styles.gridWrap}`}>
                 <AgGridReact<RoleRow>
                     theme="legacy"
                     rowData={items}

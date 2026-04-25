@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -163,11 +164,7 @@ export default function NoticeBoardsPage() {
                 <td className="px-3 py-3">
                     <div className={styles.authorCell}>
                         {row.writerProfileImageUrl ? (
-                            <img
-                                src={row.writerProfileImageUrl}
-                                alt="작성자 프로필"
-                                className={styles.authorAvatar}
-                            />
+                            <img src={row.writerProfileImageUrl} alt="작성자 프로필" className={styles.authorAvatar} />
                         ) : (
                             <span className={styles.authorFallback}>{(row.writerName ?? "?").slice(0, 1)}</span>
                         )}
@@ -184,7 +181,10 @@ export default function NoticeBoardsPage() {
         <div className="min-h-[70vh] rounded-2xl border border-slate-800 bg-[#0c1017] text-slate-100 shadow-xl">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 px-5 py-4">
                 <h1 className="text-xl font-bold tracking-tight text-white">공지사항</h1>
-                <Link href="/notice-board/write" className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500">
+                <Link
+                    href="/notice-board/write"
+                    className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+                >
                     글쓰기
                 </Link>
             </div>
@@ -225,7 +225,10 @@ export default function NoticeBoardsPage() {
                         placeholder="검색어를 입력하세요"
                         className="min-w-[200px] rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
                     />
-                    <button type="submit" className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600">
+                    <button
+                        type="submit"
+                        className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600"
+                    >
                         검색
                     </button>
                 </form>
@@ -250,7 +253,9 @@ export default function NoticeBoardsPage() {
                         <tbody>
                             {items.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-3 py-12 text-center text-slate-500">등록된 글이 없습니다.</td>
+                                    <td colSpan={5} className="px-3 py-12 text-center text-slate-500">
+                                        등록된 글이 없습니다.
+                                    </td>
                                 </tr>
                             ) : (
                                 <>
@@ -285,7 +290,13 @@ export default function NoticeBoardsPage() {
             )}
 
             <div className="border-t border-slate-800 px-5 py-6">
-                <ListPagination page={page} size={size} totalCount={totalCount} onPageChange={setPage} siblingCount={1} />
+                <ListPagination
+                    page={page}
+                    size={size}
+                    totalCount={totalCount}
+                    onPageChange={setPage}
+                    siblingCount={1}
+                />
             </div>
         </div>
     );

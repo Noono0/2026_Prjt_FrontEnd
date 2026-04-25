@@ -1,8 +1,26 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
+/**
+ * 자유게시판 — 상세 (`/boards/[boardSeq]`)
+ *
+ * [Read]
+ * - `fetchBoardDetail(boardSeq)` → GET `/api/boards/detail/:id`
+ * - `increaseBoardViewCount` — 탭당 한 번 조회수 반영(sessionStorage 키로 중복 방지)
+ *
+ * [Update]
+ * - URL에 `?mode=edit` 이고 로그인 사용자가 작성자일 때 편집 폼
+ * - 저장 시 `updateBoard` → PUT `/api/boards/update`
+ *
+ * [Delete]
+ * - `deleteMyBoard` → DELETE `/api/boards/mine/:id`
+ *
+ * 전체 CRUD 위치: `CRUD_FLOW.md` (같은 features/boards 폴더)
+ */
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { devLog } from "@/lib/devLog";
 import { useAuthStore } from "@/stores/authStore";
 import BoardEditor from "@/components/editor/BoardEditor";
 import {
@@ -31,7 +49,10 @@ function formatDate(value?: string): string {
 function isEmptyBoardHtml(html: string): boolean {
     const t = html.trim();
     if (!t || t === "<p></p>") return true;
-    const plain = t.replace(/<[^>]+>/g, "").replace(/&nbsp;/gi, " ").trim();
+    const plain = t
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/gi, " ")
+        .trim();
     return plain.length === 0 && !t.toLowerCase().includes("<img");
 }
 
@@ -66,16 +87,19 @@ export default function BoardDetailPage({ boardSeq }: Props) {
 
     useEffect(() => {
         const load = async () => {
+            // debugger; // ← 상세 데이터 받기 직전 멈추고 싶을 때 주석 해제
             setLoading(true);
             setError(null);
 
             try {
+                devLog("자유게시판 상세", "boardSeq", boardSeq);
                 const detail = await fetchBoardDetail(boardSeq);
                 const viewedKey = `board-viewed-${boardSeq}`;
                 if (typeof window !== "undefined" && !sessionStorage.getItem(viewedKey)) {
                     await increaseBoardViewCount(boardSeq);
                     sessionStorage.setItem(viewedKey, "Y");
                 }
+                devLog("자유게시판 상세", "제목", detail.title);
                 setItem(detail);
                 setEditForm({
                     title: detail.title ?? "",
@@ -85,6 +109,7 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                     replyAllowed: boardYnAllowed(detail.replyAllowedYn),
                 });
             } catch (e) {
+                devLog("자유게시판 상세", "로드 실패", e);
                 setItem(null);
                 setError(e instanceof Error ? e.message : "상세를 불러오지 못했습니다.");
             } finally {
@@ -166,6 +191,7 @@ export default function BoardDetailPage({ boardSeq }: Props) {
         if (!window.confirm("이 글을 삭제할까요? 삭제된 글은 목록에서 보이지 않습니다.")) return;
         setActionLoading("delete");
         try {
+            devLog("자유게시판 삭제", "DELETE mine", boardSeq);
             const n = await deleteMyBoard(boardSeq);
             if (n > 0) {
                 alert("삭제되었습니다.");
@@ -210,6 +236,7 @@ export default function BoardDetailPage({ boardSeq }: Props) {
 
         setSaving(true);
         try {
+            devLog("자유게시판 수정", "PUT update", { boardSeq: item.boardSeq, title: editForm.title });
             const result = await updateBoard({
                 boardSeq: item.boardSeq,
                 categoryCode: editForm.categoryCode,
@@ -259,7 +286,7 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                             ))}
                         </select>
                     ) : (
-                        item.categoryName ?? item.categoryCode ?? "-"
+                        (item.categoryName ?? item.categoryCode ?? "-")
                     )}
                 </div>
                 {editMode ? (
@@ -281,9 +308,7 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                                     className={styles.authorAvatar}
                                 />
                             ) : (
-                                <span className={styles.authorFallback}>
-                                    {(item.writerName ?? "?").slice(0, 1)}
-                                </span>
+                                <span className={styles.authorFallback}>{(item.writerName ?? "?").slice(0, 1)}</span>
                             )}
                             닉네임: {item.writerName ?? "-"}
                         </span>
@@ -351,7 +376,11 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                                     </label>
                                 </div>
                             </div>
-                            <div className={editForm.commentAllowed ? "space-y-2" : "pointer-events-none space-y-2 opacity-50"}>
+                            <div
+                                className={
+                                    editForm.commentAllowed ? "space-y-2" : "pointer-events-none space-y-2 opacity-50"
+                                }
+                            >
                                 <div className="text-sm font-semibold text-slate-200">답글 허용</div>
                                 <div className="flex flex-wrap items-center gap-5 text-sm text-slate-300">
                                     <label className="flex items-center gap-2">

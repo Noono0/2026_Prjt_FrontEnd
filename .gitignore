@@ -38,3 +38,7 @@ playwright/.cache/
 ### OS
 .DS_Store
 Thumbs.db
+
+### 공부용 로컬 문서 (커밋하지 않음)
+src/features/boards/CRUD_FLOW.md
+src/lib/STATE-LIBS.md

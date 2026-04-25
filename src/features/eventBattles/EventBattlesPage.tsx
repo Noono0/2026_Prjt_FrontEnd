@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * 이벤트 배틀 목록. Zod는 아래 `createEventBattleSchema`로 검증만 (React Hook Form 없음).
+ * Zustand는 `useAuthStore`만 사용. 요약: `src/lib/STATE-LIBS.md`
+ */
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,9 +17,7 @@ const MIN_OPTIONS = 2;
 
 const createEventBattleSchema = z.object({
     title: z.string().trim().min(1, "제목을 입력해 주세요."),
-    optionLabels: z
-        .array(z.string().trim().min(1))
-        .min(MIN_OPTIONS, `주제는 ${MIN_OPTIONS}개 이상 입력해 주세요.`),
+    optionLabels: z.array(z.string().trim().min(1)).min(MIN_OPTIONS, `주제는 ${MIN_OPTIONS}개 이상 입력해 주세요.`),
     voteLimitPerMember: z.number().int().min(1, "투표권은 1 이상이어야 합니다."),
 });
 
@@ -134,7 +136,9 @@ export default function EventBattlesPage() {
             </div>
 
             {error ? (
-                <div className="mb-4 rounded-lg border border-amber-800 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">{error}</div>
+                <div className="mb-4 rounded-lg border border-amber-800 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">
+                    {error}
+                </div>
             ) : null}
 
             {openCreate ? (
@@ -163,9 +167,7 @@ export default function EventBattlesPage() {
                         />
                     </label>
                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-slate-500">
-                            주제 ({MIN_OPTIONS}개 이상)
-                        </span>
+                        <span className="text-xs text-slate-500">주제 ({MIN_OPTIONS}개 이상)</span>
                         <button
                             type="button"
                             onClick={addOption}
@@ -248,7 +250,10 @@ export default function EventBattlesPage() {
                                 <tr key={seq} className="border-b border-slate-800/80 hover:bg-slate-900/40">
                                     <td className="px-4 py-3">
                                         {seq != null ? (
-                                            <Link href={`/event-battles/${seq}`} className="text-sky-400 hover:underline">
+                                            <Link
+                                                href={`/event-battles/${seq}`}
+                                                className="text-sky-400 hover:underline"
+                                            >
                                                 {row.title}
                                             </Link>
                                         ) : (

@@ -16,12 +16,7 @@ import {
     nextSortOrderForParent,
     type MenuNode,
 } from "./arboristUtils";
-import {
-    menuAdminKeys,
-    useDeleteMenuMutation,
-    useMenuTreeQuery,
-    useSaveMenuMutation,
-} from "./queries";
+import { menuAdminKeys, useDeleteMenuMutation, useMenuTreeQuery, useSaveMenuMutation } from "./queries";
 import MenuModal from "./components/MenuModal";
 import styles from "./menusTree.module.css";
 
@@ -78,9 +73,7 @@ function ExplorerNode({
 
             <span className={styles.label}>
                 {row.menuName}
-                {inactive && (
-                    <span className={`${styles.badge} ${styles.badgeInactive}`}>미사용</span>
-                )}
+                {inactive && <span className={`${styles.badge} ${styles.badgeInactive}`}>미사용</span>}
             </span>
 
             <span className={styles.meta}>{row.menuCode}</span>
@@ -107,20 +100,17 @@ export default function MenusPage() {
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
     const [modalInitial, setModalInitial] = useState<MenuRow | null>(null);
 
-    const flatMenus = menusQuery.data ?? [];
+    const flatMenus = useMemo(() => menusQuery.data ?? [], [menusQuery.data]);
     const treeData = useMemo(() => buildMenuTree(flatMenus), [flatMenus]);
 
     useEffect(() => {
         if (!menusQuery.isError || !menusQuery.error) return;
         const message =
-            menusQuery.error instanceof Error
-                ? menusQuery.error.message
-                : "메뉴 목록 조회 중 오류가 발생했습니다.";
+            menusQuery.error instanceof Error ? menusQuery.error.message : "메뉴 목록 조회 중 오류가 발생했습니다.";
         alert(message);
     }, [menusQuery.isError, menusQuery.error]);
 
-    const busy =
-        menusQuery.isFetching || deleteMutation.isPending || saveMutation.isPending;
+    const busy = menusQuery.isFetching || deleteMutation.isPending || saveMutation.isPending;
 
     const openCreate = useCallback(
         (parent: MenuRow | null) => {
@@ -181,9 +171,7 @@ export default function MenusPage() {
 
         try {
             await deleteMutation.mutateAsync(selectedRow.menuId);
-            setSelectedRow((prev) =>
-                prev?.menuId === selectedRow.menuId ? { ...prev, useYn: "N" } : prev
-            );
+            setSelectedRow((prev) => (prev?.menuId === selectedRow.menuId ? { ...prev, useYn: "N" } : prev));
         } catch (e) {
             alert(e instanceof Error ? e.message : "처리 중 오류");
         }
@@ -199,9 +187,7 @@ export default function MenusPage() {
                 row: { ...selectedRow, useYn: "Y" },
                 mode: "edit",
             });
-            setSelectedRow((prev) =>
-                prev?.menuId === selectedRow.menuId ? { ...prev, useYn: "Y" } : prev
-            );
+            setSelectedRow((prev) => (prev?.menuId === selectedRow.menuId ? { ...prev, useYn: "Y" } : prev));
         } catch (e) {
             alert(e instanceof Error ? e.message : "복구 중 오류");
         }
@@ -299,10 +285,9 @@ export default function MenusPage() {
                 }}
             >
                 왼쪽 <strong>트리</strong>에서 메뉴를 선택합니다. <strong>더블클릭</strong>으로 수정,
-                <strong> 드래그</strong>로 같은 레벨 순서 변경 또는 다른 노드 위/아래로 이동해 부모를 바꿀 수
-                있습니다. <strong>미사용 처리</strong>는 DB 행을 지우지 않고{" "}
-                <code>USE_YN = &apos;N&apos;</code> 으로만 바꿉니다. 역할·사용자 메뉴에는 미사용 항목이
-                노출되지 않습니다.
+                <strong> 드래그</strong>로 같은 레벨 순서 변경 또는 다른 노드 위/아래로 이동해 부모를 바꿀 수 있습니다.{" "}
+                <strong>미사용 처리</strong>는 DB 행을 지우지 않고 <code>USE_YN = &apos;N&apos;</code> 으로만 바꿉니다.
+                역할·사용자 메뉴에는 미사용 항목이 노출되지 않습니다.
             </p>
 
             <div className={pageStyles.toolbar}>
@@ -343,8 +328,7 @@ export default function MenusPage() {
 
             <div className={pageStyles.pageInfo}>
                 <span>
-                    전체 {flatMenus.length}건 · 미사용{" "}
-                    {flatMenus.filter((m) => m.useYn === "N").length}건
+                    전체 {flatMenus.length}건 · 미사용 {flatMenus.filter((m) => m.useYn === "N").length}건
                 </span>
             </div>
 

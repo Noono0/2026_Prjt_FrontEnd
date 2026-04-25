@@ -1,8 +1,22 @@
 "use client";
 
+/**
+ * 자유게시판 — 목록 (`/boards`) = Read(여러 건)
+ *
+ * [데이터]
+ * - `searchBoards(requestBody)` → POST `/api/boards/search` (페이지·검색어·카테고리 등은 requestBody에 포함)
+ * - `requestBody`가 바뀌면 `useCallback` 의존으로 `load`가 다시 돌아감
+ *
+ * [참고]
+ * - 공지 상단 고정 행은 `fetchNoticeBoardsPinnedOnFreeBoard` 로 따로 가져와 목록과 합쳐 보여줌
+ * - CRUD 전체 도식: `CRUD_FLOW.md`
+ *
+ * 디버거: `load` 안 try 앞에 `debugger` / 콘솔 `[자유게시판 목록]`
+ */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ListPagination from "@/components/ui/ListPagination";
+import { devLog } from "@/lib/devLog";
 import { fetchNoticeBoardsPinnedOnFreeBoard } from "@/features/noticeBoards/api";
 import type { NoticeBoardListItem } from "@/features/noticeBoards/types";
 import { fetchBoardCategories, fetchBoardPopularConfig, searchBoards } from "./api";
@@ -27,11 +41,7 @@ function categoryFilterToRequest(c: { label: string; value: string }): string | 
 }
 
 function isBoardRowPinHighlighted(row: BoardListItem): boolean {
-    return (
-        row.pinOnFreeBoardYn === "Y" ||
-        row.noticeBoardSeq != null ||
-        row.highlightYn === "Y"
-    );
+    return row.pinOnFreeBoardYn === "Y" || row.noticeBoardSeq != null || row.highlightYn === "Y";
 }
 
 function PopularBadge({ label }: { label: string }) {
@@ -64,9 +74,7 @@ function formatListDate(createDt?: string): string {
 
     const now = new Date();
     const sameDay =
-        d.getFullYear() === now.getFullYear() &&
-        d.getMonth() === now.getMonth() &&
-        d.getDate() === now.getDate();
+        d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 
     if (sameDay) {
         return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
@@ -160,17 +168,21 @@ export default function BoardsPage() {
     }, [appliedSearch.field, appliedSearch.text, categoryCode, page, size]);
 
     const load = useCallback(async () => {
+        // debugger; // ← 연습 시 주석 해제: 목록 요청 직전에 멈춤
         setLoading(true);
         setError(null);
+        devLog("자유게시판 목록", "검색 조건", requestBody);
         try {
             const [res, noticePins] = await Promise.all([
                 searchBoards(requestBody),
                 fetchNoticeBoardsPinnedOnFreeBoard().catch(() => [] as NoticeBoardListItem[]),
             ]);
+            devLog("자유게시판 목록", "응답", { count: res.items?.length ?? 0, total: res.totalCount });
             setItems(res.items ?? []);
             setTotalCount(res.totalCount ?? 0);
             setNoticePinRows((noticePins ?? []).map(mapNoticePinToBoardRow));
         } catch (e) {
+            devLog("자유게시판 목록", "에러", e);
             setItems([]);
             setNoticePinRows([]);
             setTotalCount(0);
@@ -548,9 +560,14 @@ export default function BoardsPage() {
             )}
 
             <div className="border-t border-slate-800 px-5 py-6">
-                <ListPagination page={page} size={size} totalCount={totalCount} onPageChange={setPage} siblingCount={1} />
+                <ListPagination
+                    page={page}
+                    size={size}
+                    totalCount={totalCount}
+                    onPageChange={setPage}
+                    siblingCount={1}
+                />
             </div>
         </div>
     );
 }
-

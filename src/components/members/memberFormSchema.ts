@@ -1,3 +1,8 @@
+/**
+ * 회원 폼용 Zod 스키마 + 타입. MemberFormModal(RHF)에서 zodResolver로 연결합니다.
+ * (자유게시판 글쓰기는 이 패턴을 쓰지 않음 — useState + submit 시 직접 검증)
+ * 전체 요약: `src/lib/STATE-LIBS.md`
+ */
 import { z } from "zod";
 import type { Member, MemberStreamerProfileFields } from "./memberTypes";
 

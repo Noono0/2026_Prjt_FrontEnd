@@ -19,7 +19,6 @@ import {
     settleEventBattle,
     type EventBattleActivity,
     type EventBattleBetRow,
-    type EventBattleBettorRank,
     type EventBattleListItem,
     type EventBattleOption,
     type EventBattleWinnerPayoutRow,
@@ -480,7 +479,6 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
         activity?.winnerPayoutOtherMemberCount,
         activity?.winnerPayoutOtherTotal,
         detail?.voteOnlyYn,
-        detail?.winnerOptionSeq,
     ]);
 
     const onBet = async (optionSeq: number, points: number) => {

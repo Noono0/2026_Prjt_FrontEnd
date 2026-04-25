@@ -1,5 +1,6 @@
 "use client";
 
+/** TanStack Query — 권한(역할) API. 요약: `src/lib/STATE-LIBS.md` */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteRole, saveRole, searchRoles, type RoleRow, type RoleSearchCondition } from "./api";
 
@@ -19,8 +20,7 @@ export function useRolesAdminQuery(condition: RoleSearchCondition) {
 export function useSaveRoleMutation() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ row, mode }: { row: RoleRow; mode: "create" | "edit" }) =>
-            saveRole(row, mode),
+        mutationFn: ({ row, mode }: { row: RoleRow; mode: "create" | "edit" }) => saveRole(row, mode),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: roleAdminKeys.all });
         },

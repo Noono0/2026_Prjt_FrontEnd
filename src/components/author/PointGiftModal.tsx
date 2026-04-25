@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { fetchMyWallet, giftPoints } from "@/features/members/walletApi";
@@ -45,17 +46,10 @@ export function PointGiftModal({ open, onClose, recipient }: Props) {
 
     const overBalance = balance != null && giftAmount > balance;
 
-    const hasRecipientSeq =
-        typeof recipient?.memberSeq === "number" && recipient.memberSeq > 0;
+    const hasRecipientSeq = typeof recipient?.memberSeq === "number" && recipient.memberSeq > 0;
 
     const canSubmit =
-        hasRecipientSeq &&
-        balance != null &&
-        !loading &&
-        !loadError &&
-        !submitting &&
-        giftAmount > 0 &&
-        !overBalance;
+        hasRecipientSeq && balance != null && !loading && !loadError && !submitting && giftAmount > 0 && !overBalance;
 
     const loadWallet = useCallback(async () => {
         setLoading(true);
@@ -138,9 +132,7 @@ export function PointGiftModal({ open, onClose, recipient }: Props) {
                         <div className="text-xs font-medium text-slate-500">받는 사람</div>
                         <div className="truncate text-lg font-semibold text-white">{nick}</div>
                         {loginId ? (
-                            <div className="mt-0.5 truncate text-sm text-slate-400">
-                                @{loginId}
-                            </div>
+                            <div className="mt-0.5 truncate text-sm text-slate-400">@{loginId}</div>
                         ) : (
                             <div className="mt-0.5 text-sm text-slate-500">아이디 없음</div>
                         )}

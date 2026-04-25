@@ -12,7 +12,6 @@ import {
     fetchBlacklistReportDetail,
     increaseBlacklistReportViewCount,
     likeBlacklistReport,
-    updateBlacklistReport,
 } from "./api";
 import type { BlacklistReportListItem } from "./types";
 import { alertIfApiFailed, type ApiEnvelope } from "@/lib/alertApiFailure";
@@ -164,7 +163,9 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
 
     if (loading) {
         return (
-            <div className="rounded-2xl border border-slate-800 bg-[#0c1017] px-5 py-16 text-center text-slate-500">불러오는 중…</div>
+            <div className="rounded-2xl border border-slate-800 bg-[#0c1017] px-5 py-16 text-center text-slate-500">
+                불러오는 중…
+            </div>
         );
     }
     if (error || !item) {
@@ -209,7 +210,10 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
 
             <div className="px-5 py-6">
                 {editMode ? (
-                    <BoardEditor value={editForm.content} onChange={(html) => setEditForm((p) => ({ ...p, content: html }))} />
+                    <BoardEditor
+                        value={editForm.content}
+                        onChange={(html) => setEditForm((p) => ({ ...p, content: html }))}
+                    />
                 ) : (
                     <div
                         className="board-detail-content prose prose-invert max-w-none break-words text-slate-100"

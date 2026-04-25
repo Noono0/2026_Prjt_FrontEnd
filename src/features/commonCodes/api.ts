@@ -94,10 +94,7 @@ export class ApiError extends Error {
     errors?: FieldErrorResponse[];
     status?: number;
 
-    constructor(
-        message: string,
-        options?: { code?: string; errors?: FieldErrorResponse[]; status?: number }
-    ) {
+    constructor(message: string, options?: { code?: string; errors?: FieldErrorResponse[]; status?: number }) {
         super(message);
         this.name = "ApiError";
         this.code = options?.code;
@@ -120,7 +117,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<ApiRespons
 
     try {
         json = await res.json();
-    } catch (e) {
+    } catch {
         if (!res.ok) {
             throw new ApiError("요청 처리 중 오류가 발생했습니다.", {
                 status: res.status,
@@ -131,11 +128,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<ApiRespons
         });
     }
 
-    const hasApiEnvelope =
-        json !== null &&
-        typeof json === "object" &&
-        "success" in json &&
-        "data" in json;
+    const hasApiEnvelope = json !== null && typeof json === "object" && "success" in json && "data" in json;
 
     if (!hasApiEnvelope) {
         // 백엔드/프록시가 ApiResponse 래퍼 없이 raw body를 내려주는 경우 호환 처리
@@ -162,9 +155,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<ApiRespons
 }
 
 /** code group */
-export async function searchCodeGroups(
-    condition: CodeGroupSearchCondition
-): Promise<PageResponse<CodeGroupRow>> {
+export async function searchCodeGroups(condition: CodeGroupSearchCondition): Promise<PageResponse<CodeGroupRow>> {
     const result = await apiFetch<PageResponse<CodeGroupRow>>("/api/code-groups/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -218,9 +209,7 @@ export async function deleteCodeGroup(codeGroupSeq: number) {
 }
 
 /** code detail */
-export async function searchCodeDetails(
-    condition: CodeDetailSearchCondition
-): Promise<PageResponse<CodeDetailRow>> {
+export async function searchCodeDetails(condition: CodeDetailSearchCondition): Promise<PageResponse<CodeDetailRow>> {
     let result: ApiResponse<PageResponse<CodeDetailRow>> | null = null;
     try {
         result = await apiFetch<PageResponse<CodeDetailRow>>("/api/code-details/search", {
