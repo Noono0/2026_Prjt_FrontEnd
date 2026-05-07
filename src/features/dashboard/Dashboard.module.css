@@ -11,6 +11,18 @@
     gap: 14px;
 }
 
+.errorNotice {
+    width: min(1540px, 100%);
+    margin: 0 auto 10px;
+    padding: 10px 12px;
+    border: 1px solid rgb(248 113 113 / 45%);
+    border-radius: 8px;
+    background: rgb(127 29 29 / 24%);
+    color: #fecaca;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .groupSection {
     border: 1px solid #334155;
     border-radius: 10px;

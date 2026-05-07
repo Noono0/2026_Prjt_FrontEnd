@@ -171,6 +171,7 @@ export default function Dashboard() {
     const [members, setMembers] = useState<MemberRow[]>([]);
     const [affiliations, setAffiliations] = useState<AffiliationMeta[]>([]);
     const [loading, setLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState("");
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [viewingProfile, setViewingProfile] = useState<MemberRow | null>(null);
 
@@ -196,6 +197,7 @@ export default function Dashboard() {
                 setLoading(true);
             }
             try {
+                setErrorMessage("");
                 const groups = await searchCodeGroups({
                     codeGroupId: AFFILIATION_CODE_GROUP_ID,
                     page: 1,
@@ -241,7 +243,7 @@ export default function Dashboard() {
                 if (!mounted) return;
                 console.warn("[Dashboard] 로드 실패", e);
                 const msg = e instanceof ApiError ? e.message : "대시보드 데이터를 불러오지 못했습니다.";
-                alert(msg);
+                setErrorMessage(msg);
             } finally {
                 if (mounted && !opts?.silent) setLoading(false);
             }
@@ -339,6 +341,7 @@ export default function Dashboard() {
     return (
         <div className={styles.page}>
             <section ref={boardRef}>
+                {errorMessage ? <div className={styles.errorNotice}>{errorMessage}</div> : null}
                 {loading ? (
                     <div className={styles.empty}>불러오는 중...</div>
                 ) : grouped.length === 0 ? (
