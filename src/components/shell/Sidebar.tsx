@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/uiStore";
 import { useMenuStore } from "@/stores/menuStore";
@@ -11,6 +12,11 @@ export default function Sidebar() {
     const pathname = usePathname();
     const sidebarOpen = useUIStore((s) => s.sidebarOpen);
     const { defaultMenu, extraMenu } = useMenuStore();
+    const [hydrated, setHydrated] = useState(false);
+
+    useEffect(() => {
+        setHydrated(true);
+    }, []);
 
     return (
         <aside className={styles.sidebar}>
@@ -22,9 +28,7 @@ export default function Sidebar() {
             <nav className={styles.nav}>
                 <div className={styles.dashboardWrap}>
                     <Link
-                        className={`${styles.dashboardLink} ${
-                            pathname === "/" ? styles.dashboardLinkActive : ""
-                        }`}
+                        className={`${styles.dashboardLink} ${pathname === "/" ? styles.dashboardLinkActive : ""}`}
                         href="/"
                         title="Dashboard"
                     >
@@ -32,20 +36,12 @@ export default function Sidebar() {
                     </Link>
                 </div>
 
-                <MenuTree
-                    nodes={defaultMenu}
-                    pathname={pathname}
-                    collapsed={!sidebarOpen}
-                />
+                {hydrated && <MenuTree nodes={defaultMenu} pathname={pathname ?? "/"} collapsed={!sidebarOpen} />}
 
-                {extraMenu.length > 0 && (
+                {hydrated && extraMenu.length > 0 && (
                     <div className={styles.extraSection}>
                         {sidebarOpen && <div className={styles.extraTitle}>추가 메뉴</div>}
-                        <MenuTree
-                            nodes={extraMenu}
-                            pathname={pathname}
-                            collapsed={!sidebarOpen}
-                        />
+                        <MenuTree nodes={extraMenu} pathname={pathname ?? "/"} collapsed={!sidebarOpen} />
                     </div>
                 )}
             </nav>

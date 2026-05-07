@@ -14,7 +14,10 @@ const defaultMenu: MenuNode[] = [
         id: "m1",
         name: "회원관리",
         icon: "👤",
-        children: [{ id: "m1-1", name: "회원 목록", path: "/members" }],
+        children: [
+            { id: "m1-1", name: "회원 목록", path: "/members" },
+            { id: "m1-2", name: "멤버스트리머 프로필", path: "/profile" },
+        ],
     },
     {
         id: "m2",
@@ -49,7 +52,7 @@ const defaultMenu: MenuNode[] = [
     },
     {
         id: "m6",
-        name: "게시판111",
+        name: "게시판",
         icon: "📅",
         children: [
             { id: "m6-1a", name: "문의게시판", path: "/inquiry-boards" },
@@ -57,7 +60,6 @@ const defaultMenu: MenuNode[] = [
             { id: "m6-1b", name: "블랙리스트 제보", path: "/blacklist-report" },
             { id: "m6-2", name: "일정 달력", path: "/calendar-schedules" },
             { id: "m6-3", name: "포인트 랭킹", path: "/point-ranking" },
-            { id: "m6-4", name: "테스트화면", path: "/boards" }, // 연습용
         ],
     },
 ];

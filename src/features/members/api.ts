@@ -241,6 +241,7 @@ export async function saveMember(member: Member, mode: "create" | "edit") {
         profileImageUrl: member.profileImageUrl ?? null,
         profileImageFileSeq: member.profileImageFileSeq ?? null,
         roleCodes: rc ? [rc] : [],
+        gradeCode: member.gradeCode ?? "NORMAL",
         statusCode: member.status ?? "ACTIVE",
         streamerProfile: toStreamerPayload(member.streamerProfile),
     };

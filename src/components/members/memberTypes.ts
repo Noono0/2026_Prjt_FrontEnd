@@ -24,6 +24,7 @@ export type Member = {
     /** attach_file.file_seq */
     profileImageFileSeq?: number | null;
     region?: string;
+    gradeCode?: string;
     status?: "ACTIVE" | "SUSPENDED" | "WITHDRAWN";
     roleCode?: string;
     roleName?: string;

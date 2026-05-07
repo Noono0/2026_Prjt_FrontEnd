@@ -18,23 +18,14 @@ export default function CodeSearchForm({ condition, onSearch, onReset, isBusy }:
     const [useYn, setUseYn] = useState(condition.useYn ?? "");
 
     const handleSearchClick = () => {
-        const payload = {
+        onSearch({
             codeGroupId: codeGroupId.trim(),
             codeGroupName: codeGroupName.trim(),
             useYn,
-        };
-
-        console.log("[CodeSearchForm] 조회 버튼 클릭");
-        console.log("[CodeSearchForm] 조회 payload =", payload);
-        debugger;
-
-        onSearch(payload);
+        });
     };
 
     const handleResetClick = () => {
-        console.log("[CodeSearchForm] 초기화 버튼 클릭");
-        debugger;
-
         setCodeGroupId("");
         setCodeGroupName("");
         setUseYn("");
@@ -49,10 +40,7 @@ export default function CodeSearchForm({ condition, onSearch, onReset, isBusy }:
                     <input
                         className={styles.input}
                         value={codeGroupId}
-                        onChange={(e) => {
-                            console.log("[CodeSearchForm] codeGroupId 변경 =", e.target.value);
-                            setCodeGroupId(e.target.value);
-                        }}
+                        onChange={(e) => setCodeGroupId(e.target.value)}
                         placeholder="공통코드 ID"
                     />
                 </div>
@@ -62,24 +50,14 @@ export default function CodeSearchForm({ condition, onSearch, onReset, isBusy }:
                     <input
                         className={styles.input}
                         value={codeGroupName}
-                        onChange={(e) => {
-                            console.log("[CodeSearchForm] codeGroupName 변경 =", e.target.value);
-                            setCodeGroupName(e.target.value);
-                        }}
+                        onChange={(e) => setCodeGroupName(e.target.value)}
                         placeholder="공통코드명"
                     />
                 </div>
 
                 <div className={styles.field}>
                     <label className={styles.label}>사용여부</label>
-                    <select
-                        className={styles.select}
-                        value={useYn}
-                        onChange={(e) => {
-                            console.log("[CodeSearchForm] useYn 변경 =", e.target.value);
-                            setUseYn(e.target.value);
-                        }}
-                    >
+                    <select className={styles.select} value={useYn} onChange={(e) => setUseYn(e.target.value)}>
                         <option value="">전체</option>
                         <option value="Y">사용</option>
                         <option value="N">미사용</option>
@@ -88,21 +66,11 @@ export default function CodeSearchForm({ condition, onSearch, onReset, isBusy }:
             </div>
 
             <div className={styles.buttonRow}>
-                <button
-                    type="button"
-                    className={styles.primaryButton}
-                    onClick={handleSearchClick}
-                    disabled={isBusy}
-                >
+                <button type="button" className={styles.primaryButton} onClick={handleSearchClick} disabled={isBusy}>
                     공통코드 조회
                 </button>
 
-                <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    onClick={handleResetClick}
-                    disabled={isBusy}
-                >
+                <button type="button" className={styles.secondaryButton} onClick={handleResetClick} disabled={isBusy}>
                     초기화
                 </button>
             </div>

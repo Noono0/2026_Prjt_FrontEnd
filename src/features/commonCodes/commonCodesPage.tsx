@@ -8,22 +8,10 @@ import CodeGroupModal from "./components/CodeGroupModal";
 import CodeDetailModal from "./components/CodeDetailModal";
 import SelectedCodeInfoPanel from "./components/SelectedCodeInfoPanel";
 import styles from "./commonCodesPage.module.css";
-import type {
-    CodeGroupRow,
-    CodeDetailRow,
-    CodeGroupSearchCondition,
-    CodeDetailSearchCondition,
-} from "./api";
-import {
-    commonCodeKeys,
-    useCodeDetailsQuery,
-    useCodeGroupsQuery,
-} from "./queries";
+import type { CodeGroupRow, CodeDetailRow, CodeGroupSearchCondition, CodeDetailSearchCondition } from "./api";
+import { commonCodeKeys, useCodeDetailsQuery, useCodeGroupsQuery } from "./queries";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-    normalizeCodeGroupSearchCondition,
-    sameCodeGroupSearchCondition,
-} from "@/lib/query/searchConditions";
+import { normalizeCodeGroupSearchCondition, sameCodeGroupSearchCondition } from "@/lib/query/searchConditions";
 
 const defaultGroupCondition: CodeGroupSearchCondition = {
     codeGroupId: "",
@@ -38,8 +26,7 @@ const defaultGroupCondition: CodeGroupSearchCondition = {
 
 export default function CommonCodesPage() {
     const queryClient = useQueryClient();
-    const [groupCondition, setGroupCondition] =
-        useState<CodeGroupSearchCondition>(defaultGroupCondition);
+    const [groupCondition, setGroupCondition] = useState<CodeGroupSearchCondition>(defaultGroupCondition);
 
     const [selectedGroup, setSelectedGroup] = useState<CodeGroupRow | null>(null);
     const [selectedMiddle, setSelectedMiddle] = useState<CodeDetailRow | null>(null);
@@ -51,10 +38,7 @@ export default function CommonCodesPage() {
         "create-middle" | "edit-middle" | "create-small" | "edit-small"
     >("create-middle");
 
-    const normalizedGroupCondition = useMemo(
-        () => normalizeCodeGroupSearchCondition(groupCondition),
-        [groupCondition]
-    );
+    const normalizedGroupCondition = useMemo(() => normalizeCodeGroupSearchCondition(groupCondition), [groupCondition]);
 
     const groupQuery = useCodeGroupsQuery(normalizedGroupCondition);
 
@@ -91,11 +75,6 @@ export default function CommonCodesPage() {
     const groupListBusy = groupQuery.isFetching;
 
     const handleSearch = async (next: Partial<CodeGroupSearchCondition>) => {
-        console.log("[CommonCodesPage] handleSearch 호출됨");
-        console.log("[CommonCodesPage] 전달받은 검색조건 =", next);
-        console.log("[CommonCodesPage] 변경 전 groupCondition =", groupCondition);
-        debugger;
-
         setSelectedGroup(null);
         setSelectedMiddle(null);
         setSelectedSmall(null);
@@ -115,9 +94,6 @@ export default function CommonCodesPage() {
     };
 
     const handleReset = () => {
-        console.log("[CommonCodesPage] handleReset 호출됨");
-        debugger;
-
         setSelectedGroup(null);
         setSelectedMiddle(null);
         setSelectedSmall(null);
@@ -232,12 +208,8 @@ export default function CommonCodesPage() {
                 }}
                 onCreate={handleOpenGroupCreate}
                 onEdit={handleOpenGroupEdit}
-                onChangePage={(page) =>
-                    setGroupCondition((prev) => ({ ...prev, page }))
-                }
-                onChangePageSize={(size) =>
-                    setGroupCondition((prev) => ({ ...prev, page: 1, size }))
-                }
+                onChangePage={(page) => setGroupCondition((prev) => ({ ...prev, page }))}
+                onChangePageSize={(size) => setGroupCondition((prev) => ({ ...prev, page: 1, size }))}
                 onChangeSort={(sortBy, sortDir) =>
                     setGroupCondition((prev) => ({
                         ...prev,
