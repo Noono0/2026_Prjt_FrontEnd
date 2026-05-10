@@ -10,7 +10,10 @@ import { createSitePopup } from "@/features/sitePopups/api";
 function isEmptyBoardHtml(html: string): boolean {
     const t = html.trim();
     if (!t || t === "<p></p>") return true;
-    const plain = t.replace(/<[^>]+>/g, "").replace(/&nbsp;/gi, " ").trim();
+    const plain = t
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/gi, " ")
+        .trim();
     return plain.length === 0 && !t.toLowerCase().includes("<img");
 }
 
@@ -62,7 +65,7 @@ export default function SitePopupWritePage() {
             });
             if (n > 0) {
                 alert("등록 완료");
-                router.push("/site-popups");
+                router.push("/admin/site-popups");
             } else {
                 alert("등록 실패");
             }
@@ -82,7 +85,7 @@ export default function SitePopupWritePage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <Link
-                        href="/site-popups"
+                        href="/admin/site-popups"
                         className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
                     >
                         목록

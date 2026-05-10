@@ -26,8 +26,9 @@ import styles from "./BoardsPage.module.css";
 import { postHtmlContainsImage } from "@/lib/postHtmlHasImage";
 import { isNewWithin24Hours } from "@/lib/listDateUtils";
 import { AuthorCellWithMenu } from "@/components/author/AuthorCellWithMenu";
+import { formatBoardTagListForDisplay } from "@/lib/boardTagsDisplay";
 
-type SearchField = "title" | "all";
+type SearchField = "title" | "all" | "tag";
 
 /** 자유게시판 상단 고정 블록에서 기본으로 보여 줄 개수 */
 const PINNED_PREVIEW_COUNT = 5;
@@ -162,6 +163,7 @@ export default function BoardsPage() {
         const q = appliedSearch.text.trim();
         if (q) {
             if (appliedSearch.field === "title") body.title = q;
+            else if (appliedSearch.field === "tag") body.tag = q;
             else body.keyword = q;
         }
         return body;
@@ -267,6 +269,7 @@ export default function BoardsPage() {
         const likes = row.likeCount ?? 0;
         const popular = isPopularLikes(likes);
         const hasImage = postHtmlContainsImage(row.content);
+        const tagDisplay = formatBoardTagListForDisplay(row.tagList);
         return (
             <tr
                 key={rowKey(row)}
@@ -282,21 +285,31 @@ export default function BoardsPage() {
                     )}
                 </td>
                 <td className="px-3 py-3">
-                    <div className={styles.titleRow}>
-                        <Link href={getBoardHref(row)} className="text-slate-100 hover:text-sky-400">
-                            {row.title ?? "(제목 없음)"}
-                        </Link>
-                        {hasImage && <ImageAttachIcon />}
-                        {cc > 0 && <span className={styles.commentCount}>[{cc}]</span>}
-                        {isNewWithin24Hours(row.createDt) ? (
-                            <span
-                                className="rounded bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
-                                aria-label="24시간 이내 등록"
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className={`${styles.titleRow} min-w-0 flex-1`}>
+                            <Link href={getBoardHref(row)} className="text-slate-100 hover:text-sky-400">
+                                {row.title ?? "(제목 없음)"}
+                            </Link>
+                            {hasImage && <ImageAttachIcon />}
+                            {cc > 0 && <span className={styles.commentCount}>[{cc}]</span>}
+                            {isNewWithin24Hours(row.createDt) ? (
+                                <span
+                                    className="rounded bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
+                                    aria-label="24시간 이내 등록"
+                                >
+                                    NEW
+                                </span>
+                            ) : null}
+                            {popular ? <PopularBadge label={popularConfig.badgeLabel} /> : null}
+                        </div>
+                        {tagDisplay ? (
+                            <div
+                                className="max-w-[min(45%,14rem)] shrink-0 text-right text-xs leading-snug text-slate-500"
+                                title={tagDisplay}
                             >
-                                NEW
-                            </span>
+                                {tagDisplay}
+                            </div>
                         ) : null}
-                        {popular ? <PopularBadge label={popularConfig.badgeLabel} /> : null}
                     </div>
                 </td>
                 <td className="px-3 py-3">
@@ -329,6 +342,7 @@ export default function BoardsPage() {
         const pinHi = isBoardRowPinHighlighted(row);
         const badgeOverride = renderBadgeLabel(row);
         const popular = isPopularLikes(likes);
+        const tagDisplay = formatBoardTagListForDisplay(row.tagList);
         return (
             <article
                 key={rowKey(row)}
@@ -359,6 +373,7 @@ export default function BoardsPage() {
                         {popular ? <PopularBadge label={popularConfig.badgeLabel} /> : null}
                     </span>
                 </h2>
+                {tagDisplay ? <p className="mt-1 truncate text-right text-xs text-slate-500">{tagDisplay}</p> : null}
                 <div className="mt-3 flex justify-between text-xs text-slate-500">
                     <AuthorCellWithMenu
                         memberSeq={row.writerMemberSeq}
@@ -428,6 +443,7 @@ export default function BoardsPage() {
                     >
                         <option value="title">제목</option>
                         <option value="all">제목+내용</option>
+                        <option value="tag">태그</option>
                     </select>
 
                     <input

@@ -1,0 +1,29 @@
+/* 에디터·게시글 본문 공통: 반응형 영상 임베드 */
+.board-video-embed {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin: 1rem 0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid #334155;
+    aspect-ratio: 16 / 9;
+    background: #020617;
+}
+
+.board-video-embed--empty {
+    min-height: 120px;
+    aspect-ratio: auto;
+}
+
+.board-video-embed-iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.simple-editor .board-video-embed {
+    margin: 0.75rem 0;
+}

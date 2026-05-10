@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BoardEditor from "@/components/editor/BoardEditor";
+import { stripVideoEmbedsFromHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import type { BoardListItem } from "@/features/boards/types";
 import { useAuthStore } from "@/stores/authStore";
 import { deleteMyInquiryBoard, fetchInquiryBoardDetail, fetchInquiryCategories, updateInquiryBoard } from "./api";
@@ -265,7 +266,9 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
             ) : (
                 <div
                     className="prose prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: item.content ?? "" }}
+                    dangerouslySetInnerHTML={{
+                        __html: stripVideoEmbedsFromHtml(item.content ?? ""),
+                    }}
                 />
             )}
             <div className="mt-6 flex items-center gap-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { stripVideoEmbedsFromHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import { fetchCalendarScheduleDetail } from "./api";
 import type { CalendarScheduleDetail } from "./types";
 
@@ -138,7 +139,9 @@ export default function ScheduleDetailModal({ open, onClose, scheduleSeq }: Prop
                             <div
                                 className="board-detail-content prose prose-invert max-w-none break-words text-slate-100"
                                 dangerouslySetInnerHTML={{
-                                    __html: detail.content?.trim() ? detail.content : "<p></p>",
+                                    __html: detail.content?.trim()
+                                        ? stripVideoEmbedsFromHtml(detail.content)
+                                        : "<p></p>",
                                 }}
                             />
                         </div>

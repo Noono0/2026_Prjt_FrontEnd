@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { devLog } from "@/lib/devLog";
+import { normalizeSoopEmbedInHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import { useAuthStore } from "@/stores/authStore";
 import BoardEditor from "@/components/editor/BoardEditor";
 import {
@@ -36,6 +37,7 @@ import {
 import BoardCommentsSection from "./BoardCommentsSection";
 import type { BoardCategoryOption, BoardListItem } from "./types";
 import styles from "./BoardDetailPage.module.css";
+import { formatBoardTagListForDisplay } from "@/lib/boardTagsDisplay";
 
 type Props = {
     boardSeq: number;
@@ -71,13 +73,22 @@ export default function BoardDetailPage({ boardSeq }: Props) {
     const [error, setError] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<"like" | "dislike" | "report" | "delete" | null>(null);
     const [saving, setSaving] = useState(false);
-    const [editForm, setEditForm] = useState({
+    const [editForm, setEditForm] = useState<{
+        title: string;
+        content: string;
+        categoryCode: string;
+        commentAllowed: boolean;
+        replyAllowed: boolean;
+        tags: string[];
+    }>({
         title: "",
         content: "",
         categoryCode: "",
         commentAllowed: true,
         replyAllowed: true,
+        tags: [],
     });
+    const [editTagDraft, setEditTagDraft] = useState("");
 
     const isOwner =
         typeof user?.memberSeq === "number" &&
@@ -107,7 +118,14 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                     categoryCode: detail.categoryCode ?? "",
                     commentAllowed: boardYnAllowed(detail.commentAllowedYn),
                     replyAllowed: boardYnAllowed(detail.replyAllowedYn),
+                    tags: detail.tagList
+                        ? detail.tagList
+                              .split(",")
+                              .map((t) => t.replace(/^#/, "").trim())
+                              .filter(Boolean)
+                        : [],
                 });
+                setEditTagDraft("");
             } catch (e) {
                 devLog("자유게시판 상세", "로드 실패", e);
                 setItem(null);
@@ -153,6 +171,8 @@ export default function BoardDetailPage({ boardSeq }: Props) {
             </div>
         );
     }
+
+    const tagDisplayLine = formatBoardTagListForDisplay(item.tagList);
 
     const onLike = async () => {
         setActionLoading("like");
@@ -229,6 +249,10 @@ export default function BoardDetailPage({ boardSeq }: Props) {
             alert("제목을 입력해주세요.");
             return;
         }
+        if (editForm.title.length > 15) {
+            alert("제목은 15자 이내로 입력해주세요.");
+            return;
+        }
         if (isEmptyBoardHtml(editForm.content)) {
             alert("내용을 입력해주세요.");
             return;
@@ -246,6 +270,7 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                 highlightYn: item.highlightYn ?? "N",
                 commentAllowedYn: editForm.commentAllowed ? "Y" : "N",
                 replyAllowedYn: editForm.replyAllowed ? "Y" : "N",
+                tags: editForm.tags,
             });
             if (result > 0) {
                 const detail = await fetchBoardDetail(boardSeq);
@@ -256,7 +281,14 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                     categoryCode: detail.categoryCode ?? "",
                     commentAllowed: boardYnAllowed(detail.commentAllowedYn),
                     replyAllowed: boardYnAllowed(detail.replyAllowedYn),
+                    tags: detail.tagList
+                        ? detail.tagList
+                              .split(",")
+                              .map((t) => t.replace(/^#/, "").trim())
+                              .filter(Boolean)
+                        : [],
                 });
+                setEditTagDraft("");
                 router.replace(`/boards/${boardSeq}`);
                 alert("수정되었습니다.");
             } else {
@@ -267,6 +299,27 @@ export default function BoardDetailPage({ boardSeq }: Props) {
         } finally {
             setSaving(false);
         }
+    };
+
+    const addEditTagsFromDraft = () => {
+        const raw = editTagDraft
+            .split(/[\s,]+/g)
+            .map((t) => t.trim())
+            .filter(Boolean);
+        if (raw.length === 0) return;
+        setEditForm((prev) => {
+            const next = [...prev.tags];
+            for (const t of raw) {
+                if (next.length >= 10) break;
+                if (!next.includes(t)) next.push(t);
+            }
+            return { ...prev, tags: next };
+        });
+        setEditTagDraft("");
+    };
+
+    const removeEditTag = (tag: string) => {
+        setEditForm((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tag) }));
     };
 
     return (
@@ -290,13 +343,20 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                     )}
                 </div>
                 {editMode ? (
-                    <input
-                        value={editForm.title}
-                        onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
-                        className="w-full rounded-lg border border-slate-700 bg-[#081326] px-4 py-3 text-2xl font-bold text-white outline-none"
-                    />
+                    <div>
+                        <div className="mb-1 text-right text-xs text-slate-500">{editForm.title.length}/15</div>
+                        <input
+                            value={editForm.title}
+                            onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value.slice(0, 15) }))}
+                            maxLength={15}
+                            className="w-full rounded-lg border border-slate-700 bg-[#081326] px-4 py-3 text-2xl font-bold text-white outline-none"
+                        />
+                    </div>
                 ) : (
-                    <h1 className="text-2xl font-bold text-white">{item.title ?? "(제목 없음)"}</h1>
+                    <>
+                        <h1 className="text-2xl font-bold text-white">{item.title ?? "(제목 없음)"}</h1>
+                        {tagDisplayLine ? <p className="mt-2 text-sm text-slate-500">{tagDisplayLine}</p> : null}
+                    </>
                 )}
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
                     <div className="flex flex-wrap items-center gap-4">
@@ -345,7 +405,44 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                         <BoardEditor
                             value={editForm.content}
                             onChange={(html) => setEditForm((prev) => ({ ...prev, content: html }))}
+                            videoPasteEnabled
                         />
+                        <div className="mt-6 space-y-2 rounded-2xl border border-slate-800 bg-[#0b1526] p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="text-sm font-semibold text-slate-200">태그</div>
+                                <div className="text-xs text-slate-500">{editForm.tags.length}/10</div>
+                            </div>
+                            <input
+                                value={editTagDraft}
+                                onChange={(e) => setEditTagDraft(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        addEditTagsFromDraft();
+                                    }
+                                }}
+                                onBlur={addEditTagsFromDraft}
+                                placeholder="태그 (띄어쓰기·쉼표로 구분)"
+                                className="h-11 w-full rounded-xl border border-slate-700 bg-[#081326] px-4 text-slate-100 outline-none focus:border-sky-600"
+                            />
+                            {editForm.tags.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                    {editForm.tags.map((t) => (
+                                        <button
+                                            key={t}
+                                            type="button"
+                                            onClick={() => removeEditTag(t)}
+                                            className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-200 hover:bg-slate-800"
+                                            title="클릭해서 삭제"
+                                        >
+                                            #{t}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-slate-500">태그는 10개까지 입력 가능합니다.</p>
+                            )}
+                        </div>
                         <div className="mt-6 grid gap-4 rounded-2xl border border-slate-800 bg-[#0b1526] p-4 lg:grid-cols-2">
                             <div className="space-y-2">
                                 <div className="text-sm font-semibold text-slate-200">댓글 허용 설정</div>
@@ -410,7 +507,9 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                 ) : (
                     <div
                         className="board-detail-content prose prose-invert max-w-none break-words text-slate-100"
-                        dangerouslySetInnerHTML={{ __html: item.content ?? "" }}
+                        dangerouslySetInnerHTML={{
+                            __html: normalizeSoopEmbedInHtml(item.content ?? ""),
+                        }}
                     />
                 )}
             </div>

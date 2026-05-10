@@ -2,10 +2,7 @@
 
 import { useEffect } from "react";
 import { useMenuStore } from "@/stores/menuStore";
-import {
-    fetchAllMenusForSidebar,
-    toExtraMenuTree,
-} from "@/features/menus/sidebarApi";
+import { fetchAllMenusForSidebar, toExtraMenuTree } from "@/features/menus/sidebarApi";
 
 export default function MenuBootstrap() {
     const setExtraMenu = useMenuStore((s) => s.setExtraMenu);

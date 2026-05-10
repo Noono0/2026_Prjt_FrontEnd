@@ -19,7 +19,7 @@ export type BackendMenuRow = {
     useYn?: string;
 };
 
-/** 기본 사이드바(defaultMenu)와 겹치는 시드 메뉴는 "추가 메뉴"에서 제외 */
+/** 기본 사이드바(adminDefaultMenu)와 겹치는 시드 메뉴는 "추가 메뉴"에서 제외 */
 const RESERVED_MENU_CODES = new Set([
     "MEMBER",
     "ROLE",
@@ -29,6 +29,7 @@ const RESERVED_MENU_CODES = new Set([
     "PRODUCT",
     "ORDER",
     "SITE_POPUP",
+    "SITE_SUPPORT",
     "CONTENT_FILTER",
     "BOARD",
     "CALENDAR_SCHEDULE",
@@ -83,10 +84,7 @@ export async function fetchAllMenusForSidebar(): Promise<BackendMenuRow[]> {
 export function toExtraMenuTree(rows: BackendMenuRow[]): MenuNode[] {
     const filtered = (rows ?? [])
         .filter((row) => row.useYn !== "N")
-        .filter(
-            (row) =>
-                !RESERVED_MENU_CODES.has(String(row.menuCode ?? "").toUpperCase())
-        );
+        .filter((row) => !RESERVED_MENU_CODES.has(String(row.menuCode ?? "").toUpperCase()));
 
     type InternalNode = MenuNode & {
         _menuId: number;
@@ -144,9 +142,7 @@ export function toExtraMenuTree(rows: BackendMenuRow[]): MenuNode[] {
             id: node.id,
             name: node.name,
             path: node.path,
-            children: node.children?.length
-                ? stripMeta(node.children as InternalNode[])
-                : undefined,
+            children: node.children?.length ? stripMeta(node.children as InternalNode[]) : undefined,
         }));
 
     return stripMeta(roots);

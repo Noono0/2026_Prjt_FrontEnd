@@ -175,6 +175,7 @@ export async function updateBoard(payload: {
     highlightYn?: string;
     commentAllowedYn?: string;
     replyAllowedYn?: string;
+    tags?: string[];
 }): Promise<number> {
     const result = await apiFetch<number>("/api/boards/update", {
         method: "PUT",

@@ -1,11 +1,24 @@
 .page {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
     padding: 12px 16px 24px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+/* 상단 멤버 보드 ~ 미션 ~ 피드를 세로로만 쌓고, 각각 동일 max 폭 */
+.page > section {
+    width: 100%;
+    max-width: min(1540px, 100%);
 }
 
 .mainBoard {
-    width: min(1540px, 100%);
+    width: 100%;
+    max-width: min(1540px, 100%);
+    margin-inline: auto;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -223,23 +236,24 @@
     gap: 12px;
 }
 
+/* 고정 열 개수 대신 채워 넣을 수 있는 만큼 열 두고 줄바꿈 — 좁은 뷰포트에서 영역 밖으로 삐져나감 방지 */
 .coreRow7 {
     display: grid;
-    grid-template-columns: repeat(7, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(106px, 100%), 1fr));
     gap: 10px;
     justify-items: center;
 }
 
 .coreRow8 {
     display: grid;
-    grid-template-columns: repeat(8, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(106px, 100%), 1fr));
     gap: 10px;
     justify-items: center;
 }
 
 .standardGrid9 {
     display: grid;
-    grid-template-columns: repeat(9, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(106px, 100%), 1fr));
     gap: 10px;
     justify-items: center;
     align-content: start;
@@ -510,20 +524,6 @@
     max-width: 560px;
 }
 
-@media (max-width: 1100px) {
-    .standardGrid9 {
-        grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
-    }
-
-    .coreRow7 {
-        grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
-    }
-
-    .coreRow8 {
-        grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
-    }
-}
-
 @media (max-width: 720px) {
     .groupBody {
         grid-template-columns: 1fr;
@@ -542,4 +542,266 @@
         max-width: 118px;
         font-size: 11px;
     }
+}
+
+/* ─── 메인 하단: 도전미션 플레이스홀더 + 게시글 3열 ─── */
+.missionZone {
+    width: 100%;
+    max-width: min(1540px, 100%);
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.missionCard {
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 20px;
+    border-radius: 12px;
+    border: 1px dashed rgb(71 85 105 / 85%);
+    background: linear-gradient(180deg, rgb(15 23 42 / 72%) 0%, rgb(2 6 23 / 88%) 100%);
+    text-align: center;
+}
+
+.missionTitle {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: -0.02em;
+}
+
+.missionSub {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.boardFeedsWrap {
+    width: 100%;
+    max-width: min(1540px, 100%);
+    margin: 0;
+    padding: 0 0 8px;
+    flex-shrink: 0;
+}
+
+.feedGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    align-items: stretch;
+    width: 100%;
+}
+
+@media (max-width: 1100px) {
+    .feedGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.feedColumn {
+    border: 1px solid rgb(51 65 85 / 90%);
+    border-radius: 12px;
+    background: rgb(15 23 42 / 92%);
+    min-width: 0;
+    min-height: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.feedColumnHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgb(51 65 85 / 70%);
+    background: linear-gradient(90deg, rgb(15 23 42 / 95%) 0%, rgb(30 41 59 / 55%) 100%);
+    border-radius: 12px 12px 0 0;
+}
+
+.feedColumnIconWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgb(2 6 23 / 80%);
+    border: 1px solid rgb(51 65 85 / 80%);
+    flex-shrink: 0;
+}
+
+.feedColumnTitles {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 10px;
+}
+
+.feedColumnHeading {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #f1f5f9;
+    letter-spacing: -0.03em;
+}
+
+.feedColumnBadge {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgb(30 41 59 / 90%);
+    color: #94a3b8;
+    border: 1px solid rgb(71 85 105 / 70%);
+}
+
+.feedList {
+    flex: 1 1 auto;
+    min-height: 0;
+    list-style: none;
+    margin: 0;
+    padding: 8px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.feedRow {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid rgb(30 41 59 / 85%);
+}
+
+.feedRow:last-child {
+    border-bottom: none;
+}
+
+.feedMain {
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.feedMain:hover .feedTitleText {
+    color: #38bdf8;
+}
+
+.feedTitleLine {
+    margin: 0 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+    line-height: 1.35;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 6px;
+}
+
+.feedTitleText {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.feedCommentCount {
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #38bdf8;
+}
+
+.feedMeta {
+    font-size: 11px;
+    color: #64748b;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 4px;
+}
+
+.feedMetaSep {
+    color: #475569;
+    user-select: none;
+}
+
+.feedAuthor {
+    max-width: 8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.feedLikes {
+    color: #38bdf8;
+    font-weight: 600;
+}
+
+.feedThumbWrap {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgb(51 65 85 / 80%);
+    background: #020617;
+}
+
+.feedThumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.feedThumbPlaceholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgb(30 41 59 / 80%) 0%, rgb(15 23 42 / 90%) 100%);
+}
+
+.feedMuted,
+.feedError {
+    padding: 18px 14px;
+    font-size: 13px;
+    color: #64748b;
+    text-align: center;
+}
+
+.feedError {
+    color: #fca5a5;
+}
+
+.feedMore {
+    margin-top: auto;
+    padding: 10px 12px 12px;
+    border-top: 1px solid rgb(30 41 59 / 85%);
+}
+
+.feedMoreLink {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #7dd3fc;
+    text-decoration: none;
+}
+
+.feedMoreLink:hover {
+    color: #bae6fd;
+    text-decoration: underline;
 }

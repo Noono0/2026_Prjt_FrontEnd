@@ -83,6 +83,10 @@ export default function BoardWritePage() {
             alert("제목을 입력해주세요.");
             return;
         }
+        if (title.length > 15) {
+            alert("제목은 15자 이내로 입력해주세요.");
+            return;
+        }
         if (!content.trim() || content.trim() === "<p></p>") {
             alert("내용을 입력해주세요.");
             return;
@@ -98,6 +102,7 @@ export default function BoardWritePage() {
             highlightYn: "N",
             commentAllowedYn: commentAllowed ? "Y" : "N",
             replyAllowedYn: replyAllowed ? "Y" : "N",
+            tags,
         };
         devLog("자유게시판 작성", "POST /api/boards/create", body);
         const res = await fetch("/api/boards/create", {
@@ -174,17 +179,21 @@ export default function BoardWritePage() {
                     </div>
 
                     <div>
-                        <div className="mb-2 text-xs font-medium text-slate-500">제목</div>
+                        <div className="mb-2 flex items-center justify-between text-xs font-medium text-slate-500">
+                            <span>제목</span>
+                            <span>{title.length}/15</span>
+                        </div>
                         <input
                             value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            placeholder="제목"
+                            onChange={(e) => setTitle(e.target.value.slice(0, 15))}
+                            maxLength={15}
+                            placeholder="제목 (최대 15자)"
                             className="h-12 w-full rounded-xl border border-slate-700 bg-[#081326] px-4 text-slate-100 outline-none focus:border-sky-600"
                         />
                     </div>
                 </div>
 
-                <BoardEditor value={content} onChange={setContent} placeholder="내용을 입력하세요." />
+                <BoardEditor value={content} onChange={setContent} placeholder="내용을 입력하세요." videoPasteEnabled />
 
                 <div className="grid gap-4 rounded-2xl border border-slate-800 bg-[#0b1526] p-4 lg:grid-cols-2">
                     <div className="space-y-2">

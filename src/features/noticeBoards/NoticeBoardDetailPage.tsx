@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import BoardEditor from "@/components/editor/BoardEditor";
+import { stripVideoEmbedsFromHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import BoardCommentsSection from "@/features/boards/BoardCommentsSection";
 import {
     dislikeNoticeBoard,
@@ -217,7 +218,7 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
                     replyAllowed: boardYnAllowed(detail.replyAllowedYn),
                     pinOnFreeBoard: boardYnAllowed(detail.pinOnFreeBoardYn),
                 });
-                router.replace(`/notice-board/${noticeBoardSeq}`);
+                router.replace(`/admin/notice-board/${noticeBoardSeq}`);
                 alert("수정되었습니다.");
             } else {
                 alert("수정에 실패했습니다.");
@@ -372,7 +373,9 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
                 ) : (
                     <div
                         className="board-detail-content prose prose-invert max-w-none break-words text-slate-100"
-                        dangerouslySetInnerHTML={{ __html: item.content ?? "" }}
+                        dangerouslySetInnerHTML={{
+                            __html: stripVideoEmbedsFromHtml(item.content ?? ""),
+                        }}
                     />
                 )}
             </div>
@@ -389,7 +392,7 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
                             {saving ? "저장 중..." : "수정 저장"}
                         </button>
                         <Link
-                            href={`/notice-board/${noticeBoardSeq}`}
+                            href={`/admin/notice-board/${noticeBoardSeq}`}
                             className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-800"
                         >
                             취소
@@ -423,7 +426,7 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
                         </button>
                         {isOwner && (
                             <Link
-                                href={`/notice-board/${noticeBoardSeq}?mode=edit`}
+                                href={`/admin/notice-board/${noticeBoardSeq}?mode=edit`}
                                 className="rounded-lg border border-sky-600 bg-sky-900/30 px-4 py-3 text-sm font-semibold text-sky-200 hover:bg-sky-900/50"
                             >
                                 수정
@@ -440,7 +443,7 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
                 />
 
                 <Link
-                    href="/notice-board"
+                    href="/admin/notice-board"
                     className="mt-6 inline-flex rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
                 >
                     목록

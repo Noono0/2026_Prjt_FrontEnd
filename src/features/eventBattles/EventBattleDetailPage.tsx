@@ -62,7 +62,13 @@ function clampBetAmount(n: number, max: number | null): number {
     return v;
 }
 
-type Props = { eventBattleSeq: number };
+type Props = {
+    eventBattleSeq: number;
+    /** 목록으로 돌아가기 링크 기본 경로 */
+    routesBase?: string;
+};
+
+const DEFAULT_DETAIL_ROUTES_BASE = "/admin/event-battles";
 
 function formatPoolSharePercent(topicPts: number, totalPool: number): string {
     if (totalPool <= 0 || topicPts <= 0) return "0%";
@@ -222,7 +228,7 @@ function OptionBetCard({
     );
 }
 
-export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
+export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEFAULT_DETAIL_ROUTES_BASE }: Props) {
     const user = useAuthStore((s) => s.user);
     const walletTick = useWalletRefreshStore((s) => s.tick);
     const [detail, setDetail] = useState<EventBattleListItem | null>(null);
@@ -830,7 +836,7 @@ export default function EventBattleDetailPage({ eventBattleSeq }: Props) {
     return (
         <div className="min-h-[70vh] rounded-2xl border border-slate-800 bg-[#0c1017] p-6 text-slate-100 shadow-xl">
             <div className="mb-4">
-                <Link href="/event-battles" className={styles.backLink}>
+                <Link href={routesBase} className={styles.backLink}>
                     <span className={styles.backLinkIcon}>←</span>목록
                 </Link>
             </div>

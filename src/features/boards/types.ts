@@ -5,6 +5,8 @@ export type BoardListItem = {
     categoryCode?: string;
     categoryName?: string;
     title?: string;
+    /** 쉼표 구분 태그(백엔드 tag_list) */
+    tagList?: string;
     content?: string;
     writerMemberSeq?: number;
     /** 회원 로그인 ID */
@@ -35,6 +37,10 @@ export type BoardSearchCondition = {
     title?: string;
     writerName?: string;
     keyword?: string;
+    /** 태그 목록 부분 일치 검색 */
+    tag?: string;
+    /** 추천 수 이상 — 메인 인기글 등 */
+    minLikeCount?: number;
     showYn?: string;
     highlightYn?: string;
     page?: number;
@@ -85,4 +91,3 @@ export type BoardComment = {
     createDt?: string;
     children?: BoardComment[];
 };
-

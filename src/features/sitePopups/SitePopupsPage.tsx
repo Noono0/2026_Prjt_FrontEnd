@@ -70,7 +70,7 @@ export default function SitePopupsPage() {
                     <p className="mt-1 text-sm text-slate-500">로그인 직후 모달·새 창으로 띄우는 팝업을 관리합니다.</p>
                 </div>
                 <Link
-                    href="/site-popups/write"
+                    href="/admin/site-popups/write"
                     className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
                 >
                     팝업 등록
@@ -98,7 +98,11 @@ export default function SitePopupsPage() {
             </div>
 
             <div className="overflow-x-auto px-2 py-4 sm:px-5">
-                {error && <div className="mb-4 rounded-lg border border-amber-800 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">{error}</div>}
+                {error && (
+                    <div className="mb-4 rounded-lg border border-amber-800 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">
+                        {error}
+                    </div>
+                )}
                 {loading ? (
                     <div className="py-16 text-center text-slate-500">불러오는 중…</div>
                 ) : (
@@ -124,16 +128,20 @@ export default function SitePopupsPage() {
                                     </tr>
                                 ) : (
                                     items.map((row) => (
-                                        <tr key={row.sitePopupSeq} className="border-b border-slate-800/80 hover:bg-slate-900/60">
+                                        <tr
+                                            key={row.sitePopupSeq}
+                                            className="border-b border-slate-800/80 hover:bg-slate-900/60"
+                                        >
                                             <td className="px-3 py-3 text-slate-400">{row.sitePopupSeq}</td>
                                             <td className="px-3 py-3">
                                                 <Link
-                                                    href={`/site-popups/${row.sitePopupSeq}`}
+                                                    href={`/admin/site-popups/${row.sitePopupSeq}`}
                                                     className="font-medium text-slate-100 hover:text-sky-400"
                                                 >
                                                     {row.title ?? "(제목 없음)"}
                                                 </Link>
-                                                {row.showYn === "Y" && isNoticePopupActiveNow({ ...row, popupYn: "Y" }) ? (
+                                                {row.showYn === "Y" &&
+                                                isNoticePopupActiveNow({ ...row, popupYn: "Y" }) ? (
                                                     <span className="ml-2 inline-block rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
                                                         노출중
                                                     </span>
@@ -142,16 +150,16 @@ export default function SitePopupsPage() {
                                             <td className="px-3 py-3">
                                                 <span
                                                     className={
-                                                        row.showYn === "Y"
-                                                            ? "text-emerald-400"
-                                                            : "text-slate-500"
+                                                        row.showYn === "Y" ? "text-emerald-400" : "text-slate-500"
                                                     }
                                                 >
                                                     {row.showYn === "Y" ? "Y" : "N"}
                                                 </span>
                                             </td>
                                             <td className="px-3 py-3 text-slate-400">
-                                                {(row.popupType ?? "MODAL").toUpperCase() === "WINDOW" ? "새 창" : "모달"}
+                                                {(row.popupType ?? "MODAL").toUpperCase() === "WINDOW"
+                                                    ? "새 창"
+                                                    : "모달"}
                                             </td>
                                             <td className="px-3 py-3 text-xs text-slate-400">
                                                 {formatPopupPeriodRange(row.popupStartDt, row.popupEndDt)}

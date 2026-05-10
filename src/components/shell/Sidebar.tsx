@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/uiStore";
-import { useMenuStore } from "@/stores/menuStore";
+import { adminDefaultMenu, useMenuStore } from "@/stores/menuStore";
 import MenuTree from "./MenuTree";
 import Link from "next/link";
 import styles from "./Sidebar.module.css";
@@ -11,12 +11,14 @@ import styles from "./Sidebar.module.css";
 export default function Sidebar() {
     const pathname = usePathname();
     const sidebarOpen = useUIStore((s) => s.sidebarOpen);
-    const { defaultMenu, extraMenu } = useMenuStore();
+    const extraMenu = useMenuStore((s) => s.extraMenu);
     const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
         setHydrated(true);
     }, []);
+
+    const dashboardActive = pathname === "/admin";
 
     return (
         <aside className={styles.sidebar}>
@@ -28,15 +30,15 @@ export default function Sidebar() {
             <nav className={styles.nav}>
                 <div className={styles.dashboardWrap}>
                     <Link
-                        className={`${styles.dashboardLink} ${pathname === "/" ? styles.dashboardLinkActive : ""}`}
-                        href="/"
-                        title="Dashboard"
+                        className={`${styles.dashboardLink} ${dashboardActive ? styles.dashboardLinkActive : ""}`}
+                        href="/admin"
+                        title="메인"
                     >
-                        {sidebarOpen ? "대시보드" : "🏠"}
+                        {sidebarOpen ? "🏠 메인" : "🏠"}
                     </Link>
                 </div>
 
-                {hydrated && <MenuTree nodes={defaultMenu} pathname={pathname ?? "/"} collapsed={!sidebarOpen} />}
+                {hydrated && <MenuTree nodes={adminDefaultMenu} pathname={pathname ?? "/"} collapsed={!sidebarOpen} />}
 
                 {hydrated && extraMenu.length > 0 && (
                     <div className={styles.extraSection}>

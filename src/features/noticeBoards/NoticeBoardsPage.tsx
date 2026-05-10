@@ -123,7 +123,9 @@ export default function NoticeBoardsPage() {
             typeof user?.memberSeq === "number" &&
             typeof row.writerMemberSeq === "number" &&
             user.memberSeq === row.writerMemberSeq;
-        return isMine ? `/notice-board/${row.noticeBoardSeq}?mode=edit` : `/notice-board/${row.noticeBoardSeq}`;
+        return isMine
+            ? `/admin/notice-board/${row.noticeBoardSeq}?mode=edit`
+            : `/admin/notice-board/${row.noticeBoardSeq}`;
     };
 
     const renderRow = (row: NoticeBoardListItem) => {
@@ -182,7 +184,7 @@ export default function NoticeBoardsPage() {
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 px-5 py-4">
                 <h1 className="text-xl font-bold tracking-tight text-white">공지사항</h1>
                 <Link
-                    href="/notice-board/write"
+                    href="/admin/notice-board/write"
                     className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
                 >
                     글쓰기

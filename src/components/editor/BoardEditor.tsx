@@ -3,10 +3,12 @@
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 
 type BoardEditorProps = {
-  value: string;
-  onChange: (html: string) => void;
-  placeholder?: string;
-  disabled?: boolean;
+    value: string;
+    onChange: (html: string) => void;
+    placeholder?: string;
+    disabled?: boolean;
+    /** true: 자유게시판만 허용 — 붙여넣기 시 YouTube·SOOP 영상 임베드 블록 생성 */
+    videoPasteEnabled?: boolean;
 };
 
 /**
@@ -14,20 +16,22 @@ type BoardEditorProps = {
  * (데모용 다크 토글은 숨기고, 앱 테마와 맞춥니다.)
  */
 export default function BoardEditor({
-  value,
-  onChange,
-  placeholder: _placeholder,
-  disabled = false,
+    value,
+    onChange,
+    placeholder: _placeholder,
+    disabled = false,
+    videoPasteEnabled = false,
 }: BoardEditorProps) {
-  void _placeholder; // Simple Editor는 placeholder UI가 별도; 필요 시 확장
-  return (
-    <div className="board-simple-editor-root">
-      <SimpleEditor
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        showThemeToggle={false}
-      />
-    </div>
-  );
+    void _placeholder; // Simple Editor는 placeholder UI가 별도; 필요 시 확장
+    return (
+        <div className="board-simple-editor-root">
+            <SimpleEditor
+                value={value}
+                onChange={onChange}
+                disabled={disabled}
+                showThemeToggle={false}
+                videoPasteEnabled={videoPasteEnabled}
+            />
+        </div>
+    );
 }

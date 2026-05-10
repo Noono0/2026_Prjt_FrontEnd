@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { isSitePopupDismissedToday, setSitePopupDismissedToday } from "@/lib/sitePopupCookie";
 import { isNoticePopupActiveNow } from "@/lib/noticePopupSchedule";
+import { stripVideoEmbedsFromHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import type { SitePopupListItem } from "@/features/sitePopups/types";
 
 type PopupItem = SitePopupListItem;
@@ -19,14 +20,8 @@ function openCenteredWindow(
     const dualScreenTop = window.screenTop ?? window.screenY ?? 0;
     const innerW = window.innerWidth ?? document.documentElement.clientWidth ?? window.screen.width;
     const innerH = window.innerHeight ?? document.documentElement.clientHeight ?? window.screen.height;
-    const left =
-        posX != null && !Number.isNaN(posX)
-            ? dualScreenLeft + posX
-            : (innerW - width) / 2 + dualScreenLeft;
-    const top =
-        posY != null && !Number.isNaN(posY)
-            ? dualScreenTop + posY
-            : (innerH - height) / 2 + dualScreenTop;
+    const left = posX != null && !Number.isNaN(posX) ? dualScreenLeft + posX : (innerW - width) / 2 + dualScreenLeft;
+    const top = posY != null && !Number.isNaN(posY) ? dualScreenTop + posY : (innerH - height) / 2 + dualScreenTop;
     const feats = `width=${width},height=${height},left=${Math.max(0, Math.floor(left))},top=${Math.max(0, Math.floor(top))},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`;
     window.open(url, `sp_popup_${Date.now()}`, feats);
 }
@@ -80,7 +75,9 @@ function NoticeModal({
                 </div>
                 <div
                     className="min-h-0 flex-1 overflow-auto px-4 py-3 text-sm text-slate-200 prose prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: item.content ?? "" }}
+                    dangerouslySetInnerHTML={{
+                        __html: stripVideoEmbedsFromHtml(item.content ?? ""),
+                    }}
                 />
                 <div className="shrink-0 border-t border-slate-700 px-4 py-3">
                     <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">

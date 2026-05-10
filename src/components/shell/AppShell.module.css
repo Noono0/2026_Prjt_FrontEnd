@@ -1,5 +1,12 @@
-.layout {
+/* 관리 모드 상단 고정 바(40px) — AdminModeBanner 와 높이 맞출 것 */
+.shellRoot {
+    box-sizing: border-box;
     min-height: 100vh;
+    padding-top: 40px;
+}
+
+.layout {
+    min-height: calc(100vh - 40px);
     display: grid;
     position: relative;
 }
@@ -16,15 +23,19 @@
 
 .content {
     min-width: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .main {
     padding: 16px;
+    flex: 1 1 auto;
 }
 
 .collapseToggle {
     position: absolute;
-    top: 8px;
+    top: calc(40px + 8px);
     left: calc(var(--sidebar-w) - 14px);
     z-index: 60;
     width: 28px;

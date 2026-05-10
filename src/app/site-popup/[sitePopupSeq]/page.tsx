@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { setSitePopupDismissedToday } from "@/lib/sitePopupCookie";
+import { stripVideoEmbedsFromHtml } from "@/lib/normalizeSoopEmbedInHtml";
 
 type Row = {
     sitePopupSeq?: number;
@@ -66,7 +67,9 @@ export default function SitePopupWindowPage({ params }: { params: Promise<{ site
             </header>
             <article
                 className="prose prose-invert max-w-none break-words px-4 py-4 text-sm"
-                dangerouslySetInnerHTML={{ __html: row.content ?? "" }}
+                dangerouslySetInnerHTML={{
+                    __html: stripVideoEmbedsFromHtml(row.content ?? ""),
+                }}
             />
             <footer className="border-t border-slate-800 px-4 py-4">
                 <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">

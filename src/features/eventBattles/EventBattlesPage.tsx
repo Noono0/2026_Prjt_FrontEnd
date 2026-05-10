@@ -15,13 +15,20 @@ import { z } from "zod";
 
 const MIN_OPTIONS = 2;
 
+const DEFAULT_ROUTES_BASE = "/admin/event-battles";
+
 const createEventBattleSchema = z.object({
     title: z.string().trim().min(1, "제목을 입력해 주세요."),
     optionLabels: z.array(z.string().trim().min(1)).min(MIN_OPTIONS, `주제는 ${MIN_OPTIONS}개 이상 입력해 주세요.`),
     voteLimitPerMember: z.number().int().min(1, "투표권은 1 이상이어야 합니다."),
 });
 
-export default function EventBattlesPage() {
+type EventBattlesPageProps = {
+    /** 목록·상세 링크·생성 후 이동 경로 (관리자 `/admin/event-battles`, 사용자 `/event-battles`) */
+    routesBase?: string;
+};
+
+export default function EventBattlesPage({ routesBase = DEFAULT_ROUTES_BASE }: EventBattlesPageProps) {
     const router = useRouter();
     const user = useAuthStore((s) => s.user);
     const [items, setItems] = useState<EventBattleListItem[]>([]);
@@ -92,7 +99,7 @@ export default function EventBattlesPage() {
             const seq = created.eventBattleSeq;
             /* 상세로 갈 때는 모달을 먼저 닫지 않음 — 닫으면 목록이 한 프레임 보였다가 이동함 */
             if (seq != null && seq > 0) {
-                router.push(`/event-battles/${seq}`);
+                router.push(`${routesBase}/${seq}`);
                 return;
             }
             setOpenCreate(false);
@@ -251,7 +258,7 @@ export default function EventBattlesPage() {
                                     <td className="px-4 py-3">
                                         {seq != null ? (
                                             <Link
-                                                href={`/event-battles/${seq}`}
+                                                href={`${routesBase}/${seq}`}
                                                 className="text-sky-400 hover:underline"
                                             >
                                                 {row.title}

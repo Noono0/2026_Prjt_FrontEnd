@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import cx from "classnames";
@@ -31,9 +32,7 @@ function findActiveMenuId(nodes: MenuNode[], pathname: string): string | null {
         const p = normalizePath(menuPath);
         if (!p) return;
 
-        const matches =
-            cur === p ||
-            (p !== "/" && cur.startsWith(p + "/"));
+        const matches = cur === p || (p !== "/" && cur.startsWith(p + "/"));
 
         if (!matches) return;
 
@@ -74,6 +73,23 @@ function getLevelClass(level: number) {
     return styles.level3;
 }
 
+function menuEntryLabel(node: MenuNode, collapsed: boolean): ReactNode {
+    if (collapsed) {
+        return node.icon ?? "•";
+    }
+    if (node.icon) {
+        return (
+            <>
+                <span className={styles.iconEmoji} aria-hidden>
+                    {node.icon}
+                </span>
+                {node.name}
+            </>
+        );
+    }
+    return node.name;
+}
+
 function NodeItem({
     node,
     activeId,
@@ -92,34 +108,23 @@ function NodeItem({
 
     return (
         <div>
-            <div
-                className={cx(
-                    styles.row,
-                    active ? styles.rowActive : styles.rowHover
-                )}
-            >
+            <div className={cx(styles.row, active ? styles.rowActive : styles.rowHover)}>
                 {node.path ? (
                     <Link
                         href={node.path}
-                        className={cx(
-                            styles.linkButton,
-                            collapsed ? styles.collapsedLink : levelClass
-                        )}
+                        className={cx(styles.linkButton, collapsed ? styles.collapsedLink : levelClass)}
                         title={node.name}
                     >
-                        {collapsed ? node.icon ?? "•" : node.name}
+                        {menuEntryLabel(node, collapsed)}
                     </Link>
                 ) : (
                     <button
-                        className={cx(
-                            styles.linkButton,
-                            collapsed ? styles.collapsedLink : levelClass
-                        )}
+                        className={cx(styles.linkButton, collapsed ? styles.collapsedLink : levelClass)}
                         onClick={() => setOpen((v) => !v)}
                         title={node.name}
                         type="button"
                     >
-                        {collapsed ? node.icon ?? "•" : node.name}
+                        {menuEntryLabel(node, collapsed)}
                     </button>
                 )}
 
@@ -138,13 +143,7 @@ function NodeItem({
             {hasChildren && open && (
                 <div className={styles.childrenWrap}>
                     {node.children!.map((c) => (
-                        <NodeItem
-                            key={c.id}
-                            node={c}
-                            activeId={activeId}
-                            level={level + 1}
-                            collapsed={collapsed}
-                        />
+                        <NodeItem key={c.id} node={c} activeId={activeId} level={level + 1} collapsed={collapsed} />
                     ))}
                 </div>
             )}
@@ -161,21 +160,12 @@ export default function MenuTree({
     pathname: string;
     collapsed: boolean;
 }) {
-    const activeId = useMemo(
-        () => findActiveMenuId(nodes, pathname),
-        [nodes, pathname]
-    );
+    const activeId = useMemo(() => findActiveMenuId(nodes, pathname), [nodes, pathname]);
 
     return (
         <div className={styles.tree}>
             {nodes.map((n) => (
-                <NodeItem
-                    key={n.id}
-                    node={n}
-                    activeId={activeId}
-                    level={0}
-                    collapsed={collapsed}
-                />
+                <NodeItem key={n.id} node={n} activeId={activeId} level={0} collapsed={collapsed} />
             ))}
         </div>
     );

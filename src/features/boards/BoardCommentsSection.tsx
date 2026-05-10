@@ -13,6 +13,7 @@ import {
     ThumbsDown,
     ThumbsUp,
 } from "lucide-react";
+import { normalizeSoopEmbedInHtml, stripVideoEmbedsFromHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import {
     ApiError,
     createBoardComment,
@@ -633,7 +634,12 @@ function CommentBlock({
                     ) : comment.content ? (
                         <div
                             className={`${styles.body} prose prose-invert max-w-none text-sm`}
-                            dangerouslySetInnerHTML={{ __html: comment.content }}
+                            dangerouslySetInnerHTML={{
+                                __html:
+                                    commentTarget === "board"
+                                        ? normalizeSoopEmbedInHtml(comment.content)
+                                        : stripVideoEmbedsFromHtml(comment.content ?? ""),
+                            }}
                         />
                     ) : null}
                     <div className={styles.emoticons}>

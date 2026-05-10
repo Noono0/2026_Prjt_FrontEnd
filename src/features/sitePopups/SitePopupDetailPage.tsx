@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import BoardEditor from "@/components/editor/BoardEditor";
+import { stripVideoEmbedsFromHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import { deleteSitePopup, fetchSitePopupDetail, updateSitePopup } from "./api";
 import type { SitePopupListItem } from "./types";
 import {
@@ -18,7 +19,10 @@ type Props = { sitePopupSeq: number };
 function isEmptyBoardHtml(html: string): boolean {
     const t = html.trim();
     if (!t || t === "<p></p>") return true;
-    const plain = t.replace(/<[^>]+>/g, "").replace(/&nbsp;/gi, " ").trim();
+    const plain = t
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/gi, " ")
+        .trim();
     return plain.length === 0 && !t.toLowerCase().includes("<img");
 }
 
@@ -116,7 +120,7 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
             if (n > 0) {
                 const detail = await fetchSitePopupDetail(sitePopupSeq);
                 setItem(detail);
-                router.replace(`/site-popups/${sitePopupSeq}`);
+                router.replace(`/admin/site-popups/${sitePopupSeq}`);
                 alert("수정되었습니다.");
             } else {
                 alert("수정에 실패했습니다.");
@@ -134,7 +138,7 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
         try {
             const n = await deleteSitePopup(item.sitePopupSeq);
             if (n > 0) {
-                router.push("/site-popups");
+                router.push("/admin/site-popups");
             } else {
                 alert("삭제에 실패했습니다.");
             }
@@ -184,7 +188,9 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
                         </div>
                         <div className="text-slate-300">
                             <span className="text-slate-500">노출 기간 </span>
-                            <span className="break-all">{formatPopupPeriodRange(item.popupStartDt, item.popupEndDt)}</span>
+                            <span className="break-all">
+                                {formatPopupPeriodRange(item.popupStartDt, item.popupEndDt)}
+                            </span>
                             {item.showYn === "Y" ? (
                                 <>
                                     {" "}
@@ -211,7 +217,7 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
                                 {saving ? "저장 중..." : "저장"}
                             </button>
                             <Link
-                                href={`/site-popups/${sitePopupSeq}`}
+                                href={`/admin/site-popups/${sitePopupSeq}`}
                                 className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm text-slate-100"
                             >
                                 취소
@@ -220,7 +226,7 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
                     ) : (
                         <>
                             <Link
-                                href={`/site-popups/${sitePopupSeq}?mode=edit`}
+                                href={`/admin/site-popups/${sitePopupSeq}?mode=edit`}
                                 className="rounded-lg border border-sky-600 bg-sky-900/30 px-4 py-2 text-sm font-medium text-sky-200"
                             >
                                 수정
@@ -233,7 +239,7 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
                                 삭제
                             </button>
                             <Link
-                                href="/site-popups"
+                                href="/admin/site-popups"
                                 className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200"
                             >
                                 목록
@@ -328,7 +334,9 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
                                     <input
                                         type="datetime-local"
                                         value={editForm.popupStartLocal}
-                                        onChange={(e) => setEditForm((p) => ({ ...p, popupStartLocal: e.target.value }))}
+                                        onChange={(e) =>
+                                            setEditForm((p) => ({ ...p, popupStartLocal: e.target.value }))
+                                        }
                                         className="h-9 rounded border border-slate-700 bg-[#081326] px-2 text-sm"
                                     />
                                     <input
@@ -348,7 +356,9 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
                 ) : (
                     <div
                         className="prose prose-invert max-w-none break-words text-slate-100"
-                        dangerouslySetInnerHTML={{ __html: item.content ?? "" }}
+                        dangerouslySetInnerHTML={{
+                            __html: stripVideoEmbedsFromHtml(item.content ?? ""),
+                        }}
                     />
                 )}
             </div>

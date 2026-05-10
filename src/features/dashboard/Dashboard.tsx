@@ -15,6 +15,7 @@ import {
     type MemberRow,
 } from "./dashboardUtils";
 import styles from "./Dashboard.module.css";
+import DashboardBoardFeeds from "./DashboardBoardFeeds";
 
 const CORE_FIRST_ROW = 7;
 const INSTA_BTN_SVG = "/dashboard/insta_btn.svg";
@@ -375,6 +376,17 @@ export default function Dashboard() {
                     </div>
                 )}
             </section>
+
+            <div className={styles.missionZone}>
+                <div className={styles.missionCard}>
+                    <p className={styles.missionTitle}>도전미션 (API)</p>
+                    <p className={styles.missionSub}>준비 중입니다</p>
+                </div>
+            </div>
+
+            <div className={styles.boardFeedsWrap}>
+                <DashboardBoardFeeds />
+            </div>
 
             {viewingProfile ? (
                 <ProfilePreviewModal profile={viewingProfile} onClose={() => setViewingProfile(null)} />

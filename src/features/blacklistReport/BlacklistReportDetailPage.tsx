@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import BoardEditor from "@/components/editor/BoardEditor";
+import { stripVideoEmbedsFromHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import BoardCommentsSection from "@/features/boards/BoardCommentsSection";
 import {
     deleteMyBlacklistReport,
@@ -217,7 +218,9 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
                 ) : (
                     <div
                         className="board-detail-content prose prose-invert max-w-none break-words text-slate-100"
-                        dangerouslySetInnerHTML={{ __html: item.content ?? "" }}
+                        dangerouslySetInnerHTML={{
+                            __html: stripVideoEmbedsFromHtml(item.content ?? ""),
+                        }}
                     />
                 )}
             </div>

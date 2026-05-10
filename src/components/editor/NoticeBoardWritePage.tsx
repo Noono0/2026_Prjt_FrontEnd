@@ -11,7 +11,10 @@ import { alertIfApiFailed, type ApiEnvelope } from "@/lib/alertApiFailure";
 function isEmptyBoardHtml(html: string): boolean {
     const t = html.trim();
     if (!t || t === "<p></p>") return true;
-    const plain = t.replace(/<[^>]+>/g, "").replace(/&nbsp;/gi, " ").trim();
+    const plain = t
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/gi, " ")
+        .trim();
     return plain.length === 0 && !t.toLowerCase().includes("<img");
 }
 
@@ -80,7 +83,7 @@ export default function NoticeBoardWritePage() {
 
         alert("등록 완료");
         setSubmitting(false);
-        router.push("/notice-board");
+        router.push("/admin/notice-board");
     }
 
     return (
@@ -93,7 +96,7 @@ export default function NoticeBoardWritePage() {
 
                 <div className="flex items-center gap-2">
                     <Link
-                        href="/notice-board"
+                        href="/admin/notice-board"
                         className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
                     >
                         목록
@@ -171,7 +174,7 @@ export default function NoticeBoardWritePage() {
                         <div className="text-sm font-semibold text-amber-100">자유게시판 상단 고정</div>
                         <p className="text-xs text-amber-200/80">
                             켜면 자유게시판 메뉴 목록 상단에 이 공지가 함께 표시됩니다.
-                            </p>
+                        </p>
                         <div className="flex flex-wrap gap-4 text-sm text-slate-300">
                             <label className="flex items-center gap-2">
                                 <input

@@ -1,4 +1,4 @@
-/** Zustand — 사이드 메뉴 트리(defaultMenu + extraMenu). 요약: `src/lib/STATE-LIBS.md` */
+/** Zustand — 사이드바 추가 메뉴(extraMenu). 기본 트리는 adminDefaultMenu 등. 요약: `src/lib/STATE-LIBS.md` */
 import { create } from "zustand";
 
 export type MenuNode = {
@@ -9,14 +9,15 @@ export type MenuNode = {
     children?: MenuNode[];
 };
 
-const defaultMenu: MenuNode[] = [
+/** 관리자 콘솔 시드 메뉴 */
+export const adminDefaultMenu: MenuNode[] = [
     {
         id: "m1",
         name: "회원관리",
         icon: "👤",
         children: [
-            { id: "m1-1", name: "회원 목록", path: "/members" },
-            { id: "m1-2", name: "멤버스트리머 프로필", path: "/profile" },
+            { id: "m1-1", name: "회원 목록", path: "/admin/members" },
+            { id: "m1-2", name: "멤버스트리머 프로필", path: "/admin/profile" },
         ],
     },
     {
@@ -24,30 +25,31 @@ const defaultMenu: MenuNode[] = [
         name: "권한관리",
         icon: "🛡️",
         children: [
-            { id: "m2-1", name: "권한 목록", path: "/roles" },
-            { id: "m2-2", name: "역할–메뉴 매핑", path: "/role-menu-mappings" },
+            { id: "m2-1", name: "권한 목록", path: "/admin/roles" },
+            { id: "m2-2", name: "역할–메뉴 매핑", path: "/admin/role-menu-mappings" },
         ],
     },
     {
         id: "m3",
         name: "메뉴관리",
         icon: "🧭",
-        children: [{ id: "m3-1", name: "메뉴 목록", path: "/menus" }],
+        children: [{ id: "m3-1", name: "메뉴 목록", path: "/admin/menus" }],
     },
     {
         id: "m4",
         name: "공통코드관리",
         icon: "🗂️",
-        children: [{ id: "m4-1", name: "공통코드 목록", path: "/common-codes" }],
+        children: [{ id: "m4-1", name: "공통코드 목록", path: "/admin/common-codes" }],
     },
     {
         id: "m5",
         name: "팝업 관리",
         icon: "🪟",
         children: [
-            { id: "m5-1", name: "사이트 팝업", path: "/site-popups" },
-            { id: "m5-2", name: "비속어·광고 필터", path: "/content-filter" },
-            { id: "m5-3", name: "포인트 정책", path: "/point-policy" },
+            { id: "m5-1", name: "사이트 팝업", path: "/admin/site-popups" },
+            { id: "m5-1b", name: "서포트 콘텐츠", path: "/admin/support-items" },
+            { id: "m5-2", name: "비속어·광고 필터", path: "/admin/content-filter" },
+            { id: "m5-3", name: "포인트 정책", path: "/admin/point-policy" },
         ],
     },
     {
@@ -60,19 +62,41 @@ const defaultMenu: MenuNode[] = [
             { id: "m6-1b", name: "블랙리스트 제보", path: "/blacklist-report" },
             { id: "m6-2", name: "일정 달력", path: "/calendar-schedules" },
             { id: "m6-3", name: "포인트 랭킹", path: "/point-ranking" },
+            { id: "m6-4", name: "이벤트 대결", path: "/admin/event-battles" },
         ],
     },
 ];
 
+/** 사용자 사이드바 트리(메인은 상단 고정 링크). 접힘 시에는 그룹/leaf 의 icon 표시 */
+export const userSidebarMenuTree: MenuNode[] = [
+    {
+        id: "u1",
+        name: "게시판",
+        icon: "📋",
+        children: [
+            { id: "u1-1a", name: "문의게시판", path: "/inquiry-boards", icon: "💬" },
+            { id: "u1-1", name: "자유게시판", path: "/boards", icon: "📰" },
+            { id: "u1-1b", name: "블랙리스트 제보", path: "/blacklist-report", icon: "🚨" },
+            { id: "u1-2", name: "일정 달력", path: "/calendar-schedules", icon: "📅" },
+            { id: "u1-3", name: "포인트 랭킹", path: "/point-ranking", icon: "🏆" },
+            { id: "u1-4", name: "이벤트 대결", path: "/event-battles", icon: "⚔️" },
+        ],
+    },
+    {
+        id: "u2",
+        name: "서포트",
+        icon: "🤝",
+        children: [{ id: "u2-1", name: "서포트", path: "/support", icon: "🤝" }],
+    },
+];
+
 type MenuState = {
-    defaultMenu: MenuNode[];
     extraMenu: MenuNode[];
     setExtraMenu: (menu: MenuNode[]) => void;
     clearExtraMenu: () => void;
 };
 
 export const useMenuStore = create<MenuState>((set) => ({
-    defaultMenu,
     extraMenu: [],
     setExtraMenu: (menu) => set({ extraMenu: menu }),
     clearExtraMenu: () => set({ extraMenu: [] }),
