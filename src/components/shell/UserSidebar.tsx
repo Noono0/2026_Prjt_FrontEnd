@@ -20,6 +20,7 @@ export default function UserSidebar() {
 
     const dashPath = pathname?.split("?")[0] ?? "/";
     const dashboardActive = dashPath === "/";
+    const sheetActive = dashPath === "/sheet";
 
     return (
         <aside className={styles.sidebar}>
@@ -37,6 +38,16 @@ export default function UserSidebar() {
                         title="메인"
                     >
                         {sidebarOpen ? "🏠 메인" : "🏠"}
+                    </Link>
+                </div>
+
+                <div className={styles.dashboardWrap}>
+                    <Link
+                        className={`${styles.dashboardLink} ${sheetActive ? styles.dashboardLinkActive : ""}`}
+                        href="/sheet"
+                        title="유연서 시트지"
+                    >
+                        {sidebarOpen ? "📊 유연서 시트지" : "📊"}
                     </Link>
                 </div>
 

@@ -65,6 +65,12 @@ export const adminDefaultMenu: MenuNode[] = [
             { id: "m6-4", name: "이벤트 대결", path: "/admin/event-battles" },
         ],
     },
+    {
+        id: "m7",
+        name: "시트",
+        icon: "📊",
+        children: [{ id: "m7-1", name: "유연서 시트", path: "/admin/sheet" }],
+    },
 ];
 
 /** 사용자 사이드바 트리(메인은 상단 고정 링크). 접힘 시에는 그룹/leaf 의 icon 표시 */
