@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { InlineNotice } from "@/components/ui/InlineNotice";
 import { fetchPointPolicies, savePointPolicies, type PointPolicyRow } from "./api";
 
 const LABELS: Record<string, { title: string; desc: string }> = {
@@ -34,13 +35,7 @@ const LABELS: Record<string, { title: string; desc: string }> = {
     },
 };
 
-function PolicyCard({
-    row,
-    onChange,
-}: {
-    row: PointPolicyRow;
-    onChange: (next: PointPolicyRow) => void;
-}) {
+function PolicyCard({ row, onChange }: { row: PointPolicyRow; onChange: (next: PointPolicyRow) => void }) {
     const meta = LABELS[row.policyKey] ?? { title: row.policyKey, desc: "" };
     const isExtra = row.policyKey === "BOARD_COMMENT_EXTRA" || row.policyKey === "NOTICE_COMMENT_EXTRA";
     const isLike = row.policyKey === "FREE_BOARD_LIKE";
@@ -185,7 +180,14 @@ export default function PointPolicyPage() {
     if (loading || !rows) {
         return (
             <div className="min-h-[50vh] rounded-2xl border border-slate-800 bg-[#0c1017] p-6 text-slate-400">
-                {loading ? "불러오는 중…" : "정책을 불러올 수 없습니다."}
+                {loading ? (
+                    "불러오는 중…"
+                ) : (
+                    <div className="space-y-3">
+                        {error ? <InlineNotice>{error}</InlineNotice> : null}
+                        <p className="text-slate-400">정책을 불러올 수 없습니다.</p>
+                    </div>
+                )}
             </div>
         );
     }

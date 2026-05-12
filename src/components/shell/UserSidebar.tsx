@@ -45,9 +45,9 @@ export default function UserSidebar() {
                     <Link
                         className={`${styles.dashboardLink} ${sheetActive ? styles.dashboardLinkActive : ""}`}
                         href="/sheet"
-                        title="유연서 시트지"
+                        title="시트지"
                     >
-                        {sidebarOpen ? "📊 유연서 시트지" : "📊"}
+                        {sidebarOpen ? "📊 시트지" : "📊"}
                     </Link>
                 </div>
 

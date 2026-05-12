@@ -3,9 +3,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { searchCodeDetails, searchCodeGroups } from "@/features/commonCodes/api";
 import {
-    ApiError,
     createGamniverseProfile,
     deleteGamniverseProfile,
+    apiErrorMessage,
     searchGamniverseProfiles,
     updateGamniverseProfile,
     type GamniverseProfileDto,
@@ -17,6 +17,7 @@ import {
     PROFILE_FIELDS_JSON_PREFIX,
 } from "@/constants/affiliationCodes";
 import { uploadImageFile } from "@/lib/upload";
+import { InlineNotice } from "@/components/ui/InlineNotice";
 import styles from "./ProfilePage.module.css";
 
 const INSTA_BTN_SVG = "/dashboard/insta_btn.svg";
@@ -213,6 +214,7 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [keyword, setKeyword] = useState("");
     const [affiliationOptions, setAffiliationOptions] = useState<AffiliationOption[]>([]);
+    const [profilePageNotice, setProfilePageNotice] = useState<string | null>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -258,8 +260,9 @@ export default function ProfilePage() {
         };
     }, []);
 
-    const loadProfiles = async () => {
+    const loadProfiles = async (): Promise<boolean> => {
         setIsLoading(true);
+        setProfilePageNotice(null);
         try {
             const page = await searchGamniverseProfiles({
                 page: 1,
@@ -279,9 +282,10 @@ export default function ProfilePage() {
                         item.fields.some((f) => f.label || f.value)
                 );
             setProfiles(rows);
+            return true;
         } catch (error) {
-            const message = error instanceof ApiError ? error.message : "프로필 목록 조회에 실패했습니다.";
-            alert(message);
+            setProfilePageNotice(apiErrorMessage(error, "프로필 목록 조회에 실패했습니다."));
+            return false;
         } finally {
             setIsLoading(false);
         }
@@ -383,6 +387,7 @@ export default function ProfilePage() {
                 return;
             }
             setIsSaving(true);
+            setProfilePageNotice(null);
             try {
                 const payload = {
                     gamniverseProfileSeq: editing.gamniverseProfileSeq,
@@ -404,12 +409,14 @@ export default function ProfilePage() {
                 } else {
                     await createGamniverseProfile(payload);
                 }
-                await loadProfiles();
+                const reloaded = await loadProfiles();
+                if (!reloaded) {
+                    return;
+                }
                 setIsModalOpen(false);
                 alert(editing.gamniverseProfileSeq ? "수정되었습니다." : "등록되었습니다.");
             } catch (error) {
-                const message = error instanceof ApiError ? error.message : "저장 중 오류가 발생했습니다.";
-                alert(message);
+                setProfilePageNotice(apiErrorMessage(error, "저장 중 오류가 발생했습니다."));
             } finally {
                 setIsSaving(false);
             }
@@ -430,8 +437,7 @@ export default function ProfilePage() {
                     setIsModalOpen(false);
                 }
             } catch (error) {
-                const message = error instanceof ApiError ? error.message : "삭제 중 오류가 발생했습니다.";
-                alert(message);
+                setProfilePageNotice(apiErrorMessage(error, "삭제 중 오류가 발생했습니다."));
             }
         };
         void run();
@@ -460,6 +466,12 @@ export default function ProfilePage() {
                 소속 코드({AFFILIATION_CODE_GROUP_ID}) 기준으로 그룹 배치됩니다. 등록 버튼으로 모달에서 프로필을
                 생성하세요.
             </p>
+
+            {profilePageNotice ? (
+                <div className={`${styles.noticeWrap} ${styles.noticeSticky}`}>
+                    <InlineNotice>{profilePageNotice}</InlineNotice>
+                </div>
+            ) : null}
 
             <div className={styles.toolbar}>
                 <input
@@ -618,6 +630,12 @@ export default function ProfilePage() {
                                 닫기
                             </button>
                         </div>
+
+                        {profilePageNotice ? (
+                            <div className={styles.modalNotice}>
+                                <InlineNotice>{profilePageNotice}</InlineNotice>
+                            </div>
+                        ) : null}
 
                         <div className={styles.fieldSection}>
                             <div className={styles.fieldSectionHeader}>

@@ -13,6 +13,7 @@ import {
 } from "./walletApi";
 import { bumpWalletRefresh, useWalletRefreshStore } from "@/stores/walletRefreshStore";
 import { useAuthStore } from "@/stores/authStore";
+import { InlineNotice } from "@/components/ui/InlineNotice";
 
 function fmt(n: number | undefined | null) {
     if (n == null || Number.isNaN(n)) return "0";
@@ -37,14 +38,17 @@ export default function WalletSection() {
     const [ledgerLoading, setLedgerLoading] = useState(false);
     const [qtyIron, setQtyIron] = useState(1);
     const [timesEx, setTimesEx] = useState(1);
+    const [loadNotice, setLoadNotice] = useState<string | null>(null);
 
     const loadWallet = useCallback(async () => {
         try {
             setLoading(true);
+            setLoadNotice(null);
             const w = await fetchMyWallet();
             setWallet(w);
         } catch (e) {
             console.error(e);
+            setLoadNotice(e instanceof Error ? e.message : "지갑 정보를 불러오지 못했습니다.");
         } finally {
             setLoading(false);
         }
@@ -59,6 +63,7 @@ export default function WalletSection() {
         } catch (e) {
             console.error(e);
             setLedger([]);
+            setLoadNotice(e instanceof Error ? e.message : "내역을 불러오지 못했습니다.");
         } finally {
             setLedgerLoading(false);
         }
@@ -115,6 +120,8 @@ export default function WalletSection() {
                 </p>
             </div>
 
+            {loadNotice ? <InlineNotice>{loadNotice}</InlineNotice> : null}
+
             {loading && !wallet ? (
                 <p className="text-sm text-slate-400">불러오는 중…</p>
             ) : (
@@ -144,8 +151,8 @@ export default function WalletSection() {
 
                     {rates && (
                         <div className="rounded-lg border border-slate-800 bg-slate-950/50 px-3 py-2 text-xs text-slate-400">
-                            교환 규칙: {rates.pointsPerIron}P → 아이언 1장 · 아이언 {rates.ironPerSilver}장 → 실버 1장 · 실버{" "}
-                            {rates.silverPerGold}장 → 골드 1장 · 골드 {rates.goldPerDiamond}장 → 다이아 1장
+                            교환 규칙: {rates.pointsPerIron}P → 아이언 1장 · 아이언 {rates.ironPerSilver}장 → 실버 1장 ·
+                            실버 {rates.silverPerGold}장 → 골드 1장 · 골드 {rates.goldPerDiamond}장 → 다이아 1장
                         </div>
                     )}
 
@@ -243,11 +250,21 @@ export default function WalletSection() {
                                     <tr key={row.ledgerSeq} className="border-b border-slate-800/80">
                                         <td className="whitespace-nowrap px-2 py-2 text-slate-400">{row.createDt}</td>
                                         <td className="max-w-[280px] px-2 py-2 text-slate-300">{row.summary}</td>
-                                        <td className="px-2 py-2 text-right font-mono text-xs">{fmtDelta(row.pointDelta)}</td>
-                                        <td className="px-2 py-2 text-right font-mono text-xs">{fmtDelta(row.ironDelta)}</td>
-                                        <td className="px-2 py-2 text-right font-mono text-xs">{fmtDelta(row.silverDelta)}</td>
-                                        <td className="px-2 py-2 text-right font-mono text-xs">{fmtDelta(row.goldDelta)}</td>
-                                        <td className="px-2 py-2 text-right font-mono text-xs">{fmtDelta(row.diamondDelta)}</td>
+                                        <td className="px-2 py-2 text-right font-mono text-xs">
+                                            {fmtDelta(row.pointDelta)}
+                                        </td>
+                                        <td className="px-2 py-2 text-right font-mono text-xs">
+                                            {fmtDelta(row.ironDelta)}
+                                        </td>
+                                        <td className="px-2 py-2 text-right font-mono text-xs">
+                                            {fmtDelta(row.silverDelta)}
+                                        </td>
+                                        <td className="px-2 py-2 text-right font-mono text-xs">
+                                            {fmtDelta(row.goldDelta)}
+                                        </td>
+                                        <td className="px-2 py-2 text-right font-mono text-xs">
+                                            {fmtDelta(row.diamondDelta)}
+                                        </td>
                                     </tr>
                                 ))
                             )}

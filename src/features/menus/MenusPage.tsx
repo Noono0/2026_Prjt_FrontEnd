@@ -17,6 +17,7 @@ import {
     type MenuNode,
 } from "./arboristUtils";
 import { menuAdminKeys, useDeleteMenuMutation, useMenuTreeQuery, useSaveMenuMutation } from "./queries";
+import { InlineNotice } from "@/components/ui/InlineNotice";
 import MenuModal from "./components/MenuModal";
 import styles from "./menusTree.module.css";
 
@@ -99,15 +100,22 @@ export default function MenusPage() {
     const [modalOpen, setModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
     const [modalInitial, setModalInitial] = useState<MenuRow | null>(null);
+    const [treeLoadNotice, setTreeLoadNotice] = useState<string | null>(null);
 
     const flatMenus = useMemo(() => menusQuery.data ?? [], [menusQuery.data]);
     const treeData = useMemo(() => buildMenuTree(flatMenus), [flatMenus]);
 
     useEffect(() => {
+        if (menusQuery.isSuccess) {
+            setTreeLoadNotice(null);
+        }
+    }, [menusQuery.isSuccess]);
+
+    useEffect(() => {
         if (!menusQuery.isError || !menusQuery.error) return;
         const message =
             menusQuery.error instanceof Error ? menusQuery.error.message : "메뉴 목록 조회 중 오류가 발생했습니다.";
-        alert(message);
+        setTreeLoadNotice(message);
     }, [menusQuery.isError, menusQuery.error]);
 
     const busy = menusQuery.isFetching || deleteMutation.isPending || saveMutation.isPending;
@@ -276,6 +284,11 @@ export default function MenusPage() {
     return (
         <div className={pageStyles.page}>
             <h2 className={pageStyles.title}>메뉴 관리</h2>
+            {treeLoadNotice ? (
+                <div style={{ margin: "0 0 12px" }}>
+                    <InlineNotice>{treeLoadNotice}</InlineNotice>
+                </div>
+            ) : null}
             <p
                 style={{
                     margin: "0 0 18px",

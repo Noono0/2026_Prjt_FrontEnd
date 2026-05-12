@@ -79,6 +79,13 @@ export class ApiError extends Error {
     }
 }
 
+/** instanceof 가 번들/프록시 이슈로 실패해도 메시지 추출 */
+export function apiErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof ApiError) return error.message;
+    if (error instanceof Error && error.message.trim()) return error.message.trim();
+    return fallback;
+}
+
 async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiResponse<T>> {
     const res = await fetch(input, {
         ...defaultApiRequestInit,

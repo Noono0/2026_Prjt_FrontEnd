@@ -15,7 +15,8 @@ import {
     likeBlacklistReport,
 } from "./api";
 import type { BlacklistReportListItem } from "./types";
-import { alertIfApiFailed, type ApiEnvelope } from "@/lib/alertApiFailure";
+import { InlineNotice } from "@/components/ui/InlineNotice";
+import { getApiFailureMessage, type ApiEnvelope } from "@/lib/alertApiFailure";
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
 
 type Props = { blacklistReportSeq: number };
@@ -35,6 +36,7 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
     const [saving, setSaving] = useState(false);
     const [actionLoading, setActionLoading] = useState<"like" | "dislike" | "delete" | null>(null);
     const [editForm, setEditForm] = useState({ blacklistTargetId: "", title: "", content: "" });
+    const [actionNotice, setActionNotice] = useState<string | null>(null);
 
     const isOwner =
         typeof user?.memberSeq === "number" &&
@@ -46,6 +48,7 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
         const load = async () => {
             setLoading(true);
             setError(null);
+            setActionNotice(null);
             try {
                 const detail = await fetchBlacklistReportDetail(blacklistReportSeq);
                 const viewedKey = `bl-viewed-${blacklistReportSeq}`;
@@ -79,6 +82,7 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
             return;
         }
         setSaving(true);
+        setActionNotice(null);
         const res = await fetch("/api/blacklist-reports/update", {
             ...defaultApiRequestInit,
             method: "PUT",
@@ -96,7 +100,9 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
         } catch {
             json = null;
         }
-        if (alertIfApiFailed(res, json, "수정 실패")) {
+        const failMsg = getApiFailureMessage(res, json, "수정 실패");
+        if (failMsg) {
+            setActionNotice(failMsg);
             setSaving(false);
             return;
         }
@@ -124,7 +130,7 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
             alert("삭제되었습니다.");
             router.push("/blacklist-report");
         } catch (e) {
-            alert(e instanceof Error ? e.message : "삭제에 실패했습니다.");
+            setActionNotice(e instanceof Error ? e.message : "삭제에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -179,6 +185,11 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
 
     return (
         <div className="min-h-[70vh] rounded-2xl border border-slate-800 bg-[#0c1017] text-slate-100 shadow-xl">
+            {actionNotice ? (
+                <div className="border-b border-slate-800 px-5 py-3">
+                    <InlineNotice>{actionNotice}</InlineNotice>
+                </div>
+            ) : null}
             <div className="border-b border-slate-800 px-5 py-6">
                 <div className="mb-2 text-xs font-medium text-amber-200/90">블랙리스트 아이디 (제보 대상)</div>
                 {editMode ? (

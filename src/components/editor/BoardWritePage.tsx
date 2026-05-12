@@ -19,7 +19,8 @@ import { devLog } from "@/lib/devLog";
 import BoardEditor from "./BoardEditor";
 import { fetchBoardCategories } from "@/features/boards/api";
 import type { BoardCategoryOption } from "@/features/boards/types";
-import { alertIfApiFailed, type ApiEnvelope } from "@/lib/alertApiFailure";
+import { InlineNotice } from "@/components/ui/InlineNotice";
+import { getApiFailureMessage, type ApiEnvelope } from "@/lib/alertApiFailure";
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
 import { bumpWalletRefresh } from "@/stores/walletRefreshStore";
 
@@ -34,18 +35,21 @@ export default function BoardWritePage() {
     const [commentAllowed, setCommentAllowed] = useState(true);
     const [replyAllowed, setReplyAllowed] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [pageNotice, setPageNotice] = useState<string | null>(null);
 
     useEffect(() => {
         const loadCategories = async () => {
             try {
+                setPageNotice(null);
                 const list = await fetchBoardCategories();
                 setCategories(list);
                 if (list.length > 0) {
                     const free = list.find((c) => String(c.value).trim().toUpperCase() === "FREE") ?? list[0];
                     setCategoryCode(free.value);
                 }
-            } catch {
+            } catch (e) {
                 setCategories([]);
+                setPageNotice(e instanceof Error ? e.message : "카테고리를 불러오지 못했습니다.");
             }
         };
         void loadCategories();
@@ -93,6 +97,7 @@ export default function BoardWritePage() {
         }
 
         setSubmitting(true);
+        setPageNotice(null);
         // debugger; // ← 등록 요청 직전에 멈추고 Network 탭과 비교해 보기
         const body = {
             title,
@@ -120,7 +125,9 @@ export default function BoardWritePage() {
         } catch {
             json = null;
         }
-        if (alertIfApiFailed(res, json, "등록 실패")) {
+        const failMsg = getApiFailureMessage(res, json, "등록 실패");
+        if (failMsg) {
+            setPageNotice(failMsg);
             setSubmitting(false);
             return;
         }
@@ -158,6 +165,7 @@ export default function BoardWritePage() {
             </div>
 
             <div className="space-y-4 px-5 py-5">
+                {pageNotice ? <InlineNotice>{pageNotice}</InlineNotice> : null}
                 <div className="grid gap-3 lg:grid-cols-[220px_1fr]">
                     <div>
                         <div className="mb-2 text-xs font-medium text-slate-500">분류</div>

@@ -7,11 +7,8 @@ import { AgGridReact } from "ag-grid-react";
 import styles from "@/features/members/MembersPage.module.css";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import type { RoleMenuAssignment } from "./api";
-import {
-    useActiveRolesForMappingQuery,
-    useRoleMenuAssignmentsQuery,
-    useSaveRoleMenuMappingsMutation,
-} from "./queries";
+import { useActiveRolesForMappingQuery, useRoleMenuAssignmentsQuery, useSaveRoleMenuMappingsMutation } from "./queries";
+import { InlineNotice } from "@/components/ui/InlineNotice";
 
 export type RoleMenuGridRow = {
     menuId: number;
@@ -80,11 +77,20 @@ export default function RoleMenuMappingsPage() {
                 : "메뉴 목록을 불러오지 못했습니다."
             : null;
 
+    const rolesLoadError =
+        rolesQuery.isError && rolesQuery.error
+            ? rolesQuery.error instanceof Error
+                ? rolesQuery.error.message
+                : "권한(역할) 목록을 불러오지 못했습니다."
+            : null;
+
     const setPerm = useCallback(
-        (menuId: number, field: keyof Pick<RoleMenuGridRow, "canRead" | "canCreate" | "canUpdate" | "canDelete">, value: boolean) => {
-            setRows((prev) =>
-                prev.map((r) => (r.menuId === menuId ? { ...r, [field]: value } : r))
-            );
+        (
+            menuId: number,
+            field: keyof Pick<RoleMenuGridRow, "canRead" | "canCreate" | "canUpdate" | "canDelete">,
+            value: boolean
+        ) => {
+            setRows((prev) => prev.map((r) => (r.menuId === menuId ? { ...r, [field]: value } : r)));
         },
         []
     );
@@ -151,10 +157,8 @@ export default function RoleMenuMappingsPage() {
                 cellRenderer: (p: ICellRendererParams<RoleMenuGridRow>) => {
                     const r = p.data;
                     if (!r) return null;
-                    const allOn =
-                        r.canRead && r.canCreate && r.canUpdate && r.canDelete;
-                    const someOn =
-                        r.canRead || r.canCreate || r.canUpdate || r.canDelete;
+                    const allOn = r.canRead && r.canCreate && r.canUpdate && r.canDelete;
+                    const someOn = r.canRead || r.canCreate || r.canUpdate || r.canDelete;
                     return (
                         <input
                             type="checkbox"
@@ -262,11 +266,16 @@ export default function RoleMenuMappingsPage() {
     return (
         <div className={styles.page}>
             <h2 className={styles.title}>역할–메뉴 매핑</h2>
+            {rolesLoadError ? (
+                <div style={{ margin: "0 0 12px" }}>
+                    <InlineNotice>{rolesLoadError}</InlineNotice>
+                </div>
+            ) : null}
             <p style={{ margin: "0 0 16px", color: "var(--text-subtle)", fontSize: 14, lineHeight: 1.5 }}>
                 아래 목록은 <strong>DB의 MENU 테이블</strong>에 등록된 메뉴 전체입니다. 메뉴가 비어 있으면{" "}
                 <strong>메뉴관리</strong> 화면에서 먼저 메뉴를 등록하거나, 백엔드 기동 시{" "}
-                <code style={{ fontSize: 13 }}>data.sql</code> 시드가 적용되는지 확인하세요. 역할을 선택한 뒤
-                메뉴별 조회·등록·수정·삭제를 설정합니다. 저장 시 해당 역할의 ROLE_MENU 매핑이 모두 교체됩니다.
+                <code style={{ fontSize: 13 }}>data.sql</code> 시드가 적용되는지 확인하세요. 역할을 선택한 뒤 메뉴별
+                조회·등록·수정·삭제를 설정합니다. 저장 시 해당 역할의 ROLE_MENU 매핑이 모두 교체됩니다.
             </p>
 
             <div className={styles.sectionTitle}>역할 선택</div>
@@ -296,7 +305,12 @@ export default function RoleMenuMappingsPage() {
             </div>
 
             <div className={styles.toolbar}>
-                <button type="button" className={styles.primaryButton} onClick={handleSave} disabled={busy || roleId == null}>
+                <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={handleSave}
+                    disabled={busy || roleId == null}
+                >
                     저장
                 </button>
                 <button type="button" onClick={handleRefetch} disabled={busy || roleId == null}>
@@ -306,8 +320,7 @@ export default function RoleMenuMappingsPage() {
 
             <div className={styles.pageInfo}>
                 <span>
-                    메뉴 {rows.length}건
-                    {assignmentsQuery.isError ? " · 조회 오류" : ""}
+                    메뉴 {rows.length}건{assignmentsQuery.isError ? " · 조회 오류" : ""}
                 </span>
             </div>
 
@@ -327,25 +340,22 @@ export default function RoleMenuMappingsPage() {
                 </div>
             )}
 
-            {!assignmentsQuery.isFetching &&
-                assignmentsQuery.isSuccess &&
-                roleId != null &&
-                rows.length === 0 && (
-                    <div
-                        style={{
-                            marginBottom: 12,
-                            padding: "12px 14px",
-                            borderRadius: 12,
-                            border: "1px solid var(--border-strong)",
-                            background: "var(--panel-2)",
-                            color: "var(--text-subtle)",
-                            fontSize: 14,
-                        }}
-                    >
-                        표시할 메뉴가 없습니다. <strong>MENU</strong> 테이블에 <code>USE_YN=&apos;Y&apos;</code> 인
-                        행이 없습니다. 메뉴관리에서 등록하거나 DB를 확인하세요.
-                    </div>
-                )}
+            {!assignmentsQuery.isFetching && assignmentsQuery.isSuccess && roleId != null && rows.length === 0 && (
+                <div
+                    style={{
+                        marginBottom: 12,
+                        padding: "12px 14px",
+                        borderRadius: 12,
+                        border: "1px solid var(--border-strong)",
+                        background: "var(--panel-2)",
+                        color: "var(--text-subtle)",
+                        fontSize: 14,
+                    }}
+                >
+                    표시할 메뉴가 없습니다. <strong>MENU</strong> 테이블에 <code>USE_YN=&apos;Y&apos;</code> 인 행이
+                    없습니다. 메뉴관리에서 등록하거나 DB를 확인하세요.
+                </div>
+            )}
 
             <div className={styles.sectionTitle}>메뉴 권한</div>
             <div className={`${isDark ? "ag-theme-quartz-dark" : "ag-theme-quartz"} ${styles.gridWrap}`}>

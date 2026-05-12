@@ -13,6 +13,21 @@
     margin-bottom: 16px;
 }
 
+.noticeWrap {
+    margin-bottom: 14px;
+}
+
+.noticeSticky {
+    position: sticky;
+    top: 0;
+    z-index: 35;
+}
+
+.modalNotice {
+    padding: 0 16px 12px;
+    border-bottom: 1px solid #334155;
+}
+
 .toolbar {
     display: flex;
     align-items: center;

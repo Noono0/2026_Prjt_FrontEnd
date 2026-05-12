@@ -9,6 +9,7 @@ import type { ColDef, GridApi, GridReadyEvent, RowClickedEvent, SortChangedEvent
 import type { RoleRow, RoleSearchCondition } from "./api";
 import { useDeleteRoleMutation, useRolesAdminQuery, useSaveRoleMutation } from "./queries";
 import { normalizeRoleSearchCondition, sameRoleSearchCondition } from "@/lib/query/searchConditions";
+import { InlineNotice } from "@/components/ui/InlineNotice";
 import RoleModal from "./components/RoleModal";
 
 type RoleFilters = {
@@ -61,6 +62,7 @@ export default function RolesPage() {
     const [modalOpen, setModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
     const [modalInitial, setModalInitial] = useState<RoleRow | null>(null);
+    const [listLoadNotice, setListLoadNotice] = useState<string | null>(null);
 
     const gridApiRef = useRef<GridApi<RoleRow> | null>(null);
 
@@ -74,10 +76,16 @@ export default function RolesPage() {
     }, []);
 
     useEffect(() => {
+        if (rolesQuery.isSuccess) {
+            setListLoadNotice(null);
+        }
+    }, [rolesQuery.isSuccess]);
+
+    useEffect(() => {
         if (!rolesQuery.isError || !rolesQuery.error) return;
         const message =
             rolesQuery.error instanceof Error ? rolesQuery.error.message : "권한 목록 조회 중 오류가 발생했습니다.";
-        alert(message);
+        setListLoadNotice(message);
     }, [rolesQuery.isError, rolesQuery.error]);
 
     const isDark = mounted && resolvedTheme === "dark";
@@ -233,6 +241,12 @@ export default function RolesPage() {
     return (
         <div className={styles.page}>
             <h2 className={styles.title}>권한관리</h2>
+
+            {listLoadNotice ? (
+                <div className={styles.noticeWrap}>
+                    <InlineNotice>{listLoadNotice}</InlineNotice>
+                </div>
+            ) : null}
 
             <div className={styles.sectionTitle}>검색 조건</div>
             <div className={styles.searchGrid}>

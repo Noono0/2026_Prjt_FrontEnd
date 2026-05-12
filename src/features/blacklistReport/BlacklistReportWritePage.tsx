@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BoardEditor from "@/components/editor/BoardEditor";
-import { alertIfApiFailed, type ApiEnvelope } from "@/lib/alertApiFailure";
+import { InlineNotice } from "@/components/ui/InlineNotice";
+import { getApiFailureMessage, type ApiEnvelope } from "@/lib/alertApiFailure";
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
 import { type BlacklistCategoryOption, fetchBlacklistCategories } from "./api";
 
@@ -18,13 +19,16 @@ export default function BlacklistReportWritePage() {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [pageNotice, setPageNotice] = useState<string | null>(null);
 
     useEffect(() => {
         void (async () => {
             try {
+                setPageNotice(null);
                 setCategories(await fetchBlacklistCategories());
-            } catch {
+            } catch (e) {
                 setCategories([]);
+                setPageNotice(e instanceof Error ? e.message : "카테고리를 불러오지 못했습니다.");
             }
         })();
     }, []);
@@ -44,6 +48,7 @@ export default function BlacklistReportWritePage() {
         }
 
         setSubmitting(true);
+        setPageNotice(null);
         const res = await fetch("/api/blacklist-reports/create", {
             ...defaultApiRequestInit,
             method: "POST",
@@ -64,7 +69,9 @@ export default function BlacklistReportWritePage() {
         } catch {
             json = null;
         }
-        if (alertIfApiFailed(res, json, "등록 실패")) {
+        const failMsg = getApiFailureMessage(res, json, "등록 실패");
+        if (failMsg) {
+            setPageNotice(failMsg);
             setSubmitting(false);
             return;
         }
@@ -98,6 +105,12 @@ export default function BlacklistReportWritePage() {
                     </button>
                 </div>
             </div>
+
+            {pageNotice ? (
+                <div className="px-5 pt-4">
+                    <InlineNotice>{pageNotice}</InlineNotice>
+                </div>
+            ) : null}
 
             <div className="space-y-4 px-5 py-5">
                 <div>

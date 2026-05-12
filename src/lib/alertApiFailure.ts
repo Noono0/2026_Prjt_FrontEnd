@@ -5,16 +5,13 @@ export type ApiEnvelope = {
 };
 
 /**
- * `fetch` 직후 JSON을 파싱했을 때, 실패 응답이면 서버 `message`로 alert 하고 true.
- * 성공이면 false (alert 없음).
+ * `fetch` 직후 JSON을 파싱했을 때, 실패 응답이면 서버 `message`(없으면 fallback)를 반환.
+ * 성공이면 null.
  */
-export function alertIfApiFailed(res: Response, body: ApiEnvelope | null, fallback: string): boolean {
+export function getApiFailureMessage(res: Response, body: ApiEnvelope | null, fallback: string): string | null {
     const failed = !res.ok || body?.success === false;
     if (!failed) {
-        return false;
+        return null;
     }
-    const msg =
-        typeof body?.message === "string" && body.message.trim().length > 0 ? body.message.trim() : fallback;
-    alert(msg);
-    return true;
+    return typeof body?.message === "string" && body.message.trim().length > 0 ? body.message.trim() : fallback;
 }

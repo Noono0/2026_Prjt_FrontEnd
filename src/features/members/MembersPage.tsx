@@ -15,6 +15,7 @@ import type {
     ICellRendererParams,
 } from "ag-grid-community";
 
+import { InlineNotice } from "@/components/ui/InlineNotice";
 import MemberFormModal from "@/components/members/MemberFormModal";
 import type { Member } from "@/components/members/memberTypes";
 import { useMemberModalStore } from "@/stores/memberModalStore";
@@ -89,6 +90,8 @@ export default function MembersPage() {
     const [listParams, setListParams] = useState<MemberListParams>(initialListParams);
 
     const [detailLoading, setDetailLoading] = useState(false);
+    const [listLoadNotice, setListLoadNotice] = useState<string | null>(null);
+    const [detailOpenNotice, setDetailOpenNotice] = useState<string | null>(null);
 
     const gridApiRef = useRef<GridApi<MemberRow> | null>(null);
 
@@ -112,10 +115,16 @@ export default function MembersPage() {
     }, []);
 
     useEffect(() => {
+        if (membersQuery.isSuccess) {
+            setListLoadNotice(null);
+        }
+    }, [membersQuery.isSuccess]);
+
+    useEffect(() => {
         if (!membersQuery.isError || !membersQuery.error) return;
         const message =
             membersQuery.error instanceof Error ? membersQuery.error.message : "회원 목록 조회 중 오류가 발생했습니다.";
-        alert(message);
+        setListLoadNotice(message);
     }, [membersQuery.isError, membersQuery.error]);
 
     const isDark = mounted && resolvedTheme === "dark";
@@ -168,6 +177,7 @@ export default function MembersPage() {
             if (!row?.memberSeq) return;
 
             try {
+                setDetailOpenNotice(null);
                 setDetailLoading(true);
 
                 const detail = await fetchMemberDetail(row.memberSeq);
@@ -200,7 +210,7 @@ export default function MembersPage() {
                 });
             } catch (error) {
                 const message = error instanceof Error ? error.message : "회원 상세조회 중 오류가 발생했습니다.";
-                alert(message);
+                setDetailOpenNotice(message);
             } finally {
                 setDetailLoading(false);
             }
@@ -365,9 +375,17 @@ export default function MembersPage() {
         setListParams((prev) => ({ ...prev, page: nextPage }));
     };
 
+    const fetchNotice = listLoadNotice ?? detailOpenNotice;
+
     return (
         <div className={styles.page}>
             <h2 className={styles.title}>회원관리</h2>
+
+            {fetchNotice ? (
+                <div className={styles.noticeWrap}>
+                    <InlineNotice>{fetchNotice}</InlineNotice>
+                </div>
+            ) : null}
 
             <div className={styles.sectionTitle}>검색 조건</div>
             <div className={styles.searchGrid}>

@@ -11,6 +11,7 @@ import {
 } from "./api";
 import type { CalendarScheduleSaveBody, ScheduleCategoryOption } from "./types";
 import { SCHEDULE_COLOR_PALETTE, pickRandomScheduleColor } from "./scheduleColors";
+import { InlineNotice } from "@/components/ui/InlineNotice";
 
 function todayYmd(): string {
     const d = new Date();
@@ -64,6 +65,8 @@ export default function ScheduleWriteModal({ open, onClose, onSaved, editingSeq,
     const [categoryOptions, setCategoryOptions] = useState<ScheduleCategoryOption[]>([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [loadDetailNotice, setLoadDetailNotice] = useState<string | null>(null);
+    const [categoryLoadNotice, setCategoryLoadNotice] = useState<string | null>(null);
 
     const resetForCreate = useCallback(() => {
         setEventKind("GENERAL");
@@ -85,10 +88,12 @@ export default function ScheduleWriteModal({ open, onClose, onSaved, editingSeq,
         if (!open) return;
         void (async () => {
             try {
+                setCategoryLoadNotice(null);
                 const opts = await fetchCalendarScheduleCategories();
                 setCategoryOptions(opts);
-            } catch {
+            } catch (e) {
                 setCategoryOptions([]);
+                setCategoryLoadNotice(e instanceof Error ? e.message : "카테고리를 불러오지 못했습니다.");
             }
         })();
     }, [open]);
@@ -98,6 +103,7 @@ export default function ScheduleWriteModal({ open, onClose, onSaved, editingSeq,
 
         if (editingSeq != null) {
             setLoading(true);
+            setLoadDetailNotice(null);
             void (async () => {
                 try {
                     const detail = await fetchCalendarScheduleDetail(editingSeq);
@@ -123,16 +129,16 @@ export default function ScheduleWriteModal({ open, onClose, onSaved, editingSeq,
                         setEndTime("");
                     }
                 } catch (e) {
-                    alert(e instanceof Error ? e.message : "불러오지 못했습니다.");
-                    onClose();
+                    setLoadDetailNotice(e instanceof Error ? e.message : "불러오지 못했습니다.");
                 } finally {
                     setLoading(false);
                 }
             })();
         } else {
             resetForCreate();
+            setLoadDetailNotice(null);
         }
-    }, [open, editingSeq, initialDate, initialEndDate, onClose, resetForCreate]);
+    }, [open, editingSeq, initialDate, initialEndDate, resetForCreate]);
 
     if (!open) {
         return null;
@@ -232,7 +238,11 @@ export default function ScheduleWriteModal({ open, onClose, onSaved, editingSeq,
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal>
+        <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+            role="dialog"
+            aria-modal
+        >
             <div className="flex max-h-[92vh] w-full max-w-[min(1120px,98vw)] min-w-[min(100%,560px)] flex-col overflow-hidden rounded-2xl border border-slate-700 bg-[#0c1017] shadow-2xl">
                 <div className="flex shrink-0 items-center justify-between border-b border-slate-800 px-5 py-4">
                     <h2 className="text-lg font-semibold text-white">{editingSeq ? "일정 수정" : "일정 등록"}</h2>
@@ -245,8 +255,24 @@ export default function ScheduleWriteModal({ open, onClose, onSaved, editingSeq,
                     </button>
                 </div>
 
+                {loadDetailNotice ? (
+                    <div className="shrink-0 border-b border-slate-800 px-5 py-3">
+                        <InlineNotice className="mb-0">{loadDetailNotice}</InlineNotice>
+                    </div>
+                ) : null}
+
+                {categoryLoadNotice ? (
+                    <div className="shrink-0 border-b border-slate-800 px-5 py-3">
+                        <InlineNotice className="mb-0">{categoryLoadNotice}</InlineNotice>
+                    </div>
+                ) : null}
+
                 {loading ? (
                     <div className="py-20 text-center text-slate-500">불러오는 중…</div>
+                ) : loadDetailNotice != null && editingSeq != null ? (
+                    <div className="flex flex-1 flex-col justify-center px-5 py-12 text-center text-sm text-slate-500">
+                        수정할 일정을 불러오지 못했습니다. 상단 안내를 확인한 뒤 닫기를 눌러 주세요.
+                    </div>
                 ) : (
                     <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
                         <div className="mb-4 flex flex-wrap gap-4">

@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import BoardEditor from "./BoardEditor";
 import { fetchNoticeBoardCategories } from "@/features/noticeBoards/api";
 import type { NoticeBoardCategoryOption } from "@/features/noticeBoards/types";
-import { alertIfApiFailed, type ApiEnvelope } from "@/lib/alertApiFailure";
+import { InlineNotice } from "@/components/ui/InlineNotice";
+import { getApiFailureMessage, type ApiEnvelope } from "@/lib/alertApiFailure";
 
 function isEmptyBoardHtml(html: string): boolean {
     const t = html.trim();
@@ -28,17 +29,20 @@ export default function NoticeBoardWritePage() {
     const [replyAllowed, setReplyAllowed] = useState(true);
     const [pinOnFreeBoard, setPinOnFreeBoard] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [pageNotice, setPageNotice] = useState<string | null>(null);
 
     useEffect(() => {
         const loadCategories = async () => {
             try {
+                setPageNotice(null);
                 const list = await fetchNoticeBoardCategories();
                 setCategories(list);
                 if (list.length > 0) {
                     setCategoryCode(list[0].value);
                 }
-            } catch {
+            } catch (e) {
                 setCategories([]);
+                setPageNotice(e instanceof Error ? e.message : "카테고리를 불러오지 못했습니다.");
             }
         };
         void loadCategories();
@@ -55,6 +59,7 @@ export default function NoticeBoardWritePage() {
         }
 
         setSubmitting(true);
+        setPageNotice(null);
         const res = await fetch("/api/notice-boards/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -76,7 +81,9 @@ export default function NoticeBoardWritePage() {
         } catch {
             json = null;
         }
-        if (alertIfApiFailed(res, json, "등록 실패")) {
+        const failMsg = getApiFailureMessage(res, json, "등록 실패");
+        if (failMsg) {
+            setPageNotice(failMsg);
             setSubmitting(false);
             return;
         }
@@ -111,6 +118,12 @@ export default function NoticeBoardWritePage() {
                     </button>
                 </div>
             </div>
+
+            {pageNotice ? (
+                <div className="px-5 pt-4">
+                    <InlineNotice>{pageNotice}</InlineNotice>
+                </div>
+            ) : null}
 
             <div className="border-b border-slate-800 px-5 py-4">
                 <div className="mb-2 text-xs font-medium text-slate-500">노출·댓글 설정</div>

@@ -41,6 +41,10 @@
     color: var(--text);
 }
 
+.noticeWrap {
+    margin: -8px 0 14px;
+}
+
 .searchGrid {
     display: grid;
     grid-template-columns: repeat(4, minmax(220px, 1fr));
@@ -70,9 +74,9 @@
     color: var(--text);
     outline: none;
     transition:
-            border-color 0.18s ease,
-            box-shadow 0.18s ease,
-            background-color 0.18s ease;
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background-color 0.18s ease;
 }
 
 .fullInput::placeholder {
@@ -115,10 +119,10 @@
     font-weight: 700;
     cursor: pointer;
     transition:
-            transform 0.14s ease,
-            border-color 0.18s ease,
-            background-color 0.18s ease,
-            box-shadow 0.18s ease;
+        transform 0.14s ease,
+        border-color 0.18s ease,
+        background-color 0.18s ease,
+        box-shadow 0.18s ease;
 }
 
 .toolbar button:hover,

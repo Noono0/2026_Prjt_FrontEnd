@@ -10,6 +10,7 @@ import {
     updateMyInfo,
 } from "@/features/members/api";
 import { uploadImageFile } from "@/lib/upload";
+import { InlineNotice } from "@/components/ui/InlineNotice";
 import WalletSection from "@/features/members/WalletSection";
 
 function oauthProviderLabel(code?: string) {
@@ -46,23 +47,25 @@ export default function MyInfoPage() {
     const [newPassword, setNewPassword] = useState("");
     const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
     const [passwordSaving, setPasswordSaving] = useState(false);
+    const [pageNotice, setPageNotice] = useState<string | null>(null);
 
     const loadMyInfo = useCallback(async () => {
         if (!memberId) {
-            alert("로그인 정보를 찾을 수 없습니다.");
+            setPageNotice("로그인 정보를 찾을 수 없습니다.");
             return;
         }
         try {
             setLoading(true);
+            setPageNotice(null);
             const detail = await findMemberByMemberId(memberId);
             if (!detail) {
-                alert("회원 정보를 찾을 수 없습니다.");
+                setPageNotice("회원 정보를 찾을 수 없습니다.");
                 setInfo(null);
                 return;
             }
             setInfo(detail);
         } catch (e) {
-            alert(e instanceof Error ? e.message : "회원정보 조회 실패");
+            setPageNotice(e instanceof Error ? e.message : "회원정보 조회 실패");
         } finally {
             setLoading(false);
         }
@@ -153,6 +156,12 @@ export default function MyInfoPage() {
                     {loading ? "불러오는 중..." : "새로고침"}
                 </button>
             </div>
+
+            {pageNotice ? (
+                <div className="mb-4">
+                    <InlineNotice>{pageNotice}</InlineNotice>
+                </div>
+            ) : null}
 
             <div className="mb-6">
                 <WalletSection />

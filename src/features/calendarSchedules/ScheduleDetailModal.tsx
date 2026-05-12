@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { stripVideoEmbedsFromHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import { fetchCalendarScheduleDetail } from "./api";
 import type { CalendarScheduleDetail } from "./types";
+import { InlineNotice } from "@/components/ui/InlineNotice";
 
 type Props = {
     open: boolean;
@@ -20,10 +21,12 @@ function formatTimeForInput(t?: string | null): string {
 export default function ScheduleDetailModal({ open, onClose, scheduleSeq }: Props) {
     const [loading, setLoading] = useState(false);
     const [detail, setDetail] = useState<CalendarScheduleDetail | null>(null);
+    const [loadNotice, setLoadNotice] = useState<string | null>(null);
 
     useEffect(() => {
         if (!open || scheduleSeq == null) {
             setDetail(null);
+            setLoadNotice(null);
             return;
         }
         setLoading(true);
@@ -31,14 +34,15 @@ export default function ScheduleDetailModal({ open, onClose, scheduleSeq }: Prop
             try {
                 const d = await fetchCalendarScheduleDetail(scheduleSeq);
                 setDetail(d);
+                setLoadNotice(null);
             } catch (e) {
-                alert(e instanceof Error ? e.message : "불러오지 못했습니다.");
-                onClose();
+                setLoadNotice(e instanceof Error ? e.message : "불러오지 못했습니다.");
+                setDetail(null);
             } finally {
                 setLoading(false);
             }
         })();
-    }, [open, scheduleSeq, onClose]);
+    }, [open, scheduleSeq]);
 
     if (!open || scheduleSeq == null) {
         return null;
@@ -66,6 +70,10 @@ export default function ScheduleDetailModal({ open, onClose, scheduleSeq }: Prop
 
                 {loading ? (
                     <div className="py-20 text-center text-slate-500">불러오는 중…</div>
+                ) : loadNotice ? (
+                    <div className="shrink-0 px-5 py-6">
+                        <InlineNotice>{loadNotice}</InlineNotice>
+                    </div>
                 ) : detail ? (
                     <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
                         <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">{kind}</div>

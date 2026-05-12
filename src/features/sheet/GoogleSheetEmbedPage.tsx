@@ -28,7 +28,7 @@ export default function GoogleSheetEmbedPage() {
 
     return (
         <div className={styles.page}>
-            <h1 className={styles.title}>유연서 시트지</h1>
+            <h1 className={styles.title}>시트지</h1>
             <p className={styles.subtitle}>확대·축소 조절가능합니다.</p>
             <div className={styles.zoomBar}>
                 <label className={styles.zoomLabel} htmlFor="sheet-zoom-range">
@@ -58,7 +58,7 @@ export default function GoogleSheetEmbedPage() {
                         <iframe
                             className={styles.frame}
                             src={GOOGLE_SHEET_EMBED_SRC}
-                            title="유연서 시트지"
+                            title="시트지"
                             allowFullScreen
                             referrerPolicy="strict-origin-when-cross-origin"
                         />
