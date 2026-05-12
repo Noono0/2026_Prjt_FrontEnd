@@ -331,6 +331,7 @@
     grid-template-columns: 1fr 2fr auto;
     gap: 8px;
     margin-bottom: 8px;
+    align-items: start;
 }
 
 .input {
@@ -341,6 +342,21 @@
     background: #020617;
     color: #e2e8f0;
     padding: 0 10px;
+}
+
+.fieldValueTextarea {
+    height: auto;
+    min-height: 88px;
+    padding: 8px 10px;
+    line-height: 1.45;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.fieldRow > button {
+    margin-top: 2px;
 }
 
 .footerActions {

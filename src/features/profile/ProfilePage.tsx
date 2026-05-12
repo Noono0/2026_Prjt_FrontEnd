@@ -180,10 +180,11 @@ function FieldListEditor({ items, onChange }: { items: FieldItem[]; onChange: (n
                         value={item.label}
                         onChange={(e) => updateItem(item.id, "label", e.target.value)}
                     />
-                    <input
+                    <textarea
                         id={`profile-field-value-${item.id}`}
-                        className={styles.input}
-                        placeholder="내용"
+                        className={`${styles.input} ${styles.fieldValueTextarea}`}
+                        placeholder="내용 (줄바꿈 가능)"
+                        rows={4}
                         value={item.value}
                         onChange={(e) => updateItem(item.id, "value", e.target.value)}
                     />

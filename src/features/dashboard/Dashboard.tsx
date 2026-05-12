@@ -153,7 +153,8 @@ function ProfilePreviewModal({ profile, onClose }: { profile: MemberRow; onClose
                     ) : (
                         profile.fields.map((f) => (
                             <div key={f.id}>
-                                <strong>{f.label || "-"}</strong>: {f.value || "-"}
+                                <strong>{f.label || "-"}</strong>:{" "}
+                                <span className={styles.modalFieldValue}>{f.value || "-"}</span>
                             </div>
                         ))
                     )}

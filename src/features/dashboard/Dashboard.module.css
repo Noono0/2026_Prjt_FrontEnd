@@ -448,6 +448,11 @@
     color: #f8fafc;
 }
 
+.modalFieldValue {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .modalLinkIcons {
     display: flex;
     align-items: center;
