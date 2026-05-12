@@ -94,7 +94,7 @@ function MemberTile({
 function ProfilePreviewModal({ profile, onClose }: { profile: MemberRow; onClose: () => void }) {
     return (
         <div className={styles.modalBackdrop} onClick={onClose}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={`${styles.modal} ${styles.modalProfile}`} onClick={(e) => e.stopPropagation()}>
                 <h3>{profile.title}</h3>
                 {profile.imageUrl ? (
                     <div className={`${styles.modalFrame} ${styles[`frame${profile.rank}`]}`}>
@@ -147,16 +147,33 @@ function ProfilePreviewModal({ profile, onClose }: { profile: MemberRow; onClose
                         </button>
                     ) : null}
                 </div>
-                <div className={styles.modalFields}>
+                <div className={styles.profileInfoTableWrap}>
                     {profile.fields.length === 0 ? (
                         <div className={styles.modalMuted}>추가 프로필 행이 없습니다.</div>
                     ) : (
-                        profile.fields.map((f) => (
-                            <div key={f.id}>
-                                <strong>{f.label || "-"}</strong>:{" "}
-                                <span className={styles.modalFieldValue}>{f.value || "-"}</span>
-                            </div>
-                        ))
+                        <table className={styles.profileInfoTable}>
+                            <tbody>
+                                {profile.fields.map((f) => {
+                                    const labelText = (f.label ?? "").trim();
+                                    const valueRaw = f.value ?? "";
+                                    const hasValue = valueRaw.trim().length > 0;
+                                    return (
+                                        <tr key={f.id}>
+                                            <th scope="row" className={styles.profileInfoLabel}>
+                                                {labelText || "—"}
+                                            </th>
+                                            <td className={styles.profileInfoValue}>
+                                                {hasValue ? (
+                                                    <span className={styles.modalFieldValue}>{valueRaw}</span>
+                                                ) : (
+                                                    <span className={styles.profileInfoEmpty}>—</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                     )}
                 </div>
                 <div className={styles.modalActions}>

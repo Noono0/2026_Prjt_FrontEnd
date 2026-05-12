@@ -347,12 +347,15 @@
 .fieldValueTextarea {
     height: auto;
     min-height: 88px;
+    max-height: min(360px, 40vh);
     padding: 8px 10px;
     line-height: 1.45;
     resize: vertical;
     font-family: inherit;
     font-size: 14px;
     box-sizing: border-box;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
 }
 
 .fieldRow > button {

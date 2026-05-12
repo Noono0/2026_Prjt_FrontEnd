@@ -432,24 +432,72 @@
     border-radius: 12px;
 }
 
-.modalFields {
-    max-height: min(340px, 42vh);
+.modalProfile {
+    width: min(680px, 96vw);
+}
+
+.profileInfoTableWrap {
+    max-height: min(380px, 48vh);
     overflow: auto;
-    display: grid;
-    gap: 12px;
-    font-size: 17px;
-    line-height: 1.5;
+    border-radius: 10px;
+    border: 1px solid #2a3f5c;
+    background: #070b12;
+}
+
+.profileInfoTableWrap > .modalMuted {
+    padding: 18px 16px;
+    margin: 0;
+    text-align: center;
+}
+
+.profileInfoTable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 15px;
+    line-height: 1.55;
     color: #e2e8f0;
 }
 
-.modalFields strong {
-    font-size: 17px;
+.profileInfoTable tbody tr:not(:last-child) .profileInfoLabel,
+.profileInfoTable tbody tr:not(:last-child) .profileInfoValue {
+    border-bottom: 1px solid #243044;
+}
+
+.profileInfoLabel {
+    width: 30%;
+    min-width: 7.5rem;
+    max-width: 11rem;
+    padding: 12px 10px;
+    margin: 0;
     font-weight: 700;
-    color: #f8fafc;
+    font-size: 14px;
+    text-align: center;
+    vertical-align: middle;
+    color: #f1f5f9;
+    background: linear-gradient(180deg, #152a45 0%, #0f1f35 100%);
+    border-right: 1px solid #243044;
+    word-break: keep-all;
+    line-height: 1.4;
+}
+
+.profileInfoValue {
+    width: 70%;
+    padding: 12px 14px;
+    vertical-align: top;
+    text-align: left;
+    background: #0a101a;
+    color: #e2e8f0;
+}
+
+.profileInfoEmpty {
+    color: #64748b;
 }
 
 .modalFieldValue {
+    display: block;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
     word-break: break-word;
 }
 

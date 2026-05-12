@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { searchCodeDetails, searchCodeGroups } from "@/features/commonCodes/api";
 import {
     createGamniverseProfile,
@@ -151,6 +151,53 @@ function toProfileRecord(raw: GamniverseProfileDto): ProfileRecord {
     };
 }
 
+const PROFILE_FIELD_TEXTAREA_MAX_PX = 360;
+
+/** 내용 칸: 줄바꿈 유지 + 입력량에 맞춰 높이 자동 조절(상한 있음) */
+function ProfileFieldValueTextarea({
+    id,
+    value,
+    onValueChange,
+    className,
+    placeholder,
+}: {
+    id: string;
+    value: string;
+    onValueChange: (next: string) => void;
+    className: string;
+    placeholder: string;
+}) {
+    const ref = useRef<HTMLTextAreaElement>(null);
+
+    const syncHeight = () => {
+        const el = ref.current;
+        if (!el) return;
+        el.style.height = "auto";
+        const h = Math.max(88, Math.min(el.scrollHeight, PROFILE_FIELD_TEXTAREA_MAX_PX));
+        el.style.height = `${h}px`;
+        el.style.overflowY = el.scrollHeight > PROFILE_FIELD_TEXTAREA_MAX_PX ? "auto" : "hidden";
+    };
+
+    useLayoutEffect(() => {
+        syncHeight();
+    }, [value]);
+
+    return (
+        <textarea
+            ref={ref}
+            id={id}
+            className={className}
+            placeholder={placeholder}
+            rows={3}
+            value={value}
+            onChange={(e) => {
+                onValueChange(e.target.value);
+                requestAnimationFrame(() => syncHeight());
+            }}
+        />
+    );
+}
+
 function FieldListEditor({ items, onChange }: { items: FieldItem[]; onChange: (next: FieldItem[]) => void }) {
     const updateItem = (id: string, key: "label" | "value", value: string) => {
         onChange(items.map((item) => (item.id === id ? { ...item, [key]: value } : item)));
@@ -180,13 +227,12 @@ function FieldListEditor({ items, onChange }: { items: FieldItem[]; onChange: (n
                         value={item.label}
                         onChange={(e) => updateItem(item.id, "label", e.target.value)}
                     />
-                    <textarea
+                    <ProfileFieldValueTextarea
                         id={`profile-field-value-${item.id}`}
                         className={`${styles.input} ${styles.fieldValueTextarea}`}
-                        placeholder="내용 (줄바꿈 가능)"
-                        rows={4}
+                        placeholder="내용 (Enter로 줄바꿈)"
                         value={item.value}
-                        onChange={(e) => updateItem(item.id, "value", e.target.value)}
+                        onValueChange={(next) => updateItem(item.id, "value", next)}
                     />
                     <button id={`profile-field-remove-${item.id}`} type="button" onClick={() => removeItem(item.id)}>
                         삭제
