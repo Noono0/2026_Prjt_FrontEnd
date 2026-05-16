@@ -27,6 +27,7 @@ import EventBattleResultCelebrationModal from "./EventBattleResultCelebrationMod
 import VoteBattleResultCelebrationModal from "./VoteBattleResultCelebrationModal";
 import { EventBattleStatusBadge } from "./EventBattleStatusBadge";
 import styles from "./EventBattleDetailPage.module.css";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 const BET_STEP = 100;
 const BET_DEFAULT = 1000;
@@ -489,15 +490,15 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
 
     const onBet = async (optionSeq: number, points: number) => {
         if (!user?.memberSeq) {
-            alert("로그인 후 베팅할 수 있습니다.");
+            sonner.warning("로그인 후 베팅할 수 있습니다.");
             return;
         }
         if (points < BET_MIN) {
-            alert(`${BET_MIN}P 이상 입력해 주세요.`);
+            sonner.warning(`${BET_MIN}P 이상 입력해 주세요.`);
             return;
         }
         if (pointBalance != null && points > pointBalance) {
-            alert("보유 포인트보다 많이 베팅할 수 없습니다.");
+            sonner.warning("보유 포인트보다 많이 베팅할 수 없습니다.");
             return;
         }
         try {
@@ -509,7 +510,7 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
             });
             setActivity(fresh);
         } catch (e) {
-            alert(e instanceof Error ? e.message : "베팅 실패");
+            sonner.error(e instanceof Error ? e.message : "베팅 실패");
         } finally {
             setBusy(false);
         }
@@ -517,7 +518,8 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
 
     const onSettle = async (winnerOptionSeq: number, skipConfirm = false) => {
         const label = activity?.options?.find((o) => o.eventBattleOptionSeq === winnerOptionSeq)?.label ?? "?";
-        if (!skipConfirm && !confirm(`승리 주제: 「${label}」 — 정산할까요?`)) return;
+        // TODO: ConfirmDialog 검토 — 정산 확인을 중앙 모달로 옮길지 추후 결정
+        if (!skipConfirm && !(await confirmSonner(`승리 주제: 「${label}」 — 정산할까요?`))) return;
         try {
             setBusy(true);
             await settleEventBattle(eventBattleSeq, winnerOptionSeq);
@@ -528,7 +530,7 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
             });
             setActivity(fresh);
         } catch (e) {
-            alert(e instanceof Error ? e.message : "정산 실패");
+            sonner.error(e instanceof Error ? e.message : "정산 실패");
         } finally {
             setBusy(false);
         }
@@ -537,7 +539,7 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
     const onOpenRoulette = () => {
         if (!open) return;
         if (options.length < 2) {
-            alert("룰렛은 주제 2개 이상일 때 사용할 수 있습니다.");
+            sonner.warning("룰렛은 주제 2개 이상일 때 사용할 수 있습니다.");
             return;
         }
         setRouletteIndex(0);
@@ -587,7 +589,8 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
     const onCancelEvent = async () => {
         const isVoteOnlyEvent = detail?.voteOnlyYn === "Y";
         const msg = isVoteOnlyEvent ? "이벤트를 취소할까요?" : "이벤트를 취소하고 참가자 포인트를 모두 환불할까요?";
-        if (!confirm(msg)) return;
+        // TODO: ConfirmDialog 검토 — 이벤트 취소 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner(msg))) return;
         try {
             setBusy(true);
             await cancelEventBattle(eventBattleSeq);
@@ -598,14 +601,15 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
             });
             setActivity(fresh);
         } catch (e) {
-            alert(e instanceof Error ? e.message : "취소 실패");
+            sonner.error(e instanceof Error ? e.message : "취소 실패");
         } finally {
             setBusy(false);
         }
     };
 
     const onCloseVoteOnly = async () => {
-        if (!confirm("투표를 마감할까요? 마감 후에는 더 이상 투표할 수 없습니다.")) return;
+        // TODO: ConfirmDialog 검토 — 투표 마감 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("투표를 마감할까요? 마감 후에는 더 이상 투표할 수 없습니다."))) return;
         try {
             setBusy(true);
             await closeVoteOnlyEventBattle(eventBattleSeq);
@@ -615,7 +619,7 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
             });
             setActivity(fresh);
         } catch (e) {
-            alert(e instanceof Error ? e.message : "투표 마감 실패");
+            sonner.error(e instanceof Error ? e.message : "투표 마감 실패");
         } finally {
             setBusy(false);
         }
@@ -638,19 +642,19 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
     const onSubmitVotes = async () => {
         const limit = detail?.voteLimitPerMember && detail.voteLimitPerMember > 0 ? detail.voteLimitPerMember : 1;
         if (!user?.memberSeq) {
-            alert("로그인 후 투표할 수 있습니다.");
+            sonner.warning("로그인 후 투표할 수 있습니다.");
             return;
         }
         if (!open) {
-            alert("종료된 이벤트는 투표할 수 없습니다.");
+            sonner.warning("종료된 이벤트는 투표할 수 없습니다.");
             return;
         }
         if (voteSelections.length < 1) {
-            alert("최소 1개 주제를 선택해 주세요.");
+            sonner.warning("최소 1개 주제를 선택해 주세요.");
             return;
         }
         if (voteSelections.length > limit) {
-            alert(`투표권은 최대 ${limit}개입니다.`);
+            sonner.warning(`투표권은 최대 ${limit}개입니다.`);
             return;
         }
         try {
@@ -660,9 +664,9 @@ export default function EventBattleDetailPage({ eventBattleSeq, routesBase = DEF
                 recentLimit: EVENT_BATTLE_RECENT_BETS_PAGE,
             });
             setActivity(fresh);
-            alert("투표가 반영되었습니다.");
+            sonner.success("투표가 반영되었습니다.");
         } catch (e) {
-            alert(e instanceof Error ? e.message : "투표 실패");
+            sonner.error(e instanceof Error ? e.message : "투표 실패");
         } finally {
             setBusy(false);
         }

@@ -47,6 +47,7 @@ import { bumpWalletRefresh } from "@/stores/walletRefreshStore";
 import type { BoardComment, MemberEmoticon } from "./types";
 import { useAuthStore, type User } from "@/stores/authStore";
 import { uploadBoardImage } from "@/lib/upload";
+import { confirmSonner, sonner } from "@/lib/sonner";
 import styles from "./BoardCommentsSection.module.css";
 
 const MAX_COMMENT_ATTACH_TOTAL = 3;
@@ -434,7 +435,7 @@ function CommentBlock({
             await fn();
             onRefresh();
         } catch (e) {
-            alert(e instanceof ApiError ? e.message : "처리에 실패했습니다.");
+            sonner.error(e instanceof ApiError ? e.message : "처리에 실패했습니다.");
         } finally {
             setBusyId(null);
         }
@@ -471,7 +472,7 @@ function CommentBlock({
         ).length;
         const imgs = extractImageUrlsFromCommentHtml(comment.content ?? "");
         if (!canSubmitComment(editText, emoSlots, imgs.length)) {
-            alert("내용을 입력해주세요.");
+            sonner.warning("내용을 입력해주세요.");
             return;
         }
         setEditSaving(true);
@@ -492,10 +493,10 @@ function CommentBlock({
                 setIsEditing(false);
                 onRefresh();
             } else {
-                alert("수정에 실패했습니다.");
+                sonner.error("수정에 실패했습니다.");
             }
         } catch (e) {
-            alert(e instanceof ApiError ? e.message : "수정에 실패했습니다.");
+            sonner.error(e instanceof ApiError ? e.message : "수정에 실패했습니다.");
         } finally {
             setEditSaving(false);
         }
@@ -505,7 +506,8 @@ function CommentBlock({
         if (seq == null) return;
         const confirmMsg =
             depth === 0 && replyCount > 0 ? "이 댓글과 달린 답글을 모두 삭제할까요?" : "이 댓글을 삭제할까요?";
-        if (!window.confirm(confirmMsg)) return;
+        // TODO: ConfirmDialog 검토 — 댓글 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner(confirmMsg))) return;
         setBusyId(seq);
         try {
             const ok = isNotice
@@ -517,10 +519,10 @@ function CommentBlock({
                 setIsEditing(false);
                 onRefresh();
             } else {
-                alert("삭제에 실패했습니다.");
+                sonner.error("삭제에 실패했습니다.");
             }
         } catch (e) {
-            alert(e instanceof ApiError ? e.message : "삭제에 실패했습니다.");
+            sonner.error(e instanceof ApiError ? e.message : "삭제에 실패했습니다.");
         } finally {
             setBusyId(null);
         }
@@ -842,7 +844,7 @@ export default function BoardCommentsSection({
         if (seq == null || !row.imageUrl) return;
         if (selectedEmoticons.some((s) => s.memberEmoticonSeq === seq)) return;
         if (slotsUsed(selectedEmoticons.length, imageCount) >= MAX_COMMENT_ATTACH_TOTAL) {
-            alert(`이모티콘과 이미지는 합쳐 최대 ${MAX_COMMENT_ATTACH_TOTAL}개까지 첨부할 수 있습니다.`);
+            sonner.warning(`이모티콘과 이미지는 합쳐 최대 ${MAX_COMMENT_ATTACH_TOTAL}개까지 첨부할 수 있습니다.`);
             return;
         }
         setSelectedEmoticons((prev) => [...prev, { memberEmoticonSeq: seq, imageUrl: row.imageUrl! }]);
@@ -862,7 +864,7 @@ export default function BoardCommentsSection({
         e.target.value = "";
         if (!file || !user?.memberSeq) return;
         if (slotsUsed(selectedEmoticons.length, attachedImages.length) >= MAX_COMMENT_ATTACH_TOTAL) {
-            alert(`이모티콘과 이미지는 합쳐 최대 ${MAX_COMMENT_ATTACH_TOTAL}개까지 첨부할 수 있습니다.`);
+            sonner.warning(`이모티콘과 이미지는 합쳐 최대 ${MAX_COMMENT_ATTACH_TOTAL}개까지 첨부할 수 있습니다.`);
             return;
         }
         setUploadingImage(true);
@@ -871,7 +873,7 @@ export default function BoardCommentsSection({
             const key = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
             setAttachedImages((prev) => [...prev, { key, url }]);
         } catch (err) {
-            alert(err instanceof Error ? err.message : "이미지 업로드에 실패했습니다.");
+            sonner.error(err instanceof Error ? err.message : "이미지 업로드에 실패했습니다.");
         } finally {
             setUploadingImage(false);
         }
@@ -879,23 +881,23 @@ export default function BoardCommentsSection({
 
     const onSubmit = async () => {
         if (!user?.memberSeq) {
-            alert("로그인 후 댓글을 작성할 수 있습니다.");
+            sonner.warning("로그인 후 댓글을 작성할 수 있습니다.");
             return;
         }
         if (!commentsAllowed) {
-            alert("이 게시글은 댓글이 비활성화되어 있습니다.");
+            sonner.warning("이 게시글은 댓글이 비활성화되어 있습니다.");
             return;
         }
         if (openReplyThreadSeq != null && !repliesAllowed) {
-            alert("이 게시글은 답글 작성이 허용되지 않았습니다.");
+            sonner.warning("이 게시글은 답글 작성이 허용되지 않았습니다.");
             return;
         }
         if (!canSubmitComment(bodyText, selectedEmoticons.length, attachedImages.length)) {
-            alert("내용을 입력하거나 이모티콘·이미지를 추가해주세요.");
+            sonner.warning("내용을 입력하거나 이모티콘·이미지를 추가해주세요.");
             return;
         }
         if (slotsUsed(selectedEmoticons.length, attachedImages.length) > MAX_COMMENT_ATTACH_TOTAL) {
-            alert(`이모티콘과 이미지는 합쳐 최대 ${MAX_COMMENT_ATTACH_TOTAL}개입니다.`);
+            sonner.warning(`이모티콘과 이미지는 합쳐 최대 ${MAX_COMMENT_ATTACH_TOTAL}개입니다.`);
             return;
         }
         setSubmitting(true);
@@ -923,7 +925,7 @@ export default function BoardCommentsSection({
             clearReplyDraft();
             await load();
         } catch (e) {
-            alert(e instanceof ApiError ? e.message : "등록에 실패했습니다.");
+            sonner.error(e instanceof ApiError ? e.message : "등록에 실패했습니다.");
         } finally {
             setSubmitting(false);
         }

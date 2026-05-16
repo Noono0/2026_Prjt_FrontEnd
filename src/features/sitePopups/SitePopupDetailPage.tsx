@@ -13,6 +13,7 @@ import {
     formatPopupPeriodRange,
     isNoticePopupActiveNow,
 } from "@/lib/noticePopupSchedule";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 type Props = { sitePopupSeq: number };
 
@@ -88,11 +89,11 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
     const onSave = async () => {
         if (!item?.sitePopupSeq) return;
         if (!editForm.title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         if (isEmptyBoardHtml(editForm.content)) {
-            alert("내용을 입력해주세요.");
+            sonner.warning("내용을 입력해주세요.");
             return;
         }
         const pw = Math.min(2000, Math.max(200, parseInt(editForm.popupWidth, 10) || 600));
@@ -121,12 +122,12 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
                 const detail = await fetchSitePopupDetail(sitePopupSeq);
                 setItem(detail);
                 router.replace(`/admin/site-popups/${sitePopupSeq}`);
-                alert("수정되었습니다.");
+                sonner.success("수정되었습니다.");
             } else {
-                alert("수정에 실패했습니다.");
+                sonner.error("수정에 실패했습니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "수정에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "수정에 실패했습니다.");
         } finally {
             setSaving(false);
         }
@@ -134,16 +135,17 @@ export default function SitePopupDetailPage({ sitePopupSeq }: Props) {
 
     const onDelete = async () => {
         if (!item?.sitePopupSeq) return;
-        if (!confirm("이 팝업을 삭제할까요?")) return;
+        // TODO: ConfirmDialog 검토 — 팝업 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("이 팝업을 삭제할까요?"))) return;
         try {
             const n = await deleteSitePopup(item.sitePopupSeq);
             if (n > 0) {
                 router.push("/admin/site-popups");
             } else {
-                alert("삭제에 실패했습니다.");
+                sonner.error("삭제에 실패했습니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "삭제에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "삭제에 실패했습니다.");
         }
     };
 

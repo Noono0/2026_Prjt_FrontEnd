@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ListPagination from "@/components/ui/ListPagination";
 import { AuthorCellWithMenu } from "@/components/author/AuthorCellWithMenu";
 import { useAuthStore } from "@/stores/authStore";
+import { sonner } from "@/lib/sonner";
 import {
     type BlacklistCategoryOption,
     downloadBlacklistReportExcel,
@@ -46,9 +47,7 @@ function formatListDate(createDt?: string): string {
     if (Number.isNaN(d.getTime())) return createDt.slice(0, 10).replace(/-/g, ".");
     const now = new Date();
     const sameDay =
-        d.getFullYear() === now.getFullYear() &&
-        d.getMonth() === now.getMonth() &&
-        d.getDate() === now.getDate();
+        d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
     if (sameDay) {
         return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
     }
@@ -91,7 +90,16 @@ export default function BlacklistReportPage() {
                 ? { createDtFrom: appliedDateFrom, createDtTo: appliedDateTo }
                 : {}),
         }),
-        [page, size, categoryCode, appliedBlacklistTargetId, appliedKeyword, dateRangeEnabled, appliedDateFrom, appliedDateTo]
+        [
+            page,
+            size,
+            categoryCode,
+            appliedBlacklistTargetId,
+            appliedKeyword,
+            dateRangeEnabled,
+            appliedDateFrom,
+            appliedDateTo,
+        ]
     );
 
     const load = useCallback(async () => {
@@ -168,7 +176,7 @@ export default function BlacklistReportPage() {
                     : {}),
             });
         } catch (e) {
-            alert(e instanceof Error ? e.message : "엑셀 다운로드에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "엑셀 다운로드에 실패했습니다.");
         } finally {
             setExporting(false);
         }
@@ -211,7 +219,9 @@ export default function BlacklistReportPage() {
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 px-5 py-4">
                 <div>
                     <h1 className="text-xl font-bold tracking-tight text-white">블랙리스트 제보</h1>
-                    <p className="mt-1 text-sm text-slate-500">제보 대상 아이디를 기록하고, 목록·엑셀에서 동일 아이디로 묶어 조회할 수 있습니다.</p>
+                    <p className="mt-1 text-sm text-slate-500">
+                        제보 대상 아이디를 기록하고, 목록·엑셀에서 동일 아이디로 묶어 조회할 수 있습니다.
+                    </p>
                 </div>
                 <Link
                     href="/blacklist-report/write"
@@ -241,9 +251,14 @@ export default function BlacklistReportPage() {
                 })}
             </div>
 
-            <form onSubmit={onSearch} className="flex flex-col gap-3 border-b border-slate-800 px-5 py-4 lg:flex-row lg:flex-wrap lg:items-end">
+            <form
+                onSubmit={onSearch}
+                className="flex flex-col gap-3 border-b border-slate-800 px-5 py-4 lg:flex-row lg:flex-wrap lg:items-end"
+            >
                 <div className="min-w-[200px] flex-1">
-                    <label className="mb-1 block text-xs font-medium text-slate-500">블랙리스트 아이디 (부분 검색)</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-500">
+                        블랙리스트 아이디 (부분 검색)
+                    </label>
                     <input
                         value={blacklistTargetIdDraft}
                         onChange={(e) => setBlacklistTargetIdDraft(e.target.value)}
@@ -270,7 +285,9 @@ export default function BlacklistReportPage() {
                         />
                         작성일 기간 적용
                     </label>
-                    <div className={`flex flex-wrap items-center gap-2 ${!dateRangeEnabled ? "pointer-events-none opacity-45" : ""}`}>
+                    <div
+                        className={`flex flex-wrap items-center gap-2 ${!dateRangeEnabled ? "pointer-events-none opacity-45" : ""}`}
+                    >
                         <input
                             type="date"
                             value={dateFromDraft}
@@ -326,7 +343,8 @@ export default function BlacklistReportPage() {
                                 엑셀에 포함할 칼럼
                             </h2>
                             <p className="mt-1 text-xs text-slate-500">
-                                체크한 항목만 시트에 표시됩니다. 순서는 목록과 동일합니다. 설정은 이 브라우저에 저장됩니다.
+                                체크한 항목만 시트에 표시됩니다. 순서는 목록과 동일합니다. 설정은 이 브라우저에
+                                저장됩니다.
                             </p>
                         </div>
                         <div className="max-h-[50vh] overflow-y-auto px-5 py-3">
@@ -341,7 +359,9 @@ export default function BlacklistReportPage() {
                                                 className="rounded border-slate-600 text-emerald-600 focus:ring-emerald-600"
                                             />
                                             <span className="text-sm text-slate-200">{opt.label}</span>
-                                            <span className="ml-auto font-mono text-[10px] text-slate-600">{opt.key}</span>
+                                            <span className="ml-auto font-mono text-[10px] text-slate-600">
+                                                {opt.key}
+                                            </span>
                                         </label>
                                     </li>
                                 ))}
@@ -415,11 +435,16 @@ export default function BlacklistReportPage() {
                                 </tr>
                             ) : (
                                 items.map((row) => (
-                                    <tr key={row.blacklistReportSeq} className="border-b border-slate-800/80 hover:bg-slate-900/60">
+                                    <tr
+                                        key={row.blacklistReportSeq}
+                                        className="border-b border-slate-800/80 hover:bg-slate-900/60"
+                                    >
                                         <td className="px-3 py-3 text-xs text-slate-400">
                                             {row.categoryName ?? row.categoryCode ?? "—"}
                                         </td>
-                                        <td className="px-3 py-3 font-medium text-amber-200/90">{row.blacklistTargetId ?? "—"}</td>
+                                        <td className="px-3 py-3 font-medium text-amber-200/90">
+                                            {row.blacklistTargetId ?? "—"}
+                                        </td>
                                         <td className="px-3 py-3">
                                             <Link
                                                 href={`/blacklist-report/${row.blacklistReportSeq}`}
@@ -443,10 +468,18 @@ export default function BlacklistReportPage() {
                                                 variant="default"
                                             />
                                         </td>
-                                        <td className="whitespace-nowrap px-3 py-3 text-slate-400">{formatListDate(row.createDt)}</td>
-                                        <td className="px-3 py-3 text-right tabular-nums text-slate-400">{row.viewCount ?? 0}</td>
-                                        <td className="px-3 py-3 text-right tabular-nums text-sky-400">{row.likeCount ?? 0}</td>
-                                        <td className="px-3 py-3 text-right tabular-nums text-slate-500">{row.dislikeCount ?? 0}</td>
+                                        <td className="whitespace-nowrap px-3 py-3 text-slate-400">
+                                            {formatListDate(row.createDt)}
+                                        </td>
+                                        <td className="px-3 py-3 text-right tabular-nums text-slate-400">
+                                            {row.viewCount ?? 0}
+                                        </td>
+                                        <td className="px-3 py-3 text-right tabular-nums text-sky-400">
+                                            {row.likeCount ?? 0}
+                                        </td>
+                                        <td className="px-3 py-3 text-right tabular-nums text-slate-500">
+                                            {row.dislikeCount ?? 0}
+                                        </td>
                                     </tr>
                                 ))
                             )}
@@ -456,7 +489,13 @@ export default function BlacklistReportPage() {
             )}
 
             <div className="border-t border-slate-800 px-5 py-6">
-                <ListPagination page={page} size={size} totalCount={totalCount} onPageChange={setPage} siblingCount={1} />
+                <ListPagination
+                    page={page}
+                    size={size}
+                    totalCount={totalCount}
+                    onPageChange={setPage}
+                    siblingCount={1}
+                />
             </div>
         </div>
     );

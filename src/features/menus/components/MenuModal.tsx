@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "./MenuModal.module.css";
 import type { MenuRow } from "../api";
 import { filterSelectableParents } from "../arboristUtils";
+import { sonner } from "@/lib/sonner";
 
 type Props = {
     open: boolean;
@@ -27,10 +28,7 @@ export default function MenuModal({ open, mode, initial, allMenus, onClose, onSa
     const [form, setForm] = useState<MenuRow>(empty);
 
     const parentChoices = useMemo(() => {
-        const base =
-            mode === "edit" && initial?.menuId
-                ? filterSelectableParents(allMenus, initial.menuId)
-                : allMenus;
+        const base = mode === "edit" && initial?.menuId ? filterSelectableParents(allMenus, initial.menuId) : allMenus;
         return [...base].sort((a, b) => {
             const c = (a.menuCode ?? "").localeCompare(b.menuCode ?? "");
             if (c !== 0) return c;
@@ -66,11 +64,11 @@ export default function MenuModal({ open, mode, initial, allMenus, onClose, onSa
 
     const handleSubmit = async () => {
         if (!form.menuCode?.trim()) {
-            alert("메뉴 코드를 입력하세요.");
+            sonner.warning("메뉴 코드를 입력하세요.");
             return;
         }
         if (!form.menuName?.trim()) {
-            alert("메뉴명을 입력하세요.");
+            sonner.warning("메뉴명을 입력하세요.");
             return;
         }
         try {
@@ -84,7 +82,7 @@ export default function MenuModal({ open, mode, initial, allMenus, onClose, onSa
             });
             onClose();
         } catch (e) {
-            alert(e instanceof Error ? e.message : "저장 중 오류가 발생했습니다.");
+            sonner.error(e instanceof Error ? e.message : "저장 중 오류가 발생했습니다.");
         }
     };
 
@@ -92,9 +90,7 @@ export default function MenuModal({ open, mode, initial, allMenus, onClose, onSa
         <div className={styles.overlay}>
             <div className={styles.modal}>
                 <div className={styles.header}>
-                    <h3 className={styles.modalTitle}>
-                        {mode === "create" ? "메뉴 등록" : "메뉴 수정"}
-                    </h3>
+                    <h3 className={styles.modalTitle}>{mode === "create" ? "메뉴 등록" : "메뉴 수정"}</h3>
                     <button type="button" onClick={onClose} className={styles.closeButton}>
                         ✕
                     </button>
@@ -142,14 +138,11 @@ export default function MenuModal({ open, mode, initial, allMenus, onClose, onSa
                             <option value="">(루트)</option>
                             {parentChoices.map((m) => (
                                 <option key={m.menuId} value={m.menuId}>
-                                    {(m.menuName ?? "").trim()} ({m.menuCode})
-                                    {m.useYn === "N" ? " · 미사용" : ""}
+                                    {(m.menuName ?? "").trim()} ({m.menuCode}){m.useYn === "N" ? " · 미사용" : ""}
                                 </option>
                             ))}
                         </select>
-                        <p className={styles.hint}>
-                            루트는 상위 없음. 하위 메뉴는 드래그로도 이동할 수 있습니다.
-                        </p>
+                        <p className={styles.hint}>루트는 상위 없음. 하위 메뉴는 드래그로도 이동할 수 있습니다.</p>
                     </div>
                     <div>
                         <label className={styles.label}>정렬 순서</label>
@@ -157,9 +150,7 @@ export default function MenuModal({ open, mode, initial, allMenus, onClose, onSa
                             type="number"
                             className={styles.input}
                             value={form.sortOrder ?? 0}
-                            onChange={(e) =>
-                                setForm((p) => ({ ...p, sortOrder: Number(e.target.value || 0) }))
-                            }
+                            onChange={(e) => setForm((p) => ({ ...p, sortOrder: Number(e.target.value || 0) }))}
                         />
                     </div>
                     <div>

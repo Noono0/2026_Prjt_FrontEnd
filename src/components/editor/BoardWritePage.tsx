@@ -23,6 +23,7 @@ import { InlineNotice } from "@/components/ui/InlineNotice";
 import { getApiFailureMessage, type ApiEnvelope } from "@/lib/alertApiFailure";
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
 import { bumpWalletRefresh } from "@/stores/walletRefreshStore";
+import { sonner } from "@/lib/sonner";
 
 export default function BoardWritePage() {
     const router = useRouter();
@@ -80,19 +81,19 @@ export default function BoardWritePage() {
 
     async function handleSubmit() {
         if (!categoryCode) {
-            alert("카테고리를 선택해주세요.");
+            sonner.warning("카테고리를 선택해주세요.");
             return;
         }
         if (!title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         if (title.length > 15) {
-            alert("제목은 15자 이내로 입력해주세요.");
+            sonner.warning("제목은 15자 이내로 입력해주세요.");
             return;
         }
         if (!content.trim() || content.trim() === "<p></p>") {
-            alert("내용을 입력해주세요.");
+            sonner.warning("내용을 입력해주세요.");
             return;
         }
 
@@ -133,7 +134,7 @@ export default function BoardWritePage() {
         }
 
         bumpWalletRefresh();
-        alert("등록 완료");
+        sonner.success("등록 완료");
         setSubmitting(false);
         router.push("/boards");
     }

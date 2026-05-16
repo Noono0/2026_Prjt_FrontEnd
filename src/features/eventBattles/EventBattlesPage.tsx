@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { AuthorCellWithMenu } from "@/components/author/AuthorCellWithMenu";
 import { EventBattleStatusBadge } from "./EventBattleStatusBadge";
 import { z } from "zod";
+import { sonner } from "@/lib/sonner";
 
 const MIN_OPTIONS = 2;
 
@@ -85,7 +86,7 @@ export default function EventBattlesPage({ routesBase = DEFAULT_ROUTES_BASE }: E
             voteLimitPerMember: voteMode ? voteLimitPerMember : 1,
         });
         if (!parsed.success) {
-            alert(parsed.error.issues[0]?.message ?? "입력값이 올바르지 않습니다.");
+            sonner.warning(parsed.error.issues[0]?.message ?? "입력값이 올바르지 않습니다.");
             return;
         }
         try {
@@ -108,7 +109,7 @@ export default function EventBattlesPage({ routesBase = DEFAULT_ROUTES_BASE }: E
             setVoteLimitPerMember(1);
             await load();
         } catch (e) {
-            alert(e instanceof Error ? e.message : "등록 실패");
+            sonner.error(e instanceof Error ? e.message : "등록 실패");
         } finally {
             setSaving(false);
         }

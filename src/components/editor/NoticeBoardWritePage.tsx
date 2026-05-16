@@ -8,6 +8,7 @@ import { fetchNoticeBoardCategories } from "@/features/noticeBoards/api";
 import type { NoticeBoardCategoryOption } from "@/features/noticeBoards/types";
 import { InlineNotice } from "@/components/ui/InlineNotice";
 import { getApiFailureMessage, type ApiEnvelope } from "@/lib/alertApiFailure";
+import { sonner } from "@/lib/sonner";
 
 function isEmptyBoardHtml(html: string): boolean {
     const t = html.trim();
@@ -50,11 +51,11 @@ export default function NoticeBoardWritePage() {
 
     async function handleSubmit() {
         if (!title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         if (isEmptyBoardHtml(content)) {
-            alert("내용을 입력해주세요.");
+            sonner.warning("내용을 입력해주세요.");
             return;
         }
 
@@ -88,7 +89,7 @@ export default function NoticeBoardWritePage() {
             return;
         }
 
-        alert("등록 완료");
+        sonner.success("등록 완료");
         setSubmitting(false);
         router.push("/admin/notice-board");
     }

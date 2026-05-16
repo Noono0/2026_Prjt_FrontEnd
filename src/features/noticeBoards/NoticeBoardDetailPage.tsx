@@ -19,6 +19,7 @@ import {
 } from "./api";
 import type { NoticeBoardCategoryOption, NoticeBoardListItem } from "./types";
 import styles from "./NoticeBoardDetailPage.module.css";
+import { sonner } from "@/lib/sonner";
 
 type Props = {
     noticeBoardSeq: number;
@@ -141,10 +142,10 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
             if (changed > 0) {
                 setItem((prev) => (prev ? { ...prev, likeCount: (prev.likeCount ?? 0) + 1 } : prev));
             } else {
-                alert("이미 좋아요 처리된 게시글입니다.");
+                sonner.warning("이미 좋아요 처리된 게시글입니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "좋아요 처리에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "좋아요 처리에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -157,10 +158,10 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
             if (changed > 0) {
                 setItem((prev) => (prev ? { ...prev, dislikeCount: (prev.dislikeCount ?? 0) + 1 } : prev));
             } else {
-                alert("이미 싫어요 처리된 게시글입니다.");
+                sonner.warning("이미 싫어요 처리된 게시글입니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "싫어요 처리에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "싫어요 처리에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -172,12 +173,12 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
             const changed = await reportNoticeBoard(noticeBoardSeq);
             if (changed > 0) {
                 setItem((prev) => (prev ? { ...prev, reportCount: (prev.reportCount ?? 0) + 1 } : prev));
-                alert("신고가 접수되었습니다.");
+                sonner.success("신고가 접수되었습니다.");
             } else {
-                alert("이미 신고 처리된 게시글입니다.");
+                sonner.warning("이미 신고 처리된 게시글입니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "신고 처리에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "신고 처리에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -186,11 +187,11 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
     const onSaveEdit = async () => {
         if (!item?.noticeBoardSeq) return;
         if (!editForm.title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         if (isEmptyBoardHtml(editForm.content)) {
-            alert("내용을 입력해주세요.");
+            sonner.warning("내용을 입력해주세요.");
             return;
         }
 
@@ -219,12 +220,12 @@ export default function NoticeBoardDetailPage({ noticeBoardSeq }: Props) {
                     pinOnFreeBoard: boardYnAllowed(detail.pinOnFreeBoardYn),
                 });
                 router.replace(`/admin/notice-board/${noticeBoardSeq}`);
-                alert("수정되었습니다.");
+                sonner.success("수정되었습니다.");
             } else {
-                alert("수정에 실패했습니다.");
+                sonner.error("수정에 실패했습니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "수정에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "수정에 실패했습니다.");
         } finally {
             setSaving(false);
         }

@@ -101,7 +101,7 @@ export function dtoToMember(dto: GamniverseProfileDto): MemberRow {
         youtubeUrl: dto.youtubeUrl ?? "",
         cafeLink: dto.cafeLink ?? "",
         imageUrl: dto.profileImageFileSeq ? `/api/files/view/${dto.profileImageFileSeq}` : "",
-        isLive: Boolean(dto.isLive),
+        isLive: false,
         fields: parseProfileRows(dto.profileRowsJson),
     };
 }

@@ -18,6 +18,7 @@ import {
 } from "@/constants/affiliationCodes";
 import { uploadImageFile } from "@/lib/upload";
 import { InlineNotice } from "@/components/ui/InlineNotice";
+import { confirmSonner, sonner } from "@/lib/sonner";
 import styles from "./ProfilePage.module.css";
 
 const INSTA_BTN_SVG = "/dashboard/insta_btn.svg";
@@ -246,7 +247,7 @@ function FieldListEditor({ items, onChange }: { items: FieldItem[]; onChange: (n
 function openExternalLink(url: string, emptyMessage: string) {
     const u = url.trim();
     if (!u) {
-        alert(emptyMessage);
+        sonner.warning(emptyMessage);
         return;
     }
     const withProtocol = /^https?:\/\//i.test(u) ? u : `https://${u}`;
@@ -430,7 +431,7 @@ export default function ProfilePage() {
         const run = async () => {
             const title = editing.title.trim();
             if (!title) {
-                alert("방송명(회원명)은 필수입니다.");
+                sonner.warning("방송명(회원명)은 필수입니다.");
                 return;
             }
             setIsSaving(true);
@@ -461,7 +462,7 @@ export default function ProfilePage() {
                     return;
                 }
                 setIsModalOpen(false);
-                alert(editing.gamniverseProfileSeq ? "수정되었습니다." : "등록되었습니다.");
+                sonner.success(editing.gamniverseProfileSeq ? "수정되었습니다." : "등록되었습니다.");
             } catch (error) {
                 setProfilePageNotice(apiErrorMessage(error, "저장 중 오류가 발생했습니다."));
             } finally {
@@ -475,7 +476,8 @@ export default function ProfilePage() {
         const run = async () => {
             const target = profiles.find((item) => item.id === id);
             if (!target?.gamniverseProfileSeq) return;
-            if (!confirm(`'${target.title || "이름 없음"}' 프로필을 삭제할까요?`)) return;
+            // TODO: ConfirmDialog 검토 — 삭제 확인을 중앙 모달로 옮길지 추후 결정
+            if (!(await confirmSonner(`'${target.title || "이름 없음"}' 프로필을 삭제할까요?`))) return;
             try {
                 await deleteGamniverseProfile(target.gamniverseProfileSeq);
                 await loadProfiles();
@@ -500,7 +502,7 @@ export default function ProfilePage() {
                     imageFileSeq: uploaded.fileSeq,
                 });
             } catch (error) {
-                alert(error instanceof Error ? error.message : "이미지 업로드에 실패했습니다.");
+                sonner.error(error instanceof Error ? error.message : "이미지 업로드에 실패했습니다.");
             }
         };
         void run();

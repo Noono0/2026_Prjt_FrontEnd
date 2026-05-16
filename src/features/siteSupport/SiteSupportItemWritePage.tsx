@@ -7,6 +7,7 @@ import BoardEditor from "@/components/editor/BoardEditor";
 import { createSiteSupport } from "./api";
 import { SUPPORT_CATEGORY_OPTIONS } from "./labels";
 import type { SiteSupportCategoryCode } from "./types";
+import { sonner } from "@/lib/sonner";
 
 function isEmptyBoardHtml(html: string): boolean {
     const t = html.trim();
@@ -30,11 +31,11 @@ export default function SiteSupportItemWritePage() {
 
     async function handleSubmit() {
         if (!title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         if (isEmptyBoardHtml(content)) {
-            alert("내용을 입력해주세요.");
+            sonner.warning("내용을 입력해주세요.");
             return;
         }
         const so = Math.max(0, parseInt(sortOrder, 10) || 0);
@@ -49,13 +50,13 @@ export default function SiteSupportItemWritePage() {
                 sortOrder: so,
             });
             if (n > 0) {
-                alert("등록 완료");
+                sonner.success("등록 완료");
                 router.push("/admin/support-items");
             } else {
-                alert("등록 실패");
+                sonner.error("등록 실패");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "등록 실패");
+            sonner.error(e instanceof Error ? e.message : "등록 실패");
         } finally {
             setSubmitting(false);
         }

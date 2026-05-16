@@ -14,6 +14,7 @@ import {
 import { bumpWalletRefresh, useWalletRefreshStore } from "@/stores/walletRefreshStore";
 import { useAuthStore } from "@/stores/authStore";
 import { InlineNotice } from "@/components/ui/InlineNotice";
+import { sonner } from "@/lib/sonner";
 
 function fmt(n: number | undefined | null) {
     if (n == null || Number.isNaN(n)) return "0";
@@ -94,20 +95,20 @@ export default function WalletSection() {
     const onPurchaseIron = async () => {
         try {
             await purchaseIron(qtyIron);
-            alert("아이언 티켓을 구매했습니다.");
+            sonner.success("아이언 티켓을 구매했습니다.");
             await refreshAfterMutation();
         } catch (e) {
-            alert(e instanceof Error ? e.message : "구매 실패");
+            sonner.error(e instanceof Error ? e.message : "구매 실패");
         }
     };
 
     const ex = async (fn: (t: number) => Promise<void>) => {
         try {
             await fn(timesEx);
-            alert("교환되었습니다.");
+            sonner.success("교환되었습니다.");
             await refreshAfterMutation();
         } catch (e) {
-            alert(e instanceof Error ? e.message : "교환 실패");
+            sonner.error(e instanceof Error ? e.message : "교환 실패");
         }
     };
 

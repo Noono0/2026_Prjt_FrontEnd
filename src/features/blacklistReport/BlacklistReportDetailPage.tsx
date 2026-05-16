@@ -18,6 +18,7 @@ import type { BlacklistReportListItem } from "./types";
 import { InlineNotice } from "@/components/ui/InlineNotice";
 import { getApiFailureMessage, type ApiEnvelope } from "@/lib/alertApiFailure";
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 type Props = { blacklistReportSeq: number };
 
@@ -74,11 +75,11 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
 
     async function onSaveEdit() {
         if (!editForm.blacklistTargetId.trim()) {
-            alert("블랙리스트 아이디를 입력해주세요.");
+            sonner.warning("블랙리스트 아이디를 입력해주세요.");
             return;
         }
         if (!editForm.title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         setSaving(true);
@@ -106,7 +107,7 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
             setSaving(false);
             return;
         }
-        alert("수정되었습니다.");
+        sonner.success("수정되었습니다.");
         setSaving(false);
         router.replace(`/blacklist-report/${blacklistReportSeq}`);
         router.refresh();
@@ -123,11 +124,12 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
     }
 
     async function onDelete() {
-        if (!confirm("삭제하시겠습니까?")) return;
+        // TODO: ConfirmDialog 검토 — 게시글 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("삭제하시겠습니까?"))) return;
         setActionLoading("delete");
         try {
             await deleteMyBlacklistReport(blacklistReportSeq);
-            alert("삭제되었습니다.");
+            sonner.success("삭제되었습니다.");
             router.push("/blacklist-report");
         } catch (e) {
             setActionNotice(e instanceof Error ? e.message : "삭제에 실패했습니다.");
@@ -143,10 +145,10 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
             if (changed > 0) {
                 setItem((prev) => (prev ? { ...prev, likeCount: (prev.likeCount ?? 0) + 1 } : prev));
             } else {
-                alert("이미 추천한 글입니다.");
+                sonner.warning("이미 추천한 글입니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "추천 처리에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "추천 처리에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -159,10 +161,10 @@ export default function BlacklistReportDetailPage({ blacklistReportSeq }: Props)
             if (changed > 0) {
                 setItem((prev) => (prev ? { ...prev, dislikeCount: (prev.dislikeCount ?? 0) + 1 } : prev));
             } else {
-                alert("이미 비추천한 글입니다.");
+                sonner.warning("이미 비추천한 글입니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "비추천 처리에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "비추천 처리에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }

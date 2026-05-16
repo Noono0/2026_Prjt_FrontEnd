@@ -8,6 +8,7 @@ import { InlineNotice } from "@/components/ui/InlineNotice";
 import { getApiFailureMessage, type ApiEnvelope } from "@/lib/alertApiFailure";
 import { defaultApiRequestInit } from "@/lib/http/requestInit";
 import { type BlacklistCategoryOption, fetchBlacklistCategories } from "./api";
+import { sonner } from "@/lib/sonner";
 
 export default function BlacklistReportWritePage() {
     const router = useRouter();
@@ -35,15 +36,15 @@ export default function BlacklistReportWritePage() {
 
     async function handleSubmit(): Promise<void> {
         if (!blacklistTargetId.trim()) {
-            alert("블랙리스트 아이디를 입력해주세요.");
+            sonner.warning("블랙리스트 아이디를 입력해주세요.");
             return;
         }
         if (!title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         if (!content.trim() || content.trim() === "<p></p>") {
-            alert("내용을 입력해주세요.");
+            sonner.warning("내용을 입력해주세요.");
             return;
         }
 
@@ -76,7 +77,7 @@ export default function BlacklistReportWritePage() {
             return;
         }
 
-        alert("등록 완료");
+        sonner.success("등록 완료");
         setSubmitting(false);
         router.push("/blacklist-report");
     }

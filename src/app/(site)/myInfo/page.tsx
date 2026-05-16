@@ -12,6 +12,7 @@ import {
 import { uploadImageFile } from "@/lib/upload";
 import { InlineNotice } from "@/components/ui/InlineNotice";
 import WalletSection from "@/features/members/WalletSection";
+import { sonner } from "@/lib/sonner";
 
 function oauthProviderLabel(code?: string) {
     if (!code) return "";
@@ -81,7 +82,7 @@ export default function MyInfoPage() {
         try {
             const { fileUrl, fileSeq, optimizationNotice } = await uploadImageFile(file, "/myInfo", "profile");
             if (optimizationNotice) {
-                window.alert(optimizationNotice);
+                sonner.info(optimizationNotice);
             }
             setInfo((prev) =>
                 prev
@@ -93,7 +94,7 @@ export default function MyInfoPage() {
                     : prev
             );
         } catch (e) {
-            alert(e instanceof Error ? e.message : "이미지 업로드에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "이미지 업로드에 실패했습니다.");
         }
     };
 
@@ -102,10 +103,10 @@ export default function MyInfoPage() {
         try {
             setSaving(true);
             await updateMyInfo(info);
-            alert("회원정보가 저장되었습니다.");
+            sonner.success("회원정보가 저장되었습니다.");
             await loadMyInfo();
         } catch (e) {
-            alert(e instanceof Error ? e.message : "회원정보 저장 실패");
+            sonner.error(e instanceof Error ? e.message : "회원정보 저장 실패");
         } finally {
             setSaving(false);
         }
@@ -117,27 +118,27 @@ export default function MyInfoPage() {
 
     const handleChangePassword = async () => {
         if (!currentPassword.trim() || !newPassword.trim() || !newPasswordConfirm.trim()) {
-            alert("현재 비밀번호/새 비밀번호/확인을 모두 입력해주세요.");
+            sonner.warning("현재 비밀번호/새 비밀번호/확인을 모두 입력해주세요.");
             return;
         }
         if (newPassword !== newPasswordConfirm) {
-            alert("새 비밀번호 확인이 일치하지 않습니다.");
+            sonner.warning("새 비밀번호 확인이 일치하지 않습니다.");
             return;
         }
         if (newPassword.length < 8) {
-            alert("새 비밀번호는 8자 이상으로 입력해주세요.");
+            sonner.warning("새 비밀번호는 8자 이상으로 입력해주세요.");
             return;
         }
 
         try {
             setPasswordSaving(true);
             await changeMyPassword(currentPassword, newPassword);
-            alert("비밀번호가 변경되었습니다.");
+            sonner.success("비밀번호가 변경되었습니다.");
             setCurrentPassword("");
             setNewPassword("");
             setNewPasswordConfirm("");
         } catch (e) {
-            alert(e instanceof Error ? e.message : "비밀번호 변경 실패");
+            sonner.error(e instanceof Error ? e.message : "비밀번호 변경 실패");
         } finally {
             setPasswordSaving(false);
         }

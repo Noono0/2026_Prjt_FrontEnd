@@ -20,6 +20,7 @@ import { menuAdminKeys, useDeleteMenuMutation, useMenuTreeQuery, useSaveMenuMuta
 import { InlineNotice } from "@/components/ui/InlineNotice";
 import MenuModal from "./components/MenuModal";
 import styles from "./menusTree.module.css";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 function ExplorerNode({
     node,
@@ -141,7 +142,7 @@ export default function MenusPage() {
 
     const handleCreateChild = () => {
         if (!selectedRow?.menuId) {
-            alert("하위 메뉴를 추가할 상위 메뉴를 왼쪽 트리에서 먼저 선택하세요.");
+            sonner.warning("하위 메뉴를 추가할 상위 메뉴를 왼쪽 트리에서 먼저 선택하세요.");
             return;
         }
         openCreate(selectedRow);
@@ -149,7 +150,7 @@ export default function MenusPage() {
 
     const handleEdit = () => {
         if (!selectedRow?.menuId) {
-            alert("수정할 메뉴를 선택하세요.");
+            sonner.warning("수정할 메뉴를 선택하세요.");
             return;
         }
         setModalMode("edit");
@@ -166,13 +167,14 @@ export default function MenusPage() {
 
     const handleSoftDelete = async () => {
         if (!selectedRow?.menuId) {
-            alert("미사용 처리할 메뉴를 선택하세요.");
+            sonner.warning("미사용 처리할 메뉴를 선택하세요.");
             return;
         }
+        // TODO: ConfirmDialog 검토 — 미사용 처리 확인을 중앙 모달로 옮길지 추후 결정
         if (
-            !confirm(
-                `「${selectedRow.menuName ?? selectedRow.menuCode}」을(를) 미사용 처리할까요?\n\nDB에서는 삭제되지 않고 USE_YN = 'N' 으로만 바뀝니다.`
-            )
+            !(await confirmSonner(`「${selectedRow.menuName ?? selectedRow.menuCode}」을(를) 미사용 처리할까요?`, {
+                description: "DB에서는 삭제되지 않고 USE_YN = 'N' 으로만 바뀝니다.",
+            }))
         ) {
             return;
         }
@@ -181,13 +183,13 @@ export default function MenusPage() {
             await deleteMutation.mutateAsync(selectedRow.menuId);
             setSelectedRow((prev) => (prev?.menuId === selectedRow.menuId ? { ...prev, useYn: "N" } : prev));
         } catch (e) {
-            alert(e instanceof Error ? e.message : "처리 중 오류");
+            sonner.error(e instanceof Error ? e.message : "처리 중 오류");
         }
     };
 
     const handleRestore = async () => {
         if (!selectedRow?.menuId || selectedRow.useYn !== "N") {
-            alert("복구할 미사용 메뉴를 선택하세요.");
+            sonner.warning("복구할 미사용 메뉴를 선택하세요.");
             return;
         }
         try {
@@ -197,7 +199,7 @@ export default function MenusPage() {
             });
             setSelectedRow((prev) => (prev?.menuId === selectedRow.menuId ? { ...prev, useYn: "Y" } : prev));
         } catch (e) {
-            alert(e instanceof Error ? e.message : "복구 중 오류");
+            sonner.error(e instanceof Error ? e.message : "복구 중 오류");
         }
     };
 
@@ -275,7 +277,7 @@ export default function MenusPage() {
             await queryClient.refetchQueries({ queryKey: menuAdminKeys.tree });
         } catch (e) {
             console.error(e);
-            alert(e instanceof Error ? e.message : "메뉴 순서 저장 중 오류가 발생했습니다.");
+            sonner.error(e instanceof Error ? e.message : "메뉴 순서 저장 중 오류가 발생했습니다.");
         } finally {
             dragSaveLockRef.current = false;
         }

@@ -12,6 +12,7 @@ import type { CodeGroupRow, CodeDetailRow, CodeGroupSearchCondition, CodeDetailS
 import { commonCodeKeys, useCodeDetailsQuery, useCodeGroupsQuery } from "./queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { normalizeCodeGroupSearchCondition, sameCodeGroupSearchCondition } from "@/lib/query/searchConditions";
+import { sonner } from "@/lib/sonner";
 
 const defaultGroupCondition: CodeGroupSearchCondition = {
     codeGroupId: "",
@@ -107,7 +108,7 @@ export default function CommonCodesPage() {
 
     const handleOpenGroupEdit = () => {
         if (!selectedGroup?.codeGroupSeq) {
-            alert("수정할 대분류를 선택하세요.");
+            sonner.warning("수정할 대분류를 선택하세요.");
             return;
         }
         setGroupModalMode("edit");
@@ -116,7 +117,7 @@ export default function CommonCodesPage() {
 
     const handleOpenMiddleCreate = () => {
         if (!selectedGroup?.codeGroupSeq) {
-            alert("대분류를 먼저 선택하세요.");
+            sonner.warning("대분류를 먼저 선택하세요.");
             return;
         }
         setDetailModalMode("create-middle");
@@ -125,7 +126,7 @@ export default function CommonCodesPage() {
 
     const handleOpenMiddleEdit = () => {
         if (!selectedMiddle?.codeDetailSeq) {
-            alert("수정할 중분류를 선택하세요.");
+            sonner.warning("수정할 중분류를 선택하세요.");
             return;
         }
         setDetailModalMode("edit-middle");
@@ -155,11 +156,11 @@ export default function CommonCodesPage() {
 
     const handleOpenSmallCreate = () => {
         if (!selectedGroup?.codeGroupSeq) {
-            alert("대분류를 먼저 선택하세요.");
+            sonner.warning("대분류를 먼저 선택하세요.");
             return;
         }
         if (!selectedMiddle?.codeDetailSeq) {
-            alert("상위 중분류를 먼저 선택하세요.");
+            sonner.warning("상위 중분류를 먼저 선택하세요.");
             return;
         }
         setDetailModalMode("create-small");
@@ -168,7 +169,7 @@ export default function CommonCodesPage() {
 
     const handleOpenSmallEdit = () => {
         if (!selectedSmall?.codeDetailSeq) {
-            alert("수정할 소분류를 선택하세요.");
+            sonner.warning("수정할 소분류를 선택하세요.");
             return;
         }
         setDetailModalMode("edit-small");

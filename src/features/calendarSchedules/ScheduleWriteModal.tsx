@@ -12,6 +12,7 @@ import {
 import type { CalendarScheduleSaveBody, ScheduleCategoryOption } from "./types";
 import { SCHEDULE_COLOR_PALETTE, pickRandomScheduleColor } from "./scheduleColors";
 import { InlineNotice } from "@/components/ui/InlineNotice";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 function todayYmd(): string {
     const d = new Date();
@@ -174,21 +175,21 @@ export default function ScheduleWriteModal({ open, onClose, onSaved, editingSeq,
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         if (eventKind === "GENERAL") {
             if (!startDate || !endDate) {
-                alert("시작일·종료일을 선택해주세요.");
+                sonner.warning("시작일·종료일을 선택해주세요.");
                 return;
             }
             if (startDate > endDate) {
-                alert("시작일이 종료일보다 늦을 수 없습니다.");
+                sonner.warning("시작일이 종료일보다 늦을 수 없습니다.");
                 return;
             }
         } else {
             if (birthMonth < 1 || birthMonth > 12 || birthDay < 1 || birthDay > 31) {
-                alert("생일 월·일을 확인해주세요.");
+                sonner.warning("생일 월·일을 확인해주세요.");
                 return;
             }
         }
@@ -199,20 +200,20 @@ export default function ScheduleWriteModal({ open, onClose, onSaved, editingSeq,
             if (editingSeq != null) {
                 const n = await updateCalendarSchedule(body);
                 if (n <= 0) {
-                    alert("수정에 실패했습니다.");
+                    sonner.error("수정에 실패했습니다.");
                     return;
                 }
             } else {
                 const n = await createCalendarSchedule(body);
                 if (n <= 0) {
-                    alert("등록에 실패했습니다.");
+                    sonner.error("등록에 실패했습니다.");
                     return;
                 }
             }
             onSaved();
             onClose();
         } catch (err) {
-            alert(err instanceof Error ? err.message : "저장에 실패했습니다.");
+            sonner.error(err instanceof Error ? err.message : "저장에 실패했습니다.");
         } finally {
             setSaving(false);
         }
@@ -220,18 +221,19 @@ export default function ScheduleWriteModal({ open, onClose, onSaved, editingSeq,
 
     const onDelete = async () => {
         if (editingSeq == null) return;
-        if (!window.confirm("이 일정을 삭제할까요?")) return;
+        // TODO: ConfirmDialog 검토 — 일정 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("이 일정을 삭제할까요?"))) return;
         setSaving(true);
         try {
             const n = await deleteCalendarSchedule(editingSeq);
             if (n <= 0) {
-                alert("삭제에 실패했습니다.");
+                sonner.error("삭제에 실패했습니다.");
                 return;
             }
             onSaved();
             onClose();
         } catch (err) {
-            alert(err instanceof Error ? err.message : "삭제에 실패했습니다.");
+            sonner.error(err instanceof Error ? err.message : "삭제에 실패했습니다.");
         } finally {
             setSaving(false);
         }

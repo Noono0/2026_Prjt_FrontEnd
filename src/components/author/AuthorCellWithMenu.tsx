@@ -3,6 +3,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { PointGiftModal } from "./PointGiftModal";
+import { sonner } from "@/lib/sonner";
 import styles from "./AuthorCellWithMenu.module.css";
 
 export type AuthorMenuContext = {
@@ -31,7 +32,7 @@ type Props = {
 };
 
 function defaultReport(ctx: AuthorMenuContext) {
-    window.alert(
+    sonner.info(
         `신고 기능은 준비 중입니다.\n대상: ${ctx.memberId ?? "(아이디 없음)"} (회원번호 ${ctx.memberSeq ?? "-"})`
     );
 }

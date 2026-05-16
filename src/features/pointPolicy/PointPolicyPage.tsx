@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { InlineNotice } from "@/components/ui/InlineNotice";
+import { sonner } from "@/lib/sonner";
 import { fetchPointPolicies, savePointPolicies, type PointPolicyRow } from "./api";
 
 const LABELS: Record<string, { title: string; desc: string }> = {
@@ -160,7 +161,7 @@ export default function PointPolicyPage() {
             setSaving(true);
             setError(null);
             await savePointPolicies(rows);
-            alert("저장되었습니다.");
+            sonner.success("저장되었습니다.");
         } catch (e) {
             setError(e instanceof Error ? e.message : "저장 실패");
         } finally {

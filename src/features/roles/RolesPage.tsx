@@ -11,6 +11,7 @@ import { useDeleteRoleMutation, useRolesAdminQuery, useSaveRoleMutation } from "
 import { normalizeRoleSearchCondition, sameRoleSearchCondition } from "@/lib/query/searchConditions";
 import { InlineNotice } from "@/components/ui/InlineNotice";
 import RoleModal from "./components/RoleModal";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 type RoleFilters = {
     roleCode: string;
@@ -190,7 +191,7 @@ export default function RolesPage() {
     const handleOpenEdit = () => {
         const selected = gridApiRef.current?.getSelectedRows()?.[0];
         if (!selected?.roleId) {
-            alert("수정할 권한을 선택하세요.");
+            sonner.warning("수정할 권한을 선택하세요.");
             return;
         }
         openEdit(selected);
@@ -199,17 +200,18 @@ export default function RolesPage() {
     const handleDelete = async () => {
         const selected = gridApiRef.current?.getSelectedRows()?.[0];
         if (!selected?.roleId) {
-            alert("삭제할 권한을 선택하세요.");
+            sonner.warning("삭제할 권한을 선택하세요.");
             return;
         }
-        if (!confirm("선택한 권한을 삭제(미사용 처리)할까요?")) return;
+        // TODO: ConfirmDialog 검토 — 권한 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("선택한 권한을 삭제(미사용 처리)할까요?"))) return;
         try {
             await deleteMutation.mutateAsync(selected.roleId);
             if (page > 1 && items.length === 1) {
                 setListParams((p) => ({ ...p, page: p.page - 1 }));
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "삭제 중 오류");
+            sonner.error(e instanceof Error ? e.message : "삭제 중 오류");
         }
     };
 

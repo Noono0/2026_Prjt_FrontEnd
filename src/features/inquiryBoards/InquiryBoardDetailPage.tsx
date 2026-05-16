@@ -9,6 +9,7 @@ import type { BoardListItem } from "@/features/boards/types";
 import { useAuthStore } from "@/stores/authStore";
 import { deleteMyInquiryBoard, fetchInquiryBoardDetail, fetchInquiryCategories, updateInquiryBoard } from "./api";
 import type { BoardCategoryOption } from "@/features/boards/types";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 type Props = { boardSeq: number };
 
@@ -99,11 +100,21 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
     if (!item) return <div className="p-6 text-slate-400">게시글이 없습니다.</div>;
 
     const onSave = async () => {
-        if (!editForm.categoryCode) return alert("카테고리를 선택해주세요.");
-        if (!editForm.title.trim()) return alert("제목을 입력해주세요.");
-        if (!editForm.content.trim() || editForm.content.trim() === "<p></p>") return alert("내용을 입력해주세요.");
+        if (!editForm.categoryCode) {
+            sonner.warning("카테고리를 선택해주세요.");
+            return;
+        }
+        if (!editForm.title.trim()) {
+            sonner.warning("제목을 입력해주세요.");
+            return;
+        }
+        if (!editForm.content.trim() || editForm.content.trim() === "<p></p>") {
+            sonner.warning("내용을 입력해주세요.");
+            return;
+        }
         if (editForm.secret && !editForm.secretPassword.trim()) {
-            return alert("비밀글 비밀번호를 입력해주세요.");
+            sonner.warning("비밀글 비밀번호를 입력해주세요.");
+            return;
         }
         setSaving(true);
         try {
@@ -123,12 +134,12 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
             if (n > 0) {
                 await load(editForm.secret ? editForm.secretPassword : undefined);
                 setEditMode(false);
-                alert("수정되었습니다.");
+                sonner.success("수정되었습니다.");
             } else {
-                alert("수정에 실패했습니다.");
+                sonner.error("수정에 실패했습니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "수정에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "수정에 실패했습니다.");
         } finally {
             setSaving(false);
         }
@@ -136,17 +147,18 @@ export default function InquiryBoardDetailPage({ boardSeq }: Props) {
 
     const onDelete = async () => {
         if (!isOwner) return;
-        if (!window.confirm("이 글을 삭제할까요?")) return;
+        // TODO: ConfirmDialog 검토 — 게시글 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("이 글을 삭제할까요?"))) return;
         try {
             const n = await deleteMyInquiryBoard(boardSeq);
             if (n > 0) {
-                alert("삭제되었습니다.");
+                sonner.success("삭제되었습니다.");
                 router.push("/inquiry-boards");
             } else {
-                alert("삭제할 수 없습니다.");
+                sonner.error("삭제할 수 없습니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "삭제에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "삭제에 실패했습니다.");
         }
     };
 

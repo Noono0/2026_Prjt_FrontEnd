@@ -38,6 +38,7 @@ import BoardCommentsSection from "./BoardCommentsSection";
 import type { BoardCategoryOption, BoardListItem } from "./types";
 import styles from "./BoardDetailPage.module.css";
 import { formatBoardTagListForDisplay } from "@/lib/boardTagsDisplay";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 type Props = {
     boardSeq: number;
@@ -181,10 +182,10 @@ export default function BoardDetailPage({ boardSeq }: Props) {
             if (changed > 0) {
                 setItem((prev) => (prev ? { ...prev, likeCount: (prev.likeCount ?? 0) + 1 } : prev));
             } else {
-                alert("이미 좋아요 처리된 게시글입니다.");
+                sonner.warning("이미 좋아요 처리된 게시글입니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "좋아요 처리에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "좋아요 처리에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -197,10 +198,10 @@ export default function BoardDetailPage({ boardSeq }: Props) {
             if (changed > 0) {
                 setItem((prev) => (prev ? { ...prev, dislikeCount: (prev.dislikeCount ?? 0) + 1 } : prev));
             } else {
-                alert("이미 싫어요 처리된 게시글입니다.");
+                sonner.warning("이미 싫어요 처리된 게시글입니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "싫어요 처리에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "싫어요 처리에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -208,19 +209,20 @@ export default function BoardDetailPage({ boardSeq }: Props) {
 
     const onDelete = async () => {
         if (!isOwner || !item?.boardSeq) return;
-        if (!window.confirm("이 글을 삭제할까요? 삭제된 글은 목록에서 보이지 않습니다.")) return;
+        // TODO: ConfirmDialog 검토 — 게시글 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("이 글을 삭제할까요? 삭제된 글은 목록에서 보이지 않습니다."))) return;
         setActionLoading("delete");
         try {
             devLog("자유게시판 삭제", "DELETE mine", boardSeq);
             const n = await deleteMyBoard(boardSeq);
             if (n > 0) {
-                alert("삭제되었습니다.");
+                sonner.success("삭제되었습니다.");
                 router.push("/boards");
             } else {
-                alert("삭제할 수 없습니다.");
+                sonner.error("삭제할 수 없습니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "삭제에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "삭제에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -232,12 +234,12 @@ export default function BoardDetailPage({ boardSeq }: Props) {
             const changed = await reportBoard(boardSeq);
             if (changed > 0) {
                 setItem((prev) => (prev ? { ...prev, reportCount: (prev.reportCount ?? 0) + 1 } : prev));
-                alert("신고가 접수되었습니다.");
+                sonner.success("신고가 접수되었습니다.");
             } else {
-                alert("이미 신고 처리된 게시글입니다.");
+                sonner.warning("이미 신고 처리된 게시글입니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "신고 처리에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "신고 처리에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -246,15 +248,15 @@ export default function BoardDetailPage({ boardSeq }: Props) {
     const onSaveEdit = async () => {
         if (!item?.boardSeq) return;
         if (!editForm.title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         if (editForm.title.length > 15) {
-            alert("제목은 15자 이내로 입력해주세요.");
+            sonner.warning("제목은 15자 이내로 입력해주세요.");
             return;
         }
         if (isEmptyBoardHtml(editForm.content)) {
-            alert("내용을 입력해주세요.");
+            sonner.warning("내용을 입력해주세요.");
             return;
         }
 
@@ -290,12 +292,12 @@ export default function BoardDetailPage({ boardSeq }: Props) {
                 });
                 setEditTagDraft("");
                 router.replace(`/boards/${boardSeq}`);
-                alert("수정되었습니다.");
+                sonner.success("수정되었습니다.");
             } else {
-                alert("수정에 실패했습니다.");
+                sonner.error("수정에 실패했습니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "수정에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "수정에 실패했습니다.");
         } finally {
             setSaving(false);
         }

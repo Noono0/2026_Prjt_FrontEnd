@@ -9,6 +9,7 @@ import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import type { RoleMenuAssignment } from "./api";
 import { useActiveRolesForMappingQuery, useRoleMenuAssignmentsQuery, useSaveRoleMenuMappingsMutation } from "./queries";
 import { InlineNotice } from "@/components/ui/InlineNotice";
+import { sonner } from "@/lib/sonner";
 
 export type RoleMenuGridRow = {
     menuId: number;
@@ -118,7 +119,7 @@ export default function RoleMenuMappingsPage() {
 
     const handleSave = async () => {
         if (roleId == null) {
-            alert("역할을 선택하세요.");
+            sonner.warning("역할을 선택하세요.");
             return;
         }
         const items = rows
@@ -132,9 +133,9 @@ export default function RoleMenuMappingsPage() {
             }));
         try {
             await saveMutation.mutateAsync({ roleId, items });
-            alert("저장되었습니다.");
+            sonner.success("저장되었습니다.");
         } catch (e) {
-            alert(e instanceof Error ? e.message : "저장 중 오류가 발생했습니다.");
+            sonner.error(e instanceof Error ? e.message : "저장 중 오류가 발생했습니다.");
         }
     };
 

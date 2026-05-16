@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import styles from "./CodeModal.module.css";
 import { useDeleteCodeGroupMutation, useSaveCodeGroupMutation } from "../queries";
 import type { CodeGroupRow } from "../api";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 type Props = {
     open: boolean;
@@ -50,33 +51,34 @@ export default function CodeGroupModal({ open, mode, selectedGroup, onClose }: P
 
     const handleSave = async () => {
         if (!form.codeGroupId?.trim()) {
-            alert("코드그룹 ID를 입력하세요.");
+            sonner.warning("코드그룹 ID를 입력하세요.");
             return;
         }
         if (!form.codeGroupName?.trim()) {
-            alert("코드그룹명을 입력하세요.");
+            sonner.warning("코드그룹명을 입력하세요.");
             return;
         }
 
         try {
             await saveMutation.mutateAsync({ row: form, mode });
-            alert(mode === "create" ? "대분류 등록 완료" : "대분류 수정 완료");
+            sonner.success(mode === "create" ? "대분류 등록 완료" : "대분류 수정 완료");
             onClose();
         } catch (error) {
-            alert(error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.");
+            sonner.error(error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.");
         }
     };
 
     const handleDelete = async () => {
         if (!form.codeGroupSeq) return;
-        if (!confirm("선택한 대분류를 삭제할까요?")) return;
+        // TODO: ConfirmDialog 검토 — 대분류 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("선택한 대분류를 삭제할까요?"))) return;
 
         try {
             await deleteMutation.mutateAsync(form.codeGroupSeq);
-            alert("대분류 삭제 완료");
+            sonner.success("대분류 삭제 완료");
             onClose();
         } catch (error) {
-            alert(error instanceof Error ? error.message : "삭제 중 오류가 발생했습니다.");
+            sonner.error(error instanceof Error ? error.message : "삭제 중 오류가 발생했습니다.");
         }
     };
 

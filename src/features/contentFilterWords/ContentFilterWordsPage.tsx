@@ -9,6 +9,7 @@ import {
     updateContentFilterWord,
 } from "./api";
 import type { ContentFilterWordRow, ContentFilterWordSearchCondition } from "./types";
+import { confirmSonner } from "@/lib/sonner";
 
 function formatListDate(dt?: string): string {
     if (!dt) return "-";
@@ -131,7 +132,8 @@ export default function ContentFilterWordsPage() {
     };
 
     const onDelete = async (row: ContentFilterWordRow) => {
-        if (!window.confirm(`「${row.keyword}」 항목을 삭제할까요?`)) return;
+        // TODO: ConfirmDialog 검토 — 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner(`「${row.keyword}」 항목을 삭제할까요?`))) return;
         setError(null);
         try {
             await deleteContentFilterWord(row.contentFilterWordSeq);
@@ -158,7 +160,10 @@ export default function ContentFilterWordsPage() {
             </div>
 
             <div className="border-b border-slate-800 px-5 py-4">
-                <form onSubmit={onSubmitForm} className="grid gap-4 rounded-xl border border-slate-800 bg-[#081326] p-4 sm:grid-cols-2 lg:grid-cols-12">
+                <form
+                    onSubmit={onSubmitForm}
+                    className="grid gap-4 rounded-xl border border-slate-800 bg-[#081326] p-4 sm:grid-cols-2 lg:grid-cols-12"
+                >
                     <div className="sm:col-span-1 lg:col-span-2">
                         <div className="mb-1 text-xs font-medium text-slate-500">구분</div>
                         <select
@@ -190,9 +195,7 @@ export default function ContentFilterWordsPage() {
                         <input
                             type="number"
                             value={form.sortOrder}
-                            onChange={(e) =>
-                                setForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))
-                            }
+                            onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))}
                             className="h-10 w-full rounded-lg border border-slate-700 bg-[#0c1017] px-3 text-slate-100"
                         />
                     </div>
@@ -322,14 +325,23 @@ export default function ContentFilterWordsPage() {
                                             <td className="px-3 py-3 font-medium text-slate-100">{row.keyword}</td>
                                             <td className="px-3 py-3 text-slate-400">{row.sortOrder ?? 0}</td>
                                             <td className="px-3 py-3">
-                                                <span className={row.useYn === "Y" ? "text-emerald-400" : "text-slate-500"}>
+                                                <span
+                                                    className={
+                                                        row.useYn === "Y" ? "text-emerald-400" : "text-slate-500"
+                                                    }
+                                                >
                                                     {row.useYn === "Y" ? "Y" : "N"}
                                                 </span>
                                             </td>
-                                            <td className="max-w-[200px] truncate px-3 py-3 text-slate-500" title={row.remark ?? ""}>
+                                            <td
+                                                className="max-w-[200px] truncate px-3 py-3 text-slate-500"
+                                                title={row.remark ?? ""}
+                                            >
                                                 {row.remark || "—"}
                                             </td>
-                                            <td className="px-3 py-3 text-xs text-slate-400">{formatListDate(row.modifyDt)}</td>
+                                            <td className="px-3 py-3 text-xs text-slate-400">
+                                                {formatListDate(row.modifyDt)}
+                                            </td>
                                             <td className="px-3 py-3 text-right">
                                                 <button
                                                     type="button"

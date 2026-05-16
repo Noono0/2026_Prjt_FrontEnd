@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import styles from "@/features/commonCodes/components/CodeModal.module.css";
+import { sonner } from "@/lib/sonner";
 import type { RoleRow } from "../api";
 
 type Props = {
@@ -39,18 +40,18 @@ export default function RoleModal({ open, mode, initial, onClose, onSave }: Prop
 
     const handleSubmit = async () => {
         if (!form.roleCode?.trim()) {
-            alert("권한 코드를 입력하세요.");
+            sonner.warning("권한 코드를 입력하세요.");
             return;
         }
         if (!form.roleName?.trim()) {
-            alert("권한명을 입력하세요.");
+            sonner.warning("권한명을 입력하세요.");
             return;
         }
         try {
             await onSave({ ...form, roleCode: form.roleCode.trim(), roleName: form.roleName.trim() });
             onClose();
         } catch (e) {
-            alert(e instanceof Error ? e.message : "저장 중 오류가 발생했습니다.");
+            sonner.error(e instanceof Error ? e.message : "저장 중 오류가 발생했습니다.");
         }
     };
 

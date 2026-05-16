@@ -22,6 +22,7 @@ import { useMemberModalStore } from "@/stores/memberModalStore";
 import { fetchMemberDetail, memberPrimaryRoleCode, type MemberListItemResponse, type RoleItem } from "./api";
 import { useDeleteMembersMutation, useMembersQuery, useRolesQuery, useSaveMemberMutation } from "./queries";
 import { normalizeMemberSearchCondition, sameMemberSearchCondition } from "@/lib/query/searchConditions";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 type MemberFilters = {
     memberId: string;
@@ -317,11 +318,12 @@ export default function MembersPage() {
         const selectedRows = gridApiRef.current?.getSelectedRows() ?? [];
 
         if (selectedRows.length === 0) {
-            alert("삭제할 회원을 선택하세요.");
+            sonner.warning("삭제할 회원을 선택하세요.");
             return;
         }
 
-        if (!confirm(`${selectedRows.length}건 삭제할까요?`)) {
+        // TODO: ConfirmDialog 검토 — 다건 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner(`${selectedRows.length}건 삭제할까요?`))) {
             return;
         }
 
@@ -338,7 +340,7 @@ export default function MembersPage() {
             }
         } catch (error) {
             const message = error instanceof Error ? error.message : "회원 삭제 중 오류가 발생했습니다.";
-            alert(message);
+            sonner.error(message);
         }
     };
 
@@ -348,7 +350,7 @@ export default function MembersPage() {
             close();
         } catch (error) {
             const message = error instanceof Error ? error.message : "회원 저장 중 오류가 발생했습니다.";
-            alert(message);
+            sonner.error(message);
         }
     };
 

@@ -8,6 +8,7 @@ import { normalizeSoopEmbedInHtml } from "@/lib/normalizeSoopEmbedInHtml";
 import { deleteSiteSupport, fetchSiteSupportDetail, updateSiteSupport } from "./api";
 import type { SiteSupportCategoryCode, SiteSupportRow } from "./types";
 import { SUPPORT_CATEGORY_OPTIONS, supportCategoryLabel } from "./labels";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 type Props = { supportSeq: number };
 
@@ -74,11 +75,11 @@ export default function SiteSupportItemDetailPage({ supportSeq }: Props) {
     const onSave = async () => {
         if (!item?.supportSeq) return;
         if (!editForm.title.trim()) {
-            alert("제목을 입력해주세요.");
+            sonner.warning("제목을 입력해주세요.");
             return;
         }
         if (isEmptyBoardHtml(editForm.content)) {
-            alert("내용을 입력해주세요.");
+            sonner.warning("내용을 입력해주세요.");
             return;
         }
         const so = Math.max(0, parseInt(editForm.sortOrder, 10) || 0);
@@ -97,12 +98,12 @@ export default function SiteSupportItemDetailPage({ supportSeq }: Props) {
                 const detail = await fetchSiteSupportDetail(supportSeq);
                 setItem(detail);
                 router.replace(`/admin/support-items/${supportSeq}`);
-                alert("수정되었습니다.");
+                sonner.success("수정되었습니다.");
             } else {
-                alert("수정에 실패했습니다.");
+                sonner.error("수정에 실패했습니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "수정에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "수정에 실패했습니다.");
         } finally {
             setSaving(false);
         }
@@ -110,16 +111,17 @@ export default function SiteSupportItemDetailPage({ supportSeq }: Props) {
 
     const onDelete = async () => {
         if (!item?.supportSeq) return;
-        if (!confirm("이 항목을 삭제할까요?")) return;
+        // TODO: ConfirmDialog 검토 — 항목 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("이 항목을 삭제할까요?"))) return;
         try {
             const n = await deleteSiteSupport(item.supportSeq);
             if (n > 0) {
                 router.push("/admin/support-items");
             } else {
-                alert("삭제에 실패했습니다.");
+                sonner.error("삭제에 실패했습니다.");
             }
         } catch (e) {
-            alert(e instanceof Error ? e.message : "삭제에 실패했습니다.");
+            sonner.error(e instanceof Error ? e.message : "삭제에 실패했습니다.");
         }
     };
 

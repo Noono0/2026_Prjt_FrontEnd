@@ -2,11 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "./CodeModal.module.css";
-import {
-    useDeleteCodeDetailMutation,
-    useSaveCodeDetailMutation,
-} from "../queries";
+import { useDeleteCodeDetailMutation, useSaveCodeDetailMutation } from "../queries";
 import type { CodeDetailRow, CodeGroupRow } from "../api";
+import { confirmSonner, sonner } from "@/lib/sonner";
 
 type Mode = "create-middle" | "edit-middle" | "create-small" | "edit-small";
 
@@ -35,14 +33,7 @@ const emptyForm: CodeDetailRow = {
     attr3: "",
 };
 
-export default function CodeDetailModal({
-                                            open,
-                                            mode,
-                                            selectedGroup,
-                                            selectedMiddle,
-                                            selectedSmall,
-                                            onClose,
-                                        }: Props) {
+export default function CodeDetailModal({ open, mode, selectedGroup, selectedMiddle, selectedSmall, onClose }: Props) {
     const [form, setForm] = useState<CodeDetailRow>(emptyForm);
 
     const isEdit = mode === "edit-middle" || mode === "edit-small";
@@ -104,48 +95,49 @@ export default function CodeDetailModal({
         mode === "create-middle"
             ? "중분류 등록"
             : mode === "edit-middle"
-                ? "중분류 수정"
-                : mode === "create-small"
-                    ? "소분류 등록"
-                    : "소분류 수정";
+              ? "중분류 수정"
+              : mode === "create-small"
+                ? "소분류 등록"
+                : "소분류 수정";
 
     const handleSave = async () => {
         if (!form.codeGroupSeq) {
-            alert("대분류를 먼저 선택하세요.");
+            sonner.warning("대분류를 먼저 선택하세요.");
             return;
         }
         if (!form.codeId?.trim()) {
-            alert("코드 ID를 입력하세요.");
+            sonner.warning("코드 ID를 입력하세요.");
             return;
         }
         if (!form.codeName?.trim()) {
-            alert("코드명을 입력하세요.");
+            sonner.warning("코드명을 입력하세요.");
             return;
         }
         if (form.codeLevel === 3 && !form.parentDetailSeq) {
-            alert("소분류는 상위 중분류가 필요합니다.");
+            sonner.warning("소분류는 상위 중분류가 필요합니다.");
             return;
         }
 
         try {
             await saveMutation.mutateAsync({ row: form, mode: saveMode });
-            alert(isEdit ? "코드 수정 완료" : "코드 등록 완료");
+            sonner.success(isEdit ? "코드 수정 완료" : "코드 등록 완료");
             onClose();
         } catch (error) {
-            alert(error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.");
+            sonner.error(error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.");
         }
     };
 
     const handleDelete = async () => {
         if (!form.codeDetailSeq) return;
-        if (!confirm("선택한 코드를 삭제할까요?")) return;
+        // TODO: ConfirmDialog 검토 — 코드 삭제 확인을 중앙 모달로 옮길지 추후 결정
+        if (!(await confirmSonner("선택한 코드를 삭제할까요?"))) return;
 
         try {
             await deleteMutation.mutateAsync(form.codeDetailSeq);
-            alert("코드 삭제 완료");
+            sonner.success("코드 삭제 완료");
             onClose();
         } catch (error) {
-            alert(error instanceof Error ? error.message : "삭제 중 오류가 발생했습니다.");
+            sonner.error(error instanceof Error ? error.message : "삭제 중 오류가 발생했습니다.");
         }
     };
 
@@ -167,17 +159,13 @@ export default function CodeDetailModal({
 
                     <div>
                         <label className={styles.label}>상위 대분류</label>
-                        <input
-                            value={selectedGroup?.codeGroupName ?? ""}
-                            readOnly
-                            className={styles.readonly}
-                        />
+                        <input value={selectedGroup?.codeGroupName ?? ""} readOnly className={styles.readonly} />
                     </div>
 
                     <div>
                         <label className={styles.label}>상위 중분류</label>
                         <input
-                            value={form.codeLevel === 3 ? selectedMiddle?.codeName ?? "" : ""}
+                            value={form.codeLevel === 3 ? (selectedMiddle?.codeName ?? "") : ""}
                             readOnly
                             className={styles.readonly}
                         />
@@ -216,9 +204,7 @@ export default function CodeDetailModal({
                             type="number"
                             className={styles.input}
                             value={form.sortOrder ?? 0}
-                            onChange={(e) =>
-                                setForm((prev) => ({ ...prev, sortOrder: Number(e.target.value || 0) }))
-                            }
+                            onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: Number(e.target.value || 0) }))}
                         />
                     </div>
 

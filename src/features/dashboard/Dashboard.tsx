@@ -16,6 +16,7 @@ import {
 } from "./dashboardUtils";
 import styles from "./Dashboard.module.css";
 import DashboardBoardFeeds from "./DashboardBoardFeeds";
+import { useDashboardLiveStatus } from "./useDashboardLiveStatus";
 
 const CORE_FIRST_ROW = 7;
 const INSTA_BTN_SVG = "/dashboard/insta_btn.svg";
@@ -44,7 +45,11 @@ function MemberTile({
     const expanded = openMenuId === item.id;
 
     return (
-        <article className={styles.memberTile} data-member-menu-boundary="true">
+        <article
+            className={styles.memberTile}
+            data-member-menu-boundary="true"
+            {...(item.soopBroadcastLink.trim() ? { "data-soop-link": item.soopBroadcastLink.trim() } : {})}
+        >
             <button
                 type="button"
                 className={`${styles.avatarWrap} ${frameClass}`}
@@ -196,6 +201,8 @@ export default function Dashboard() {
 
     const boardRef = useRef<HTMLDivElement>(null);
 
+    useDashboardLiveStatus(boardRef, members, setMembers);
+
     useEffect(() => {
         const onDocMouseDown = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
@@ -271,7 +278,7 @@ export default function Dashboard() {
         void load();
         timer = setInterval(() => {
             void load({ silent: true });
-        }, 5000);
+        }, 120_000);
         return () => {
             mounted = false;
             if (timer) {
