@@ -230,5 +230,3 @@ Vercel이 원격에서 `pnpm install` → `next build`를 수행합니다. 로�
 - **`pnpm install` 시 esbuild가 ELF(리눅스) 바이너리 오류**: 같은 폴더를 WSL과 Windows가 공유하면 `node_modules`가 섞일 수 있습니다. **프로젝트 루트에서 `node_modules` 폴더를 삭제한 뒤, 지금 쓰는 OS에서 다시 `pnpm install`** 하세요.
 - **Auth.js(next-auth v5) 시크릿**: Vercel·로컬 모두 **`AUTH_SECRET`**(또는 기존과 동일 값의 **`NEXTAUTH_SECRET`**)이 필요합니다. `src/auth.ts`는 둘 다 읽습니다.
 - **pnpm / Node 버전**: `package.json`의 `volta`·`packageManager` 필드와 맞추면 재현이 쉽습니다.
-
-커밋테스트
